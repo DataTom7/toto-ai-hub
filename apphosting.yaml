@@ -1,0 +1,39 @@
+# Firebase App Hosting Configuration - Production Environment
+# toto-ai project configuration
+
+runConfig:
+  minInstances: 2
+  maxInstances: 20
+  concurrency: 100
+  cpu: 2
+  memoryMiB: 2048
+
+scripts:
+  buildCommand: npm run build
+  runCommand: npm start
+
+env:
+  # Google AI API Key for Gemini
+  - variable: GOOGLE_AI_API_KEY
+    secret: toto-f9d2f-google-ai-key
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Firebase Configuration
+  - variable: FIREBASE_PROJECT_ID
+    value: toto-f9d2f
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Environment
+  - variable: NODE_ENV
+    value: "production"
+    availability:
+      - BUILD
+      - RUNTIME
+
+outputFiles:
+  serverApp:
+    include: [dist, package.json, node_modules]
