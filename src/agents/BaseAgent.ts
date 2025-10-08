@@ -8,7 +8,7 @@ export abstract class BaseAgent {
   constructor(config: AgentConfig) {
     this.config = config;
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
-    this.model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" });
+    this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
   }
 
   /**
