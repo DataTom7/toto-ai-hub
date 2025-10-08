@@ -85,3 +85,6 @@ pids/
 
 # TernJS port file
 .tern-port
+
+# Firebase service account files
+*firebase-adminsdk*.json

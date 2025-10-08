@@ -206,8 +206,16 @@
                 <p>Test the CaseAgent for case-specific interactions</p>
                 
                 <div class="form-group">
+                    <label for="caseSelect">Select Case:</label>
+                    <select id="caseSelect" onchange="updateCaseInfo()">
+                        <option value="">Loading cases...</option>
+                    </select>
+                    <button type="button" class="btn" onclick="loadCases()" style="margin-top: 10px; padding: 8px 16px; font-size: 14px;">🔄 Refresh Cases</button>
+                </div>
+                
+                <div class="form-group">
                     <label for="caseMessage">Message:</label>
-                    <textarea id="caseMessage" placeholder="Ask about a case...">Tell me about this case and how I can help</textarea>
+                    <textarea id="caseMessage" placeholder="Ask about this case...">Tell me about this case and how I can help</textarea>
                 </div>
                 
                 <div class="form-group">
@@ -272,20 +280,16 @@
             response.innerHTML = '';
             
             try {
-                const caseData = {
-                    id: 'test-case-123',
-                    name: 'Luna - Urgent Medical Care',
-                    description: 'Luna is a 2-year-old dog who needs urgent surgery for a broken leg. She was found on the street and needs immediate medical attention.',
-                    status: 'urgent',
-                    animalType: 'Dog',
-                    location: 'Madrid, Spain',
-                    guardianId: 'guardian-456',
-                    guardianName: 'María García',
-                    targetAmount: 2000,
-                    currentAmount: 500,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
+                // Get selected case from dropdown
+                const caseSelect = document.getElementById('caseSelect');
+                const selectedIndex = caseSelect.value;
+                
+                if (selectedIndex === '' || !availableCases[selectedIndex]) {
+                    alert('Please select a case first');
+                    return;
+                }
+                
+                const caseData = availableCases[selectedIndex];
                 
                 const userContext = {
                     userId: 'test-user-789',
@@ -410,9 +414,70 @@
             }
         }
         
-        // Load agents on page load
+        // Global variable to store cases
+        let availableCases = [];
+        
+        async function loadCases() {
+            try {
+                const result = await fetch(`${API_BASE}/api/cases`);
+                const data = await result.json();
+                
+                if (data.success) {
+                    availableCases = data.cases;
+                    const caseSelect = document.getElementById('caseSelect');
+                    
+                    // Clear existing options
+                    caseSelect.innerHTML = '';
+                    
+                    if (availableCases.length === 0) {
+                        caseSelect.innerHTML = '<option value="">No cases found</option>';
+                        return;
+                    }
+                    
+                    // Add cases to dropdown
+                    availableCases.forEach((caseItem, index) => {
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = `${caseItem.name} - ${caseItem.animalType} (${caseItem.status})`;
+                        caseSelect.appendChild(option);
+                    });
+                    
+                    // Update case info for first case
+                    if (availableCases.length > 0) {
+                        updateCaseInfo();
+                    }
+                } else {
+                    console.error('Failed to load cases:', data.error);
+                    document.getElementById('caseSelect').innerHTML = '<option value="">Error loading cases</option>';
+                }
+            } catch (error) {
+                console.error('Error loading cases:', error);
+                document.getElementById('caseSelect').innerHTML = '<option value="">Error loading cases</option>';
+            }
+        }
+        
+        function updateCaseInfo() {
+            const caseSelect = document.getElementById('caseSelect');
+            const selectedIndex = caseSelect.value;
+            
+            if (selectedIndex === '' || !availableCases[selectedIndex]) {
+                return;
+            }
+            
+            const selectedCase = availableCases[selectedIndex];
+            
+            // Update the message placeholder with case-specific text
+            const messageTextarea = document.getElementById('caseMessage');
+            messageTextarea.placeholder = `Ask about ${selectedCase.name}...`;
+            
+            // You could also display case info somewhere on the page
+            console.log('Selected case:', selectedCase);
+        }
+        
+        // Load agents and cases on page load
         window.onload = function() {
             loadAgents();
+            loadCases();
         };
     </script>
 </body>
