@@ -9,7 +9,7 @@ runConfig:
   memoryMiB: 2048
 
 scripts:
-  buildCommand: npm run build
+  buildCommand: npm ci && npm run build
   runCommand: npm start
 
 env:
