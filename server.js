@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const { TotoAI } = require('./dist/index.js');
 
+// Updated to trigger new deployment with fixed secret
+
 const app = express();
 const port = process.env.PORT || 8080;
 
