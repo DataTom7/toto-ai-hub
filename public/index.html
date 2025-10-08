@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TotoAI - Agent Testing Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .agent-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 2px solid #f0f0f0;
+            border-radius: 15px;
+            background: #fafafa;
+        }
+        
+        .agent-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .response {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .response.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .response.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .actions {
+            margin-top: 15px;
+        }
+        
+        .action-btn {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            margin: 5px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .suggestions {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+        }
+        
+        .suggestions h4 {
+            margin-bottom: 10px;
+            color: #1976d2;
+        }
+        
+        .suggestions ul {
+            list-style: none;
+        }
+        
+        .suggestions li {
+            padding: 5px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 TotoAI</h1>
+            <p>Agent Testing Interface</p>
+        </div>
+        
+        <div class="content">
+            <!-- Case Agent Section -->
+            <div class="agent-section">
+                <h2>📋 Case Agent</h2>
+                <p>Test the CaseAgent for case-specific interactions</p>
+                
+                <div class="form-group">
+                    <label for="caseMessage">Message:</label>
+                    <textarea id="caseMessage" placeholder="Ask about a case...">Tell me about this case and how I can help</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userRole">User Role:</label>
+                    <select id="userRole">
+                        <option value="user">User</option>
+                        <option value="guardian">Guardian</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="language">Language:</label>
+                    <select id="language">
+                        <option value="es">Spanish</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                
+                <button class="btn" onclick="testCaseAgent()">Test Case Agent</button>
+                
+                <div class="loading" id="caseLoading">
+                    <div class="spinner"></div>
+                    <p>Processing with CaseAgent...</p>
+                </div>
+                
+                <div id="caseResponse"></div>
+            </div>
+            
+            <!-- Agent Info Section -->
+            <div class="agent-section">
+                <h2>ℹ️ Available Agents</h2>
+                <button class="btn" onclick="loadAgents()">Load Agent Information</button>
+                
+                <div class="loading" id="agentsLoading">
+                    <div class="spinner"></div>
+                    <p>Loading agent information...</p>
+                </div>
+                
+                <div id="agentsResponse"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        
+        async function testCaseAgent() {
+            const message = document.getElementById('caseMessage').value;
+            const userRole = document.getElementById('userRole').value;
+            const language = document.getElementById('language').value;
+            
+            if (!message.trim()) {
+                alert('Please enter a message');
+                return;
+            }
+            
+            const loading = document.getElementById('caseLoading');
+            const response = document.getElementById('caseResponse');
+            
+            loading.style.display = 'block';
+            response.innerHTML = '';
+            
+            try {
+                const caseData = {
+                    id: 'test-case-123',
+                    name: 'Luna - Urgent Medical Care',
+                    description: 'Luna is a 2-year-old dog who needs urgent surgery for a broken leg. She was found on the street and needs immediate medical attention.',
+                    status: 'urgent',
+                    animalType: 'Dog',
+                    location: 'Madrid, Spain',
+                    guardianId: 'guardian-456',
+                    guardianName: 'María García',
+                    targetAmount: 2000,
+                    currentAmount: 500,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                const userContext = {
+                    userId: 'test-user-789',
+                    userRole: userRole,
+                    language: language,
+                    location: 'Madrid',
+                    preferences: {
+                        notifications: true,
+                        communicationStyle: 'casual'
+                    }
+                };
+                
+                const result = await fetch(`${API_BASE}/api/case`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message,
+                        caseData,
+                        userContext
+                    })
+                });
+                
+                const data = await result.json();
+                
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    response.innerHTML = `
+                        <div class="response success">
+                            <strong>Response:</strong><br>
+                            ${data.message}
+                            
+                            ${data.actions && data.actions.length > 0 ? `
+                                <div class="actions">
+                                    <strong>Available Actions:</strong><br>
+                                    ${data.actions.map(action => 
+                                        `<a href="#" class="action-btn" onclick="alert('${action.description}')">${action.label}</a>`
+                                    ).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            ${data.suggestions && data.suggestions.length > 0 ? `
+                                <div class="suggestions">
+                                    <h4>Suggestions:</h4>
+                                    <ul>
+                                        ${data.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            
+                            <br><br>
+                            <strong>Metadata:</strong><br>
+                            Agent: ${data.metadata?.agentType}<br>
+                            Confidence: ${data.metadata?.confidence}<br>
+                            Processing Time: ${data.metadata?.processingTime}ms
+                        </div>
+                    `;
+                } else {
+                    response.innerHTML = `
+                        <div class="response error">
+                            <strong>Error:</strong><br>
+                            ${data.error || 'Unknown error occurred'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                response.innerHTML = `
+                    <div class="response error">
+                        <strong>Network Error:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadAgents() {
+            const loading = document.getElementById('agentsLoading');
+            const response = document.getElementById('agentsResponse');
+            
+            loading.style.display = 'block';
+            response.innerHTML = '';
+            
+            try {
+                const result = await fetch(`${API_BASE}/api/agents`);
+                const data = await result.json();
+                
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    response.innerHTML = `
+                        <div class="response success">
+                            <strong>Available Agents:</strong><br><br>
+                            ${data.agents.map(agent => `
+                                <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+                                    <strong>${agent.name}</strong> (v${agent.version})<br>
+                                    <em>${agent.description}</em><br>
+                                    <strong>Capabilities:</strong> ${agent.capabilities.join(', ')}<br>
+                                    <strong>Status:</strong> ${agent.isEnabled ? '✅ Enabled' : '❌ Disabled'}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    response.innerHTML = `
+                        <div class="response error">
+                            <strong>Error:</strong><br>
+                            ${data.error || 'Failed to load agents'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                response.innerHTML = `
+                    <div class="response error">
+                        <strong>Network Error:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Load agents on page load
+        window.onload = function() {
+            loadAgents();
+        };
+    </script>
+</body>
+</html>
