@@ -15,14 +15,14 @@ scripts:
 env:
   # Google AI API Key for Gemini
   - variable: GOOGLE_AI_API_KEY
-    secret: toto-f9d2f-google-ai-key
+    secret: toto-ai-hub-google-ai-key
     availability:
       - BUILD
       - RUNTIME
 
   # Firebase Configuration
   - variable: FIREBASE_PROJECT_ID
-    value: toto-f9d2f
+    value: toto-ai-hub
     availability:
       - BUILD
       - RUNTIME
