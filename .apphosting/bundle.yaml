@@ -1,0 +1,13 @@
+# Firebase App Hosting Bundle Configuration
+# This file helps the buildpack detect and build our Node.js application
+
+build:
+  commands:
+    - npm ci
+    - npm run build
+
+run:
+  command: npm start
+
+# Specify that this is a Node.js application
+runtime: nodejs18
