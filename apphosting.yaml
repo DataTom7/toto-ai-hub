@@ -36,4 +36,4 @@ env:
 
 outputFiles:
   serverApp:
-    include: [dist, package.json, node_modules]
+    include: [dist, package.json, package-lock.json, server.js, public, node_modules]

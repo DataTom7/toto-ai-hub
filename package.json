@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "start": "node server.js",
     "dev": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
