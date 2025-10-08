@@ -2,10 +2,12 @@
   "name": "toto-ai",
   "version": "1.0.0",
   "description": "Clean AI agent system for Toto platform using LangChain + Google Gemini",
-  "main": "dist/index.js",
+  "main": "server.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "server.js",
+    "public"
   ],
   "scripts": {
     "build": "tsc",
@@ -26,6 +28,9 @@
   ],
   "author": "Toto Team",
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.2.0",
     "firebase-admin": "^12.0.0",
