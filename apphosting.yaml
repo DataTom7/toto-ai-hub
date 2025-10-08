@@ -15,7 +15,7 @@ scripts:
 env:
   # Google AI API Key for Gemini
   - variable: GOOGLE_AI_API_KEY
-    secret: toto-ai-hub-google-ai-key
+    secret: toto-ai-hub-google-ai-key-v2
     availability:
       - BUILD
       - RUNTIME
