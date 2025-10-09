@@ -41,8 +41,8 @@ Your role:
 - Always respond in the user's preferred language (Spanish or English)
 
 Conversation style:
-- Start with a brief, friendly greeting about the case
-- Ask what the user would like to know
+- For the FIRST message: Provide a brief, friendly case summary (2-3 sentences) including the animal's name, main issue, and current status. Do NOT thank the user for asking since this is an automatic welcome message.
+- For subsequent messages: Ask what the user would like to know
 - Provide information in digestible chunks
 - Ask follow-up questions to keep the conversation flowing
 - Be warm, caring, and conversational
@@ -75,8 +75,8 @@ Always be helpful, friendly, and conversational.`;
       if (conversationContext?.history && conversationContext.history.length > 0) {
         conversationHistory = '\n\nPrevious conversation:\n';
         conversationContext.history.forEach((msg, index) => {
-          const sender = msg.sender === 'user' ? 'User' : 'Toto';
-          conversationHistory += `${sender}: ${msg.message}\n`;
+          const sender = msg.role === 'user' ? 'User' : 'Toto';
+          conversationHistory += `${sender}: ${msg.content}\n`;
         });
       }
 
@@ -135,9 +135,12 @@ Remember: Be conversational, ask follow-up questions, and don't dump all informa
    */
   private extractActions(response: string): AgentAction[] {
     const actions: AgentAction[] = [];
+    const lowerResponse = response.toLowerCase();
 
     // Simple action extraction - in production, this could be more sophisticated
-    if (response.toLowerCase().includes('donate') || response.toLowerCase().includes('donation')) {
+    // Donate action (English and Spanish)
+    if (lowerResponse.includes('donate') || lowerResponse.includes('donation') || 
+        lowerResponse.includes('donar') || lowerResponse.includes('donación')) {
       actions.push({
         type: 'donate',
         payload: { action: 'donate' },
@@ -146,7 +149,8 @@ Remember: Be conversational, ask follow-up questions, and don't dump all informa
       });
     }
 
-    if (response.toLowerCase().includes('share') || response.toLowerCase().includes('compartir')) {
+    // Share action (English and Spanish)
+    if (lowerResponse.includes('share') || lowerResponse.includes('compartir')) {
       actions.push({
         type: 'share',
         payload: { action: 'share' },
@@ -155,7 +159,8 @@ Remember: Be conversational, ask follow-up questions, and don't dump all informa
       });
     }
 
-    if (response.toLowerCase().includes('adopt') || response.toLowerCase().includes('adoptar')) {
+    // Adopt action (English and Spanish)
+    if (lowerResponse.includes('adopt') || lowerResponse.includes('adoptar')) {
       actions.push({
         type: 'adopt',
         payload: { action: 'adopt' },
@@ -164,7 +169,8 @@ Remember: Be conversational, ask follow-up questions, and don't dump all informa
       });
     }
 
-    if (response.toLowerCase().includes('contact') || response.toLowerCase().includes('contactar')) {
+    // Contact action (English and Spanish)
+    if (lowerResponse.includes('contact') || lowerResponse.includes('contactar')) {
       actions.push({
         type: 'contact',
         payload: { action: 'contact' },

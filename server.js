@@ -8,19 +8,33 @@ const admin = require('firebase-admin');
 // Initialize Firebase Admin SDK for toto-app-stg
 if (!admin.apps.length) {
   try {
-    // Use the entire service account JSON from environment variable
-    const serviceAccountJson = process.env.TOTO_APP_STG_SERVICE_ACCOUNT_KEY;
+    let serviceAccount = null;
     
+    // Try environment variable first (for production)
+    const serviceAccountJson = process.env.TOTO_APP_STG_SERVICE_ACCOUNT_KEY;
     if (serviceAccountJson) {
-      const serviceAccount = JSON.parse(serviceAccountJson);
+      serviceAccount = JSON.parse(serviceAccountJson);
+      console.log('✅ Using service account from environment variable');
+    } else {
+      // Try local file (for development)
+      const fs = require('fs');
+      const serviceAccountPath = path.join(__dirname, 'toto-f9d2f-stg-firebase-adminsdk-fbsvc-d4bdd9b852.json');
       
+      if (fs.existsSync(serviceAccountPath)) {
+        const serviceAccountFile = fs.readFileSync(serviceAccountPath, 'utf8');
+        serviceAccount = JSON.parse(serviceAccountFile);
+        console.log('✅ Using local service account file');
+      }
+    }
+    
+    if (serviceAccount) {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: 'toto-f9d2f-stg'
       });
       console.log('✅ Firebase Admin SDK initialized for toto-app-stg');
     } else {
-      console.log('⚠️ TOTO_APP_STG_SERVICE_ACCOUNT_KEY not found, skipping toto-app-stg connection');
+      console.log('⚠️ No service account credentials found, skipping toto-app-stg connection');
     }
   } catch (error) {
     console.error('❌ Failed to initialize Firebase Admin SDK:', error.message);

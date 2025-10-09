@@ -3,268 +3,477 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TotoAI - Agent Testing Interface</title>
+    <title>TotoAI - Chat Interface</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
             overflow: hidden;
         }
-        
-        .header {
-            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+
+        .chat-container {
+            display: flex;
+            height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .sidebar {
+            width: 350px;
+            background: #2c3e50;
             color: white;
-            padding: 30px;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
         }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+
+        .sidebar-header {
+            padding: 20px;
+            background: #34495e;
+            border-bottom: 1px solid #34495e;
         }
-        
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .agent-section {
-            margin-bottom: 40px;
-            padding: 25px;
-            border: 2px solid #f0f0f0;
-            border-radius: 15px;
-            background: #fafafa;
-        }
-        
-        .agent-section h2 {
-            color: #333;
-            margin-bottom: 20px;
+
+        .sidebar-header h1 {
             font-size: 1.5rem;
+            margin-bottom: 5px;
         }
-        
-        .form-group {
-            margin-bottom: 20px;
+
+        .sidebar-header p {
+            opacity: 0.8;
+            font-size: 0.9rem;
         }
-        
-        label {
+
+        .case-selector {
+            padding: 20px;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .case-selector label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-weight: 600;
-            color: #555;
         }
-        
-        input, textarea, select {
+
+        .case-selector select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
+            padding: 10px;
+            border: none;
             border-radius: 8px;
+            background: #34495e;
+            color: white;
             font-size: 14px;
-            transition: border-color 0.3s;
         }
-        
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
+
+        .case-selector select option {
+            background: #34495e;
+            color: white;
         }
-        
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+
+        .refresh-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            background: #3498db;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 6px;
             cursor: pointer;
-            transition: transform 0.2s;
+            font-size: 14px;
         }
-        
-        .btn:hover {
-            transform: translateY(-2px);
+
+        .refresh-btn:hover {
+            background: #2980b9;
         }
-        
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .response {
-            margin-top: 20px;
+
+        .user-settings {
             padding: 20px;
-            border-radius: 8px;
-            white-space: pre-wrap;
-            font-family: 'Courier New', monospace;
+            border-bottom: 1px solid #34495e;
         }
-        
-        .response.success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+
+        .user-settings label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            font-weight: 600;
         }
-        
-        .response.error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+
+        .user-settings select {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            background: #34495e;
+            color: white;
+            font-size: 13px;
+            margin-bottom: 15px;
         }
-        
-        .loading {
-            display: none;
-            text-align: center;
+
+        .user-settings select option {
+            background: #34495e;
+            color: white;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: #667eea;
+            color: white;
             padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
-        
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
             border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .chat-info h2 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .chat-info p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
             width: 40px;
             height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
         }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
         }
-        
-        .actions {
+
+        .message.agent .message-avatar {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.agent .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-text {
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .message-actions {
             margin-top: 15px;
         }
-        
+
         .action-btn {
             display: inline-block;
             background: #28a745;
             color: white;
             padding: 8px 16px;
-            margin: 5px;
-            border-radius: 5px;
+            border-radius: 20px;
             text-decoration: none;
+            margin-right: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .action-btn.donate {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .action-btn.donate:hover {
+            background: #e0a800;
+        }
+
+        .action-btn.share {
+            background: #17a2b8;
+        }
+
+        .action-btn.share:hover {
+            background: #138496;
+        }
+
+        .action-btn.contact {
+            background: #6f42c1;
+        }
+
+        .action-btn.contact:hover {
+            background: #5a32a3;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            resize: none;
+            max-height: 120px;
+            min-height: 50px;
+            font-family: inherit;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+        }
+
+        .send-btn:hover {
+            background: #5a6fd8;
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
             font-size: 14px;
+            margin-left: 10px;
         }
-        
-        .suggestions {
-            margin-top: 15px;
-            padding: 15px;
-            background: #e3f2fd;
-            border-radius: 8px;
+
+        .clear-btn:hover {
+            background: #c82333;
         }
-        
-        .suggestions h4 {
+
+        .loading-message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state h3 {
             margin-bottom: 10px;
-            color: #1976d2;
+            color: #495057;
         }
-        
-        .suggestions ul {
-            list-style: none;
+
+        .empty-state p {
+            font-size: 0.9rem;
         }
-        
-        .suggestions li {
-            padding: 5px 0;
-            color: #555;
+
+        @media (max-width: 768px) {
+            .chat-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🤖 TotoAI</h1>
-            <p>Agent Testing Interface</p>
-        </div>
-        
-        <div class="content">
-            <!-- Case Agent Section -->
-            <div class="agent-section">
-                <h2>📋 Case Agent</h2>
-                <p>Test the CaseAgent for case-specific interactions</p>
-                
-                <div class="form-group">
-                    <label for="caseSelect">Select Case:</label>
-                    <select id="caseSelect" onchange="updateCaseInfo()">
-                        <option value="">Loading cases...</option>
-                    </select>
-                    <button type="button" class="btn" onclick="loadCases()" style="margin-top: 10px; padding: 8px 16px; font-size: 14px;">🔄 Refresh Cases</button>
-                </div>
-                
-                <div class="form-group">
-                    <label for="caseMessage">Message:</label>
-                    <textarea id="caseMessage" placeholder="Ask about this case...">Hola, ¿cómo está Rocky?</textarea>
-                </div>
-                
-                <!-- Conversation History -->
-                <div class="form-group">
-                    <label>Conversation History:</label>
-                    <div id="conversationHistory" style="height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; padding: 10px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px;">
-                        <div style="color: #666; font-style: italic;">Conversation will appear here...</div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="userRole">User Role:</label>
-                    <select id="userRole">
-                        <option value="user">User</option>
-                        <option value="guardian">Guardian</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="language">Language:</label>
-                    <select id="language">
-                        <option value="es">Spanish</option>
-                        <option value="en">English</option>
-                    </select>
-                </div>
-                
-                <button class="btn" onclick="sendMessage()">💬 Send Message</button>
-                <button class="btn" onclick="clearConversation()" style="background: #dc3545; margin-left: 10px;">🗑️ Clear Conversation</button>
-                
-                <div class="loading" id="caseLoading">
-                    <div class="spinner"></div>
-                    <p>Processing with CaseAgent...</p>
-                </div>
-                
-                <div id="caseResponse"></div>
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🤖 TotoAI</h1>
+                <p>AI Agent Testing</p>
             </div>
             
-            <!-- Agent Info Section -->
-            <div class="agent-section">
-                <h2>ℹ️ Available Agents</h2>
-                <button class="btn" onclick="loadAgents()">Load Agent Information</button>
+            <div class="case-selector">
+                <label for="caseSelect">Select Case:</label>
+                <select id="caseSelect" onchange="updateCaseInfo()">
+                    <option value="">Loading cases...</option>
+                </select>
+                <button type="button" class="refresh-btn" onclick="loadCases()">🔄 Refresh Cases</button>
+            </div>
+            
+            <div class="user-settings">
+                <label for="userRole">Your Role:</label>
+                <select id="userRole">
+                    <option value="user">User</option>
+                    <option value="guardian">Guardian</option>
+                    <option value="admin">Admin</option>
+                </select>
                 
-                <div class="loading" id="agentsLoading">
-                    <div class="spinner"></div>
-                    <p>Loading agent information...</p>
+                <label for="language">Language:</label>
+                <select id="language">
+                    <option value="es">Spanish</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="chat-avatar">🐕</div>
+                <div class="chat-info">
+                    <h2 id="currentCaseName">Select a case to start</h2>
+                    <p id="currentCaseStatus">Choose a case from the sidebar</p>
                 </div>
-                
-                <div id="agentsResponse"></div>
+            </div>
+            
+            <div class="messages-container" id="messagesContainer">
+                <div class="empty-state">
+                    <h3>👋 Welcome to TotoAI!</h3>
+                    <p>Select a case from the sidebar to start chatting with our AI agent about pet rescue cases.</p>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea 
+                        id="messageInput" 
+                        class="message-input" 
+                        placeholder="Type your message here..."
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="autoResize(this)"
+                    ></textarea>
+                    <button id="sendBtn" class="send-btn" onclick="sendMessage()" disabled>
+                        ➤
+                    </button>
+                    <button class="clear-btn" onclick="clearConversation()">🗑️ Clear</button>
+                </div>
             </div>
         </div>
     </div>
@@ -272,57 +481,43 @@
     <script>
         const API_BASE = window.location.origin;
         
-        
-        async function loadAgents() {
-            const loading = document.getElementById('agentsLoading');
-            const response = document.getElementById('agentsResponse');
-            
-            loading.style.display = 'block';
-            response.innerHTML = '';
-            
-            try {
-                const result = await fetch(`${API_BASE}/api/agents`);
-                const data = await result.json();
-                
-                loading.style.display = 'none';
-                
-                if (data.success) {
-                    response.innerHTML = `
-                        <div class="response success">
-                            <strong>Available Agents:</strong><br><br>
-                            ${data.agents.map(agent => `
-                                <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
-                                    <strong>${agent.name}</strong> (v${agent.version})<br>
-                                    <em>${agent.description}</em><br>
-                                    <strong>Capabilities:</strong> ${agent.capabilities.join(', ')}<br>
-                                    <strong>Status:</strong> ${agent.isEnabled ? '✅ Enabled' : '❌ Disabled'}
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                } else {
-                    response.innerHTML = `
-                        <div class="response error">
-                            <strong>Error:</strong><br>
-                            ${data.error || 'Failed to load agents'}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                loading.style.display = 'none';
-                response.innerHTML = `
-                    <div class="response error">
-                        <strong>Network Error:</strong><br>
-                        ${error.message}
-                    </div>
-                `;
-            }
-        }
-        
         // Global variables
         let availableCases = [];
         let conversationHistory = [];
         let currentCase = null;
+        let isLoading = false;
+        
+        // DOM elements
+        const caseSelect = document.getElementById('caseSelect');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const currentCaseName = document.getElementById('currentCaseName');
+        const currentCaseStatus = document.getElementById('currentCaseStatus');
+        
+        // Auto-resize textarea
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+        
+        // Handle Enter key
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        // Enable/disable send button
+        function updateSendButton() {
+            const hasText = messageInput.value.trim().length > 0;
+            const hasCase = currentCase !== null;
+            sendBtn.disabled = !hasText || !hasCase || isLoading;
+        }
+        
+        // Update send button on input
+        messageInput.addEventListener('input', updateSendButton);
         
         async function loadCases() {
             try {
@@ -331,7 +526,6 @@
                 
                 if (data.success) {
                     availableCases = data.cases;
-                    const caseSelect = document.getElementById('caseSelect');
                     
                     // Clear existing options
                     caseSelect.innerHTML = '';
@@ -355,111 +549,208 @@
                     }
                 } else {
                     console.error('Failed to load cases:', data.error);
-                    document.getElementById('caseSelect').innerHTML = '<option value="">Error loading cases</option>';
+                    caseSelect.innerHTML = '<option value="">Error loading cases</option>';
                 }
             } catch (error) {
                 console.error('Error loading cases:', error);
-                document.getElementById('caseSelect').innerHTML = '<option value="">Error loading cases</option>';
+                caseSelect.innerHTML = '<option value="">Error loading cases</option>';
             }
         }
         
         function updateCaseInfo() {
-            const caseSelect = document.getElementById('caseSelect');
             const selectedIndex = caseSelect.value;
             
             if (selectedIndex === '' || !availableCases[selectedIndex]) {
                 currentCase = null;
+                currentCaseName.textContent = 'Select a case to start';
+                currentCaseStatus.textContent = 'Choose a case from the sidebar';
+                updateSendButton();
                 return;
             }
             
             const selectedCase = availableCases[selectedIndex];
             currentCase = selectedCase;
             
-            // Update the message placeholder with case-specific text
-            const messageTextarea = document.getElementById('caseMessage');
-            messageTextarea.placeholder = `Ask about ${selectedCase.name}...`;
+            // Update chat header
+            currentCaseName.textContent = selectedCase.name;
+            currentCaseStatus.textContent = `${selectedCase.animalType} • ${selectedCase.status}`;
             
             // Clear conversation when switching cases
             clearConversation();
             
-            console.log('Selected case:', selectedCase);
+            // Send a special message to get case summary
+            sendInitialCaseSummary(selectedCase);
+            
+            updateSendButton();
         }
         
-        function addToConversation(sender, message, timestamp = new Date()) {
-            const conversationDiv = document.getElementById('conversationHistory');
+        function addMessage(sender, message, actions = [], timestamp = new Date()) {
+            const messagesContainer = document.getElementById('messagesContainer');
             
-            // Remove the placeholder if it exists
-            const placeholder = conversationDiv.querySelector('div[style*="color: #666"]');
-            if (placeholder) {
-                placeholder.remove();
+            // Remove empty state if it exists
+            const emptyState = messagesContainer.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
             }
             
             const messageDiv = document.createElement('div');
-            messageDiv.style.marginBottom = '10px';
-            messageDiv.style.padding = '8px';
-            messageDiv.style.borderRadius = '8px';
-            messageDiv.style.maxWidth = '80%';
+            messageDiv.className = `message ${sender}`;
             
-            if (sender === 'user') {
-                messageDiv.style.backgroundColor = '#007bff';
-                messageDiv.style.color = 'white';
-                messageDiv.style.marginLeft = 'auto';
-                messageDiv.innerHTML = `<strong>You:</strong> ${message}`;
-            } else {
-                messageDiv.style.backgroundColor = '#f8f9fa';
-                messageDiv.style.border = '1px solid #dee2e6';
-                messageDiv.innerHTML = `<strong>Toto:</strong> ${message}`;
+            const avatar = sender === 'user' ? '👤' : '🤖';
+            const timeStr = timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            let actionsHtml = '';
+            if (actions && actions.length > 0) {
+                actionsHtml = `
+                    <div class="message-actions">
+                        ${actions.map(action => 
+                            `<button class="action-btn ${action.type}" onclick="handleAction('${action.type}', '${action.description}')">
+                                ${action.label}
+                            </button>`
+                        ).join('')}
+                    </div>
+                `;
             }
             
-            conversationDiv.appendChild(messageDiv);
-            conversationDiv.scrollTop = conversationDiv.scrollHeight;
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    <div class="message-text">${message}</div>
+                    ${actionsHtml}
+                    <div class="message-time">${timeStr}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
             // Store in conversation history
             conversationHistory.push({
-                sender,
-                message,
-                timestamp: timestamp.toISOString()
+                id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                role: sender,
+                content: message,
+                timestamp: timestamp
             });
+        }
+        
+        function addLoadingMessage() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-message';
+            loadingDiv.id = 'loadingMessage';
+            loadingDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(loadingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function removeLoadingMessage() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.remove();
+            }
         }
         
         function clearConversation() {
             conversationHistory = [];
-            const conversationDiv = document.getElementById('conversationHistory');
-            conversationDiv.innerHTML = '<div style="color: #666; font-style: italic;">Conversation will appear here...</div>';
+            const messagesContainer = document.getElementById('messagesContainer');
+            messagesContainer.innerHTML = `
+                <div class="empty-state">
+                    <h3>👋 Welcome to TotoAI!</h3>
+                    <p>Select a case from the sidebar to start chatting with our AI agent about pet rescue cases.</p>
+                </div>
+            `;
         }
         
-        async function sendMessage() {
-            const message = document.getElementById('caseMessage').value.trim();
-            const userRole = document.getElementById('userRole').value;
-            const language = document.getElementById('language').value;
-            
-            if (!message) {
-                alert('Please enter a message');
-                return;
-            }
-            
-            if (!currentCase) {
-                alert('Please select a case first');
-                return;
-            }
-            
-            const loading = document.getElementById('caseLoading');
-            const response = document.getElementById('caseResponse');
-            
-            // Add user message to conversation
-            addToConversation('user', message);
-            
-            // Clear the input
-            document.getElementById('caseMessage').value = '';
-            
-            loading.style.display = 'block';
-            response.innerHTML = '';
+        async function sendInitialCaseSummary(caseData) {
+            // Show loading
+            isLoading = true;
+            addLoadingMessage();
+            updateSendButton();
             
             try {
                 const userContext = {
                     userId: 'test-user-789',
-                    userRole: userRole,
-                    language: language,
+                    userRole: document.getElementById('userRole').value,
+                    language: document.getElementById('language').value,
+                    location: caseData.location || 'Unknown',
+                    preferences: {
+                        notifications: true,
+                        communicationStyle: 'conversational'
+                    }
+                };
+                
+                const result = await fetch(`${API_BASE}/api/case`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Please provide a brief summary of this case',
+                        caseData: caseData,
+                        userContext: userContext,
+                        conversationContext: {
+                            history: [],
+                            isConversational: true,
+                            isFirstMessage: true
+                        }
+                    })
+                });
+                
+                const data = await result.json();
+                
+                // Remove loading
+                removeLoadingMessage();
+                isLoading = false;
+                updateSendButton();
+                
+                if (data.success) {
+                    // Add agent response
+                    addMessage('agent', data.message, data.actions);
+                } else {
+                    addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`);
+                }
+            } catch (error) {
+                removeLoadingMessage();
+                isLoading = false;
+                updateSendButton();
+                addMessage('agent', `Network Error: ${error.message}`);
+            }
+        }
+        
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (!message || !currentCase || isLoading) {
+                return;
+            }
+            
+            // Add user message
+            addMessage('user', message);
+            
+            // Clear input
+            messageInput.value = '';
+            autoResize(messageInput);
+            updateSendButton();
+            
+            // Show loading
+            isLoading = true;
+            addLoadingMessage();
+            updateSendButton();
+            
+            try {
+                const userContext = {
+                    userId: 'test-user-789',
+                    userRole: document.getElementById('userRole').value,
+                    language: document.getElementById('language').value,
                     location: currentCase.location || 'Unknown',
                     preferences: {
                         notifications: true,
@@ -485,67 +776,32 @@
                 
                 const data = await result.json();
                 
-                loading.style.display = 'none';
+                // Remove loading
+                removeLoadingMessage();
+                isLoading = false;
+                updateSendButton();
                 
                 if (data.success) {
-                    // Add agent response to conversation
-                    addToConversation('agent', data.message);
-                    
-                    // Show detailed response in the response area
-                    response.innerHTML = `
-                        <div class="response success">
-                            <strong>Agent Response:</strong><br>
-                            ${data.message}
-                            
-                            ${data.actions && data.actions.length > 0 ? `
-                                <div class="actions">
-                                    <strong>Available Actions:</strong><br>
-                                    ${data.actions.map(action => 
-                                        `<a href="#" class="action-btn" onclick="alert('${action.description}')">${action.label}</a>`
-                                    ).join('')}
-                                </div>
-                            ` : ''}
-                            
-                            ${data.suggestions && data.suggestions.length > 0 ? `
-                                <div class="suggestions">
-                                    <h4>Suggestions:</h4>
-                                    <ul>
-                                        ${data.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
-                                    </ul>
-                                </div>
-                            ` : ''}
-                            
-                            <br><br>
-                            <strong>Metadata:</strong><br>
-                            Agent: ${data.metadata?.agentType}<br>
-                            Confidence: ${data.metadata?.confidence}<br>
-                            Processing Time: ${data.metadata?.processingTime}ms
-                        </div>
-                    `;
+                    // Add agent response
+                    addMessage('agent', data.message, data.actions);
                 } else {
-                    addToConversation('agent', `Error: ${data.error || 'Unknown error occurred'}`);
-                    response.innerHTML = `
-                        <div class="response error">
-                            <strong>Error:</strong><br>
-                            ${data.error || 'Unknown error occurred'}
-                        </div>
-                    `;
+                    addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`);
                 }
             } catch (error) {
-                loading.style.display = 'none';
-                addToConversation('agent', `Network Error: ${error.message}`);
-                response.innerHTML = `
-                    <div class="response error">
-                        <strong>Network Error:</strong><br>
-                        ${error.message}
-                    </div>
-                `;
+                removeLoadingMessage();
+                isLoading = false;
+                updateSendButton();
+                addMessage('agent', `Network Error: ${error.message}`);
             }
         }
         
-        // Load agents and cases on page load
+        function handleAction(actionType, description) {
+            // For now, just show an alert. In a real app, this would trigger the actual action
+            alert(`${actionType.toUpperCase()}: ${description}`);
+        }
+        
+        // Load cases on page load
         window.onload = function() {
-            loadAgents();
             loadCases();
         };
     </script>
