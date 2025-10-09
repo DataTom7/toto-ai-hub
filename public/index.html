@@ -419,11 +419,24 @@
             </div>
             
             <div class="case-selector">
+                <label for="agentSelect">Select Agent:</label>
+                <select id="agentSelect" onchange="switchAgent()">
+                    <option value="case">Case Agent</option>
+                    <option value="twitter">Twitter Agent</option>
+                </select>
+            </div>
+            
+            <div id="caseAgentControls" class="case-selector">
                 <label for="caseSelect">Select Case:</label>
                 <select id="caseSelect" onchange="updateCaseInfo()">
                     <option value="">Loading cases...</option>
                 </select>
                 <button type="button" class="refresh-btn" onclick="loadCases()">🔄 Refresh Cases</button>
+            </div>
+            
+            <div id="twitterAgentControls" class="case-selector" style="display: none;">
+                <button type="button" class="refresh-btn" onclick="runTwitterMonitoring()">🐦 Run Twitter Monitoring</button>
+                <button type="button" class="refresh-btn" onclick="getTwitterStats()">📊 Get Stats</button>
             </div>
             
             <div class="user-settings">
@@ -804,6 +817,93 @@
         window.onload = function() {
             loadCases();
         };
+
+        // Twitter Agent Functions
+        function switchAgent() {
+            const agentSelect = document.getElementById('agentSelect');
+            const caseAgentControls = document.getElementById('caseAgentControls');
+            const twitterAgentControls = document.getElementById('twitterAgentControls');
+            const messagesContainer = document.getElementById('messagesContainer');
+            
+            if (agentSelect.value === 'twitter') {
+                caseAgentControls.style.display = 'none';
+                twitterAgentControls.style.display = 'block';
+                messagesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>🐦 Twitter Agent</h3>
+                        <p>Monitor guardian Twitter accounts and analyze tweets for case updates.</p>
+                        <p>Click "Run Twitter Monitoring" to start analyzing tweets.</p>
+                    </div>
+                `;
+            } else {
+                caseAgentControls.style.display = 'block';
+                twitterAgentControls.style.display = 'none';
+                messagesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h3>👋 Welcome to TotoAI!</h3>
+                        <p>Select a case from the sidebar to start chatting with our AI agent about pet rescue cases.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function runTwitterMonitoring() {
+            addMessage('system', 'Starting Twitter monitoring cycle...');
+            addLoadingMessage();
+            
+            try {
+                const result = await fetch(`${API_BASE}/api/twitter/monitor`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await result.json();
+                removeLoadingMessage();
+                
+                if (data.success) {
+                    addMessage('agent', `Twitter monitoring completed! ${data.message}`, [], 'twitter');
+                    if (data.analysisResults && data.analysisResults.length > 0) {
+                        data.analysisResults.forEach(analysis => {
+                            if (analysis.isCaseRelated) {
+                                addMessage('agent', `📝 Case-related tweet detected: ${analysis.suggestedAction}`, [], 'twitter');
+                            }
+                        });
+                    }
+                } else {
+                    addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`, [], 'twitter');
+                }
+            } catch (error) {
+                removeLoadingMessage();
+                addMessage('agent', `Network Error: ${error.message}`, [], 'twitter');
+            }
+        }
+
+        async function getTwitterStats() {
+            addMessage('system', 'Fetching Twitter agent statistics...');
+            addLoadingMessage();
+            
+            try {
+                const result = await fetch(`${API_BASE}/api/twitter/stats`);
+                const data = await result.json();
+                removeLoadingMessage();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    addMessage('agent', `📊 Twitter Agent Stats:
+• Guardians Monitored: ${stats.guardiansMonitored}
+• Total Tweets Analyzed: ${stats.totalTweetsAnalyzed}
+• Case Updates Created: ${stats.totalCaseUpdatesCreated}
+• Last Run: ${stats.lastRun ? new Date(stats.lastRun).toLocaleString() : 'Never'}`, [], 'twitter');
+                } else {
+                    addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`, [], 'twitter');
+                }
+            } catch (error) {
+                removeLoadingMessage();
+                addMessage('agent', `Network Error: ${error.message}`, [], 'twitter');
+            }
+        }
     </script>
 </body>
 </html>

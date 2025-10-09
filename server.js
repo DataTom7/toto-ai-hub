@@ -76,6 +76,57 @@ app.get('/api/agents', (req, res) => {
   }
 });
 
+// Get Twitter agent monitoring stats
+app.get('/api/twitter/stats', (req, res) => {
+  try {
+    const twitterAgent = totoAI.getTwitterAgent();
+    const stats = twitterAgent.getMonitoringStats();
+    res.json({ success: true, stats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Run Twitter monitoring cycle
+app.post('/api/twitter/monitor', async (req, res) => {
+  try {
+    const twitterAgent = totoAI.getTwitterAgent();
+    
+    // TODO: Initialize with real Twitter credentials and guardians
+    // For now, we'll use mock data
+    const mockCredentials = {
+      apiKey: 'mock_key',
+      apiSecret: 'mock_secret',
+      accessToken: 'mock_token',
+      accessTokenSecret: 'mock_token_secret'
+    };
+    
+    const mockGuardians = [
+      {
+        id: 'guardian_1',
+        name: 'Maria Fernandez',
+        twitterHandle: 'maria_fernandez',
+        twitterUserId: '123456789',
+        isActive: true,
+        lastTweetFetch: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+    
+    await twitterAgent.initialize(mockCredentials, mockGuardians);
+    const result = await twitterAgent.runMonitoringCycle();
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error running Twitter monitoring:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 // Get cases from toto-app-stg
 app.get('/api/cases', async (req, res) => {
   try {

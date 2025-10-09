@@ -3,6 +3,7 @@
 // Agents
 export { BaseAgent } from './agents/BaseAgent';
 export { CaseAgent } from './agents/CaseAgent';
+export { TwitterAgent } from './agents/TwitterAgent';
 
 // Types
 export * from './types';
@@ -13,14 +14,17 @@ export * from './types';
 
 // Import for internal use
 import { CaseAgent } from './agents/CaseAgent';
+import { TwitterAgent } from './agents/TwitterAgent';
 import { AgentConfig } from './types';
 
 // Main class for easy integration
 export class TotoAI {
   private caseAgent: CaseAgent;
+  private twitterAgent: TwitterAgent;
 
   constructor() {
     this.caseAgent = new CaseAgent();
+    this.twitterAgent = new TwitterAgent();
   }
 
   /**
@@ -28,6 +32,13 @@ export class TotoAI {
    */
   getCaseAgent(): CaseAgent {
     return this.caseAgent;
+  }
+
+  /**
+   * Get the Twitter agent
+   */
+  getTwitterAgent(): TwitterAgent {
+    return this.twitterAgent;
   }
 
   /**
@@ -53,6 +64,7 @@ export class TotoAI {
   getAvailableAgents(): AgentConfig[] {
     return [
       this.caseAgent.getAgentInfo(),
+      this.twitterAgent.getAgentInfo(),
     ];
   }
 }
