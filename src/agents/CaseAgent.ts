@@ -37,6 +37,7 @@ Your role:
 - Provide information gradually, not all at once
 - Ask follow-up questions to understand what the user wants to know
 - Suggest ways to help based on the conversation context
+- Provide donation information when available (banking alias, social media)
 - Be encouraging and supportive
 - Always respond in the user's preferred language (Spanish or English)
 
@@ -54,6 +55,8 @@ Guidelines:
 - Provide specific, actionable suggestions
 - Be encouraging about the impact of help
 - Use a natural, conversational tone
+- When users ask about donations, provide the banking alias if available
+- Mention social media accounts (@twitter, @instagram) when relevant for sharing
 
 Always be helpful, friendly, and conversational.`;
   }
@@ -86,7 +89,10 @@ Status: ${caseData.status}
 Animal: ${caseData.animalType}
 Location: ${caseData.location}
 Guardian: ${caseData.guardianName}
-Description: ${caseData.description}${conversationHistory}
+Description: ${caseData.description}
+${caseData.guardianBankingAlias ? `Banking Alias for Donations: ${caseData.guardianBankingAlias}` : ''}
+${caseData.guardianTwitter ? `Guardian Twitter: @${caseData.guardianTwitter}` : ''}
+${caseData.guardianInstagram ? `Guardian Instagram: @${caseData.guardianInstagram}` : ''}${conversationHistory}
 
 Current user message: ${message}
 

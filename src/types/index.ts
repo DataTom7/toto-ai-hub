@@ -14,6 +14,10 @@ export interface CaseData {
   imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
+  // Guardian information for donations and social media
+  guardianBankingAlias?: string;
+  guardianTwitter?: string;
+  guardianInstagram?: string;
 }
 
 export interface UserContext {

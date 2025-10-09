@@ -86,8 +86,29 @@ app.get('/api/cases', async (req, res) => {
       .get();
     
     const cases = [];
-    casesSnapshot.forEach(doc => {
+    
+    // Process cases and fetch guardian information
+    for (const doc of casesSnapshot.docs) {
       const caseData = doc.data();
+      
+      // Fetch guardian information if guardianId exists
+      let guardianInfo = {};
+      if (caseData.guardianId) {
+        try {
+          const guardianDoc = await db.collection('users').doc(caseData.guardianId).get();
+          if (guardianDoc.exists) {
+            const guardianData = guardianDoc.data();
+            guardianInfo = {
+              guardianBankingAlias: guardianData.bankingAccountAlias,
+              guardianTwitter: guardianData.contactInfo?.socialLinks?.twitter,
+              guardianInstagram: guardianData.contactInfo?.socialLinks?.instagram
+            };
+          }
+        } catch (guardianError) {
+          console.warn(`Could not fetch guardian info for case ${doc.id}:`, guardianError.message);
+        }
+      }
+      
       cases.push({
         id: doc.id,
         name: caseData.name || 'Unnamed Case',
@@ -99,9 +120,10 @@ app.get('/api/cases', async (req, res) => {
         targetAmount: caseData.targetAmount || 0,
         currentAmount: caseData.currentAmount || 0,
         createdAt: caseData.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        updatedAt: caseData.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
+        updatedAt: caseData.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        ...guardianInfo
       });
-    });
+    }
     
     res.json({ success: true, cases });
   } catch (error) {
