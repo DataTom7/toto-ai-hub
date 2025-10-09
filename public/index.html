@@ -215,7 +215,15 @@
                 
                 <div class="form-group">
                     <label for="caseMessage">Message:</label>
-                    <textarea id="caseMessage" placeholder="Ask about this case...">Tell me about this case and how I can help</textarea>
+                    <textarea id="caseMessage" placeholder="Ask about this case...">Hola, ¿cómo está Rocky?</textarea>
+                </div>
+                
+                <!-- Conversation History -->
+                <div class="form-group">
+                    <label>Conversation History:</label>
+                    <div id="conversationHistory" style="height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; padding: 10px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px;">
+                        <div style="color: #666; font-style: italic;">Conversation will appear here...</div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -235,7 +243,8 @@
                     </select>
                 </div>
                 
-                <button class="btn" onclick="testCaseAgent()">Test Case Agent</button>
+                <button class="btn" onclick="sendMessage()">💬 Send Message</button>
+                <button class="btn" onclick="clearConversation()" style="background: #dc3545; margin-left: 10px;">🗑️ Clear Conversation</button>
                 
                 <div class="loading" id="caseLoading">
                     <div class="spinner"></div>
@@ -263,110 +272,6 @@
     <script>
         const API_BASE = window.location.origin;
         
-        async function testCaseAgent() {
-            const message = document.getElementById('caseMessage').value;
-            const userRole = document.getElementById('userRole').value;
-            const language = document.getElementById('language').value;
-            
-            if (!message.trim()) {
-                alert('Please enter a message');
-                return;
-            }
-            
-            const loading = document.getElementById('caseLoading');
-            const response = document.getElementById('caseResponse');
-            
-            loading.style.display = 'block';
-            response.innerHTML = '';
-            
-            try {
-                // Get selected case from dropdown
-                const caseSelect = document.getElementById('caseSelect');
-                const selectedIndex = caseSelect.value;
-                
-                if (selectedIndex === '' || !availableCases[selectedIndex]) {
-                    alert('Please select a case first');
-                    return;
-                }
-                
-                const caseData = availableCases[selectedIndex];
-                
-                const userContext = {
-                    userId: 'test-user-789',
-                    userRole: userRole,
-                    language: language,
-                    location: 'Madrid',
-                    preferences: {
-                        notifications: true,
-                        communicationStyle: 'casual'
-                    }
-                };
-                
-                const result = await fetch(`${API_BASE}/api/case`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message,
-                        caseData,
-                        userContext
-                    })
-                });
-                
-                const data = await result.json();
-                
-                loading.style.display = 'none';
-                
-                if (data.success) {
-                    response.innerHTML = `
-                        <div class="response success">
-                            <strong>Response:</strong><br>
-                            ${data.message}
-                            
-                            ${data.actions && data.actions.length > 0 ? `
-                                <div class="actions">
-                                    <strong>Available Actions:</strong><br>
-                                    ${data.actions.map(action => 
-                                        `<a href="#" class="action-btn" onclick="alert('${action.description}')">${action.label}</a>`
-                                    ).join('')}
-                                </div>
-                            ` : ''}
-                            
-                            ${data.suggestions && data.suggestions.length > 0 ? `
-                                <div class="suggestions">
-                                    <h4>Suggestions:</h4>
-                                    <ul>
-                                        ${data.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
-                                    </ul>
-                                </div>
-                            ` : ''}
-                            
-                            <br><br>
-                            <strong>Metadata:</strong><br>
-                            Agent: ${data.metadata?.agentType}<br>
-                            Confidence: ${data.metadata?.confidence}<br>
-                            Processing Time: ${data.metadata?.processingTime}ms
-                        </div>
-                    `;
-                } else {
-                    response.innerHTML = `
-                        <div class="response error">
-                            <strong>Error:</strong><br>
-                            ${data.error || 'Unknown error occurred'}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                loading.style.display = 'none';
-                response.innerHTML = `
-                    <div class="response error">
-                        <strong>Network Error:</strong><br>
-                        ${error.message}
-                    </div>
-                `;
-            }
-        }
         
         async function loadAgents() {
             const loading = document.getElementById('agentsLoading');
@@ -414,8 +319,10 @@
             }
         }
         
-        // Global variable to store cases
+        // Global variables
         let availableCases = [];
+        let conversationHistory = [];
+        let currentCase = null;
         
         async function loadCases() {
             try {
@@ -461,17 +368,179 @@
             const selectedIndex = caseSelect.value;
             
             if (selectedIndex === '' || !availableCases[selectedIndex]) {
+                currentCase = null;
                 return;
             }
             
             const selectedCase = availableCases[selectedIndex];
+            currentCase = selectedCase;
             
             // Update the message placeholder with case-specific text
             const messageTextarea = document.getElementById('caseMessage');
             messageTextarea.placeholder = `Ask about ${selectedCase.name}...`;
             
-            // You could also display case info somewhere on the page
+            // Clear conversation when switching cases
+            clearConversation();
+            
             console.log('Selected case:', selectedCase);
+        }
+        
+        function addToConversation(sender, message, timestamp = new Date()) {
+            const conversationDiv = document.getElementById('conversationHistory');
+            
+            // Remove the placeholder if it exists
+            const placeholder = conversationDiv.querySelector('div[style*="color: #666"]');
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.style.marginBottom = '10px';
+            messageDiv.style.padding = '8px';
+            messageDiv.style.borderRadius = '8px';
+            messageDiv.style.maxWidth = '80%';
+            
+            if (sender === 'user') {
+                messageDiv.style.backgroundColor = '#007bff';
+                messageDiv.style.color = 'white';
+                messageDiv.style.marginLeft = 'auto';
+                messageDiv.innerHTML = `<strong>You:</strong> ${message}`;
+            } else {
+                messageDiv.style.backgroundColor = '#f8f9fa';
+                messageDiv.style.border = '1px solid #dee2e6';
+                messageDiv.innerHTML = `<strong>Toto:</strong> ${message}`;
+            }
+            
+            conversationDiv.appendChild(messageDiv);
+            conversationDiv.scrollTop = conversationDiv.scrollHeight;
+            
+            // Store in conversation history
+            conversationHistory.push({
+                sender,
+                message,
+                timestamp: timestamp.toISOString()
+            });
+        }
+        
+        function clearConversation() {
+            conversationHistory = [];
+            const conversationDiv = document.getElementById('conversationHistory');
+            conversationDiv.innerHTML = '<div style="color: #666; font-style: italic;">Conversation will appear here...</div>';
+        }
+        
+        async function sendMessage() {
+            const message = document.getElementById('caseMessage').value.trim();
+            const userRole = document.getElementById('userRole').value;
+            const language = document.getElementById('language').value;
+            
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+            
+            if (!currentCase) {
+                alert('Please select a case first');
+                return;
+            }
+            
+            const loading = document.getElementById('caseLoading');
+            const response = document.getElementById('caseResponse');
+            
+            // Add user message to conversation
+            addToConversation('user', message);
+            
+            // Clear the input
+            document.getElementById('caseMessage').value = '';
+            
+            loading.style.display = 'block';
+            response.innerHTML = '';
+            
+            try {
+                const userContext = {
+                    userId: 'test-user-789',
+                    userRole: userRole,
+                    language: language,
+                    location: currentCase.location || 'Unknown',
+                    preferences: {
+                        notifications: true,
+                        communicationStyle: 'conversational'
+                    }
+                };
+                
+                const result = await fetch(`${API_BASE}/api/case`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message,
+                        caseData: currentCase,
+                        userContext,
+                        conversationContext: {
+                            history: conversationHistory,
+                            isConversational: true
+                        }
+                    })
+                });
+                
+                const data = await result.json();
+                
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    // Add agent response to conversation
+                    addToConversation('agent', data.message);
+                    
+                    // Show detailed response in the response area
+                    response.innerHTML = `
+                        <div class="response success">
+                            <strong>Agent Response:</strong><br>
+                            ${data.message}
+                            
+                            ${data.actions && data.actions.length > 0 ? `
+                                <div class="actions">
+                                    <strong>Available Actions:</strong><br>
+                                    ${data.actions.map(action => 
+                                        `<a href="#" class="action-btn" onclick="alert('${action.description}')">${action.label}</a>`
+                                    ).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            ${data.suggestions && data.suggestions.length > 0 ? `
+                                <div class="suggestions">
+                                    <h4>Suggestions:</h4>
+                                    <ul>
+                                        ${data.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            
+                            <br><br>
+                            <strong>Metadata:</strong><br>
+                            Agent: ${data.metadata?.agentType}<br>
+                            Confidence: ${data.metadata?.confidence}<br>
+                            Processing Time: ${data.metadata?.processingTime}ms
+                        </div>
+                    `;
+                } else {
+                    addToConversation('agent', `Error: ${data.error || 'Unknown error occurred'}`);
+                    response.innerHTML = `
+                        <div class="response error">
+                            <strong>Error:</strong><br>
+                            ${data.error || 'Unknown error occurred'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                addToConversation('agent', `Network Error: ${error.message}`);
+                response.innerHTML = `
+                    <div class="response error">
+                        <strong>Network Error:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
         }
         
         // Load agents and cases on page load

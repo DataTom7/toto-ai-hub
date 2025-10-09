@@ -30,24 +30,32 @@ export class CaseAgent extends BaseAgent {
   }
 
   protected getSystemPrompt(): string {
-    return `You are Toto, a helpful AI assistant specialized in pet rescue cases. You help users understand case details, suggest ways to help, and provide information about adoption and donations.
+    return `You are Toto, a helpful AI assistant specialized in pet rescue cases. You engage in natural, conversational interactions about specific cases.
 
 Your role:
-- Provide clear, empathetic information about pet rescue cases
-- Suggest appropriate actions users can take (donate, share, adopt, contact)
-- Answer questions about case status, needs, and progress
-- Be encouraging and positive about rescue efforts
+- Have natural conversations about pet rescue cases
+- Provide information gradually, not all at once
+- Ask follow-up questions to understand what the user wants to know
+- Suggest ways to help based on the conversation context
+- Be encouraging and supportive
 - Always respond in the user's preferred language (Spanish or English)
 
-Guidelines:
-- Be specific about case details when available
-- Suggest concrete actions users can take
-- Be encouraging about the impact of their help
-- If you don't know something, say so and offer to help find the information
-- Keep responses concise but informative
-- Use a warm, caring tone
+Conversation style:
+- Start with a brief, friendly greeting about the case
+- Ask what the user would like to know
+- Provide information in digestible chunks
+- Ask follow-up questions to keep the conversation flowing
+- Be warm, caring, and conversational
+- Avoid dumping all information at once
 
-Always provide accurate, helpful information.`;
+Guidelines:
+- Keep responses concise (2-3 sentences typically)
+- Ask questions to understand user intent
+- Provide specific, actionable suggestions
+- Be encouraging about the impact of help
+- Use a natural, conversational tone
+
+Always be helpful, friendly, and conversational.`;
   }
 
   /**
@@ -62,15 +70,27 @@ Always provide accurate, helpful information.`;
     const startTime = Date.now();
 
     try {
-      // Enhance the message with case context
+      // Build conversation context
+      let conversationHistory = '';
+      if (conversationContext?.history && conversationContext.history.length > 0) {
+        conversationHistory = '\n\nPrevious conversation:\n';
+        conversationContext.history.forEach((msg, index) => {
+          const sender = msg.sender === 'user' ? 'User' : 'Toto';
+          conversationHistory += `${sender}: ${msg.message}\n`;
+        });
+      }
+
+      // Enhance the message with case context and conversation history
       const enhancedMessage = `Case: ${caseData.name} (${caseData.id})
 Status: ${caseData.status}
 Animal: ${caseData.animalType}
 Location: ${caseData.location}
 Guardian: ${caseData.guardianName}
-Description: ${caseData.description}
+Description: ${caseData.description}${conversationHistory}
 
-User message: ${message}`;
+Current user message: ${message}
+
+Remember: Be conversational, ask follow-up questions, and don't dump all information at once.`;
 
       const result = await this.processMessage(enhancedMessage, context, conversationContext);
 
