@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TotoAI - Chat Interface</title>
+    <!-- Cache bust: 2025-10-09-07-35 -->
     <style>
         * {
             margin: 0;
@@ -434,10 +435,21 @@
                 <button type="button" class="refresh-btn" onclick="loadCases()">🔄 Refresh Cases</button>
             </div>
             
-            <div id="twitterAgentControls" class="case-selector" style="display: none;">
-                <button type="button" class="refresh-btn" onclick="runTwitterMonitoring()">🐦 Run Twitter Monitoring</button>
-                <button type="button" class="refresh-btn" onclick="getTwitterStats()">📊 Get Stats</button>
-            </div>
+                <div id="twitterAgentControls" class="case-selector" style="display: none;">
+                    <label for="guardianSelect">Select Guardian:</label>
+                    <select id="guardianSelect">
+                        <option value="">Loading guardians...</option>
+                    </select>
+                    <button type="button" class="refresh-btn" onclick="loadGuardians()">🔄 Refresh Guardians</button>
+                    
+                    <div class="twitter-test-controls" style="margin-top: 15px;">
+                        <button type="button" class="refresh-btn" onclick="simulateTweetFetch()">🧪 Simulate Tweet Fetch</button>
+                        <button type="button" class="refresh-btn" onclick="fetchRealTweets()">🐦 Fetch Real Tweets</button>
+                        <button type="button" class="refresh-btn" onclick="runTwitterMonitoring()">🔄 Run Twitter Monitoring</button>
+                        <button type="button" class="refresh-btn" onclick="getTwitterStats()">📊 Get Stats</button>
+                        <button type="button" class="refresh-btn" onclick="getReviewQueue()">📋 Review Queue</button>
+                    </div>
+                </div>
             
             <div class="user-settings">
                 <label for="userRole">Your Role:</label>
@@ -496,8 +508,10 @@
         
         // Global variables
         let availableCases = [];
+        let availableGuardians = [];
         let conversationHistory = [];
         let currentCase = null;
+        let currentGuardian = null;
         let isLoading = false;
         
         // DOM elements
@@ -591,8 +605,12 @@
             // Clear conversation when switching cases
             clearConversation();
             
-            // Send a special message to get case summary
-            sendInitialCaseSummary(selectedCase);
+            // Only send case summary if Case Agent is selected
+            const agentSelect = document.getElementById('agentSelect');
+            if (agentSelect.value === 'case') {
+                // Send a special message to get case summary
+                sendInitialCaseSummary(selectedCase);
+            }
             
             updateSendButton();
         }
@@ -610,7 +628,16 @@
             messageDiv.className = `message ${sender}`;
             
             const avatar = sender === 'user' ? '👤' : '🤖';
-            const timeStr = timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            // Ensure timestamp is a Date object
+            let dateObj;
+            if (timestamp instanceof Date) {
+                dateObj = timestamp;
+            } else if (timestamp && !isNaN(new Date(timestamp).getTime())) {
+                dateObj = new Date(timestamp);
+            } else {
+                dateObj = new Date();
+            }
+            const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
             let actionsHtml = '';
             if (actions && actions.length > 0) {
@@ -816,6 +843,8 @@
         // Load cases on page load
         window.onload = function() {
             loadCases();
+            // Add guardian selection event listener
+            document.getElementById('guardianSelect').addEventListener('change', updateCurrentGuardian);
         };
 
         // Twitter Agent Functions
@@ -832,9 +861,11 @@
                     <div class="empty-state">
                         <h3>🐦 Twitter Agent</h3>
                         <p>Monitor guardian Twitter accounts and analyze tweets for case updates.</p>
-                        <p>Click "Run Twitter Monitoring" to start analyzing tweets.</p>
+                        <p>Select a guardian and click "Simulate Tweet Fetch" to test the agent with mock tweets.</p>
                     </div>
                 `;
+                // Load guardians when switching to Twitter Agent
+                loadGuardians();
             } else {
                 caseAgentControls.style.display = 'block';
                 twitterAgentControls.style.display = 'none';
@@ -863,47 +894,291 @@
                 removeLoadingMessage();
                 
                 if (data.success) {
-                    addMessage('agent', `Twitter monitoring completed! ${data.message}`, [], 'twitter');
+                    addMessage('agent', `Twitter monitoring completed! ${data.message}`);
                     if (data.analysisResults && data.analysisResults.length > 0) {
                         data.analysisResults.forEach(analysis => {
                             if (analysis.isCaseRelated) {
-                                addMessage('agent', `📝 Case-related tweet detected: ${analysis.suggestedAction}`, [], 'twitter');
+                                addMessage('agent', `📝 Case-related tweet detected: ${analysis.suggestedAction}`);
                             }
                         });
                     }
                 } else {
-                    addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`, [], 'twitter');
+                    addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`);
                 }
             } catch (error) {
                 removeLoadingMessage();
-                addMessage('agent', `Network Error: ${error.message}`, [], 'twitter');
+                addMessage('agent', `Network Error: ${error.message}`);
             }
         }
 
-        async function getTwitterStats() {
-            addMessage('system', 'Fetching Twitter agent statistics...');
-            addLoadingMessage();
-            
-            try {
-                const result = await fetch(`${API_BASE}/api/twitter/stats`);
-                const data = await result.json();
-                removeLoadingMessage();
+            async function getTwitterStats() {
+                addMessage('system', 'Fetching Twitter agent statistics...');
+                addLoadingMessage();
                 
-                if (data.success) {
-                    const stats = data.stats;
-                    addMessage('agent', `📊 Twitter Agent Stats:
+                try {
+                    const result = await fetch(`${API_BASE}/api/twitter/stats`);
+                    const data = await result.json();
+                    removeLoadingMessage();
+                    
+                    if (data.success) {
+                        const stats = data.stats;
+                        const reviewStatus = stats.reviewQueueStatus;
+                        addMessage('agent', `📊 Twitter Agent Stats:
 • Guardians Monitored: ${stats.guardiansMonitored}
 • Total Tweets Analyzed: ${stats.totalTweetsAnalyzed}
 • Case Updates Created: ${stats.totalCaseUpdatesCreated}
+• Cases Created Today: ${stats.casesCreatedToday}/${stats.maxCasesPerDay}
+• Manual Review Required: ${stats.requireApproval ? 'Yes' : 'No'}
+• Review Queue: ${reviewStatus.pendingItems} pending, ${reviewStatus.autoApprovedItems} auto-approved
 • Last Run: ${stats.lastRun ? new Date(stats.lastRun).toLocaleString() : 'Never'}`, [], 'twitter');
-                } else {
-                    addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`, [], 'twitter');
+                    } else {
+                        addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`);
+                    }
+                } catch (error) {
+                    removeLoadingMessage();
+                    addMessage('agent', `Network Error: ${error.message}`);
                 }
-            } catch (error) {
-                removeLoadingMessage();
-                addMessage('agent', `Network Error: ${error.message}`, [], 'twitter');
             }
-        }
+
+            async function getReviewQueue() {
+                addMessage('system', 'Fetching review queue status...');
+                addLoadingMessage();
+                
+                try {
+                    const result = await fetch(`${API_BASE}/api/twitter/review-queue`);
+                    const data = await result.json();
+                    removeLoadingMessage();
+                    
+                    if (data.success) {
+                        const reviewStatus = data.reviewStatus;
+                        addMessage('agent', `📋 Review Queue Status:
+• Total Items: ${reviewStatus.totalItems}
+• Pending Review: ${reviewStatus.pendingItems}
+• Auto-Approved: ${reviewStatus.autoApprovedItems}
+• Approved: ${reviewStatus.approvedItems}
+• Rejected: ${reviewStatus.rejectedItems}
+
+By Type:
+${Object.entries(reviewStatus.itemsByType).map(([type, count]) => `• ${type}: ${count}`).join('\n')}
+
+By Urgency:
+${Object.entries(reviewStatus.itemsByUrgency).map(([urgency, count]) => `• ${urgency}: ${count}`).join('\n')}`, [], 'twitter');
+                    } else {
+                        addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`);
+                    }
+                } catch (error) {
+                    removeLoadingMessage();
+                    addMessage('agent', `Network Error: ${error.message}`);
+                }
+            }
+
+            // Guardian management functions
+            async function loadGuardians() {
+                try {
+                    const result = await fetch(`${API_BASE}/api/twitter/guardians`);
+                    const data = await result.json();
+                    
+                    if (data.success) {
+                        availableGuardians = data.guardians;
+                        updateGuardianSelect();
+                    } else {
+                        console.error('Error loading guardians:', data.error);
+                    }
+                } catch (error) {
+                    console.error('Error loading guardians:', error);
+                }
+            }
+
+            function updateGuardianSelect() {
+                const guardianSelect = document.getElementById('guardianSelect');
+                guardianSelect.innerHTML = '<option value="">Select a guardian...</option>';
+                
+                availableGuardians.forEach(guardian => {
+                    const option = document.createElement('option');
+                    option.value = guardian.id;
+                    option.textContent = `${guardian.name} (@${guardian.twitterHandle}) - ${guardian.isActive ? 'Active' : 'Inactive'}`;
+                    guardianSelect.appendChild(option);
+                });
+            }
+
+            function updateCurrentGuardian() {
+                const guardianSelect = document.getElementById('guardianSelect');
+                const selectedGuardianId = guardianSelect.value;
+                currentGuardian = availableGuardians.find(g => g.id === selectedGuardianId);
+            }
+
+            // Twitter Agent testing functions
+            async function simulateTweetFetch() {
+                if (!currentGuardian) {
+                    addMessage('agent', 'Please select a guardian first!');
+                    return;
+                }
+
+                addMessage('system', `Simulating tweet fetch for ${currentGuardian.name}...`);
+                addLoadingMessage();
+                
+                try {
+                    const result = await fetch(`${API_BASE}/api/twitter/simulate-fetch`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            guardianId: currentGuardian.id,
+                            limit: 3
+                        })
+                    });
+                    
+                    const data = await result.json();
+                    removeLoadingMessage();
+                    
+                    if (data.success) {
+                        addMessage('agent', `🧪 Tweet Simulation Results for ${currentGuardian.name}:
+• Tweets Fetched: ${data.tweets.length}
+• Analysis Results: ${data.analysisResults.length}
+• Proposed Actions: ${data.proposedActions.length}`, [], 'twitter');
+
+                        // Display each tweet and its analysis
+                        data.tweets.forEach((tweet, index) => {
+                            const analysis = data.analysisResults[index];
+                            const proposedAction = data.proposedActions.find(action => action.tweetId === tweet.id);
+                            
+                            let message = `📱 Tweet ${index + 1}:
+"${tweet.content}"
+
+📊 Analysis:
+• Case Related: ${analysis.isCaseRelated ? 'Yes' : 'No'}
+• Urgency: ${analysis.urgency}
+• Confidence: ${(analysis.confidence * 100).toFixed(1)}%
+• Suggested Action: ${analysis.suggestedAction}`;
+
+                            if (proposedAction) {
+                                message += `
+
+🎯 Proposed Action:
+• Type: ${proposedAction.type}
+• Status: ${proposedAction.status}
+• Action: ${proposedAction.proposedAction.action}`;
+                            }
+
+                            if (tweet.media.images.length > 0) {
+                                message += `
+
+🖼️ Images: ${tweet.media.images.length} image(s) detected`;
+                            }
+
+                            addMessage('agent', message);
+                        });
+
+                        // Show review items if any
+                        if (data.proposedActions.length > 0) {
+                            addMessage('agent', `📋 Review Items Created: ${data.proposedActions.length} items added to review queue for manual approval.`);
+                        }
+                    } else {
+                        addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`);
+                    }
+                } catch (error) {
+                    removeLoadingMessage();
+                    addMessage('agent', `Network Error: ${error.message}`);
+                }
+            }
+
+            async function fetchRealTweets() {
+                if (!currentGuardian) {
+                    addMessage('agent', 'Please select a guardian first!');
+                    return;
+                }
+
+                addMessage('system', `Fetching real tweets for ${currentGuardian.name}...`);
+                addLoadingMessage();
+                
+                try {
+                    const result = await fetch(`${API_BASE}/api/twitter/fetch-real-tweets`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            guardianId: currentGuardian.id,
+                            limit: 3
+                            // No credentials needed - server will use environment variables
+                        })
+                    });
+                    
+                    const data = await result.json();
+                    removeLoadingMessage();
+                    
+                    if (data.success) {
+                        addMessage('agent', `🐦 Real Tweet Fetch Results for ${currentGuardian.name}:
+• Tweets Fetched: ${data.tweets.length}
+• Analysis Results: ${data.analysisResults.length}
+• Proposed Actions: ${data.proposedActions.length}`, [], 'twitter');
+
+                        // Display each tweet and its analysis
+                        data.tweets.forEach((tweet, index) => {
+                            const analysis = data.analysisResults[index];
+                            const proposedAction = data.proposedActions.find(action => action.tweetId === tweet.id);
+                            
+                            let message = `📱 Real Tweet ${index + 1}:
+"${tweet.content}"
+
+📊 Analysis:
+• Case Related: ${analysis.isCaseRelated ? 'Yes' : 'No'}
+• Urgency: ${analysis.urgency}
+• Confidence: ${(analysis.confidence * 100).toFixed(1)}%
+• Suggested Action: ${analysis.suggestedAction}`;
+
+                            if (proposedAction) {
+                                message += `
+
+🎯 Proposed Action:
+• Type: ${proposedAction.type}
+• Status: ${proposedAction.status}
+• Action: ${proposedAction.proposedAction.action}`;
+                            }
+
+                            if (tweet.media.images.length > 0) {
+                                message += `
+
+🖼️ Images: ${tweet.media.images.length} image(s) detected`;
+                            }
+
+                            addMessage('agent', message);
+                        });
+
+                        // Show review items if any
+                        if (data.proposedActions.length > 0) {
+                            addMessage('agent', `📋 Review Items Created: ${data.proposedActions.length} items added to review queue for manual approval.`);
+                        }
+                    } else {
+                        addMessage('agent', `Error: ${data.error || 'Unknown error occurred'}`);
+                    }
+                } catch (error) {
+                    removeLoadingMessage();
+                    addMessage('agent', `Network Error: ${error.message}`);
+                }
+            }
+
+            function promptForTwitterCredentials() {
+                const apiKey = prompt('Enter Twitter API Key:');
+                if (!apiKey) return null;
+                
+                const apiSecret = prompt('Enter Twitter API Secret:');
+                if (!apiSecret) return null;
+                
+                const accessToken = prompt('Enter Twitter Access Token:');
+                if (!accessToken) return null;
+                
+                const accessTokenSecret = prompt('Enter Twitter Access Token Secret:');
+                if (!accessTokenSecret) return null;
+                
+                return {
+                    apiKey: apiKey.trim(),
+                    apiSecret: apiSecret.trim(),
+                    accessToken: accessToken.trim(),
+                    accessTokenSecret: accessTokenSecret.trim()
+                };
+            }
     </script>
 </body>
 </html>
