@@ -74,6 +74,10 @@ const totoAI = new TotoAI();
 // Initialize Scheduler Service
 const schedulerService = new SchedulerService(totoAI);
 
+// Initialize API Gateway
+const { TotoAPIGateway } = require('./dist/gateway/TotoAPIGateway');
+const apiGateway = new TotoAPIGateway();
+
 // Serve the main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -828,6 +832,566 @@ app.post('/api/case', async (req, res) => {
     });
   }
 });
+
+// ===== AI API GATEWAY ENDPOINTS =====
+// These endpoints are used by toto-bo AI Hub dashboard
+
+// Get analytics data
+app.get('/api/ai/insights', async (req, res) => {
+  try {
+    const analytics = await apiGateway.getAnalytics();
+    res.json(analytics);
+  } catch (error) {
+    console.error('Error fetching AI insights:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Enhanced analytics endpoint
+app.get('/api/ai/analytics', async (req, res) => {
+  try {
+    const { timeRange = '7d', agentType = 'case-agent', includeDetails = false } = req.query;
+    
+    // Get analytics from the enhanced Case Agent
+    const caseAgent = totoAI.getCaseAgent();
+    const analytics = caseAgent.getAnalytics();
+    
+    // Add additional computed metrics
+    const enhancedAnalytics = {
+      ...analytics,
+      metadata: {
+        timeRange,
+        agentType,
+        includeDetails,
+        timestamp: new Date().toISOString(),
+        source: 'toto-ai-hub'
+      },
+      computed: {
+        successRate: analytics.totalInteractions > 0 ? 
+          (analytics.successfulInteractions / analytics.totalInteractions * 100).toFixed(2) : 0,
+        averageResponseTimeFormatted: `${analytics.averageResponseTime}ms`,
+        userEngagementScore: calculateEngagementScore(analytics.userEngagementDistribution),
+        topActionCategory: analytics.topActions?.[0]?.action || 'none'
+      }
+    };
+    
+    res.json(enhancedAnalytics);
+  } catch (error) {
+    console.error('Error fetching enhanced analytics:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Analytics feedback endpoint
+app.post('/api/ai/analytics/feedback', async (req, res) => {
+  try {
+    const { sessionId, userId, action, satisfaction, feedback, metadata } = req.body;
+    
+    if (!sessionId || !userId || !action) {
+      return res.status(400).json({
+        error: 'sessionId, userId, and action are required',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Store feedback (in a real implementation, this would be stored in a database)
+    console.log('📊 Analytics feedback received:', {
+      sessionId,
+      userId,
+      action,
+      satisfaction,
+      feedback,
+      timestamp: new Date().toISOString()
+    });
+    
+    res.json({
+      success: true,
+      message: 'Feedback recorded successfully',
+      metadata: {
+        sessionId,
+        userId,
+        action,
+        satisfaction,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error processing analytics feedback:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Get available agents
+app.get('/api/ai/agents', async (req, res) => {
+  try {
+    const agents = await apiGateway.getAgents();
+    res.json(agents);
+  } catch (error) {
+    console.error('Error fetching AI agents:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get knowledge base
+app.get('/api/ai/knowledge', async (req, res) => {
+  try {
+    const knowledge = await apiGateway.getKnowledgeBase();
+    res.json(knowledge);
+  } catch (error) {
+    console.error('Error fetching knowledge base:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Add knowledge item
+app.post('/api/ai/knowledge', async (req, res) => {
+  try {
+    const { title, content, category } = req.body;
+    
+    if (!title || !content) {
+      return res.status(400).json({ error: 'Title and content are required' });
+    }
+
+    const newItem = await apiGateway.addKnowledgeItem(title, content, category);
+    res.status(201).json(newItem);
+  } catch (error) {
+    console.error('Error creating knowledge item:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Reset knowledge base
+app.post('/api/ai/knowledge/reset', async (req, res) => {
+  try {
+    await apiGateway.resetKnowledgeBase();
+    res.json({
+      success: true,
+      message: 'Knowledge base reset successfully',
+      resetAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error resetting knowledge base:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Test AI system
+app.post('/api/ai/test', async (req, res) => {
+  try {
+    const { message, agent, caseId, twitterHandle } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const testResponse = await apiGateway.testAI(message, agent, caseId, twitterHandle);
+    res.json(testResponse);
+  } catch (error) {
+    console.error('Error testing AI system:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Train agent
+app.post('/api/ai/train/:agentId', async (req, res) => {
+  try {
+    const { agentId } = req.params;
+    
+    if (!agentId) {
+      return res.status(400).json({ error: 'Agent ID is required' });
+    }
+
+    const trainingResult = await apiGateway.trainAgent(agentId);
+    res.json(trainingResult);
+  } catch (error) {
+    console.error('Error training agent:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Session management endpoints
+app.get('/api/ai/session/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { includeHistory = false, includeAnalytics = false } = req.query;
+    
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+    
+    // Get session data from Case Agent
+    const caseAgent = totoAI.getCaseAgent();
+    const sessionData = caseAgent.getConversationMemory(sessionId);
+    
+    if (!sessionData) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    // Enhance session data
+    const enhancedSessionData = {
+      ...sessionData,
+      metadata: {
+        sessionId,
+        includeHistory,
+        includeAnalytics,
+        timestamp: new Date().toISOString(),
+        source: 'toto-ai-hub'
+      },
+      computed: {
+        sessionDuration: sessionData.lastInteraction && sessionData.createdAt ? 
+          new Date(sessionData.lastInteraction).getTime() - new Date(sessionData.createdAt).getTime() : 0,
+        messageCount: sessionData.conversationHistory?.length || 0,
+        averageMessageLength: calculateAverageMessageLength(sessionData.conversationHistory),
+        userEngagementLevel: determineEngagementLevel(sessionData.conversationHistory),
+        sessionStatus: determineSessionStatus(sessionData.lastInteraction)
+      }
+    };
+    
+    res.json(enhancedSessionData);
+  } catch (error) {
+    console.error('Error fetching session data:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.put('/api/ai/session/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const updateData = req.body;
+    
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+    
+    // Update session data (in a real implementation, this would update the database)
+    console.log('📝 Session update received:', {
+      sessionId,
+      updateData,
+      timestamp: new Date().toISOString()
+    });
+    
+    res.json({
+      success: true,
+      message: 'Session updated successfully',
+      metadata: {
+        sessionId,
+        timestamp: new Date().toISOString(),
+        source: 'toto-ai-hub'
+      }
+    });
+  } catch (error) {
+    console.error('Error updating session:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.delete('/api/ai/session/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { archive = false } = req.query;
+    
+    if (!sessionId) {
+      return res.status(400).json({ error: 'Session ID is required' });
+    }
+    
+    // Delete/archive session (in a real implementation, this would update the database)
+    console.log('🗑️ Session deletion requested:', {
+      sessionId,
+      archive,
+      timestamp: new Date().toISOString()
+    });
+    
+    res.json({
+      success: true,
+      message: archive ? 'Session archived successfully' : 'Session deleted successfully',
+      metadata: {
+        sessionId,
+        archive,
+        timestamp: new Date().toISOString(),
+        source: 'toto-ai-hub'
+      }
+    });
+  } catch (error) {
+    console.error('Error deleting session:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// User profile management endpoints
+app.get('/api/ai/profile/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { includeHistory = false, includeAnalytics = false } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+    
+    // Get user profile from Case Agent
+    const caseAgent = totoAI.getCaseAgent();
+    const profileData = caseAgent.getUserProfile(userId);
+    
+    if (!profileData) {
+      return res.status(404).json({ error: 'User profile not found' });
+    }
+    
+    // Enhance profile data
+    const enhancedProfileData = {
+      ...profileData,
+      metadata: {
+        userId,
+        includeHistory,
+        includeAnalytics,
+        timestamp: new Date().toISOString(),
+        source: 'toto-ai-hub'
+      },
+      insights: {
+        totalInteractions: profileData.interactionHistory?.length || 0,
+        favoriteAnimalTypes: getFavoriteAnimalTypes(profileData.interactionHistory),
+        preferredActions: getPreferredActions(profileData.interactionHistory),
+        averageSatisfaction: calculateAverageSatisfaction(profileData.interactionHistory),
+        engagementTrend: calculateEngagementTrend(profileData.interactionHistory),
+        lastActiveDays: calculateDaysSinceLastActive(profileData.lastActive),
+        profileCompleteness: calculateProfileCompleteness(profileData)
+      }
+    };
+    
+    res.json(enhancedProfileData);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.put('/api/ai/profile/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const updateData = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+    
+    // Update user profile (in a real implementation, this would update the database)
+    console.log('👤 Profile update received:', {
+      userId,
+      updateData,
+      timestamp: new Date().toISOString()
+    });
+    
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      metadata: {
+        userId,
+        timestamp: new Date().toISOString(),
+        source: 'toto-ai-hub'
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.post('/api/ai/profile/:userId/interaction', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { caseId, actions, satisfaction, feedback, sessionId } = req.body;
+    
+    if (!userId || !caseId) {
+      return res.status(400).json({
+        error: 'User ID and case ID are required',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Add interaction to user profile (in a real implementation, this would update the database)
+    console.log('📊 Profile interaction received:', {
+      userId,
+      caseId,
+      actions,
+      satisfaction,
+      feedback,
+      sessionId,
+      timestamp: new Date().toISOString()
+    });
+    
+    res.json({
+      success: true,
+      message: 'Interaction recorded successfully',
+      metadata: {
+        userId,
+        caseId,
+        sessionId,
+        timestamp: new Date().toISOString(),
+        source: 'toto-ai-hub'
+      }
+    });
+  } catch (error) {
+    console.error('Error adding interaction to user profile:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Helper functions for analytics and session management
+function calculateEngagementScore(engagementDistribution) {
+  const total = engagementDistribution.low + engagementDistribution.medium + engagementDistribution.high;
+  if (total === 0) return 0;
+  
+  const score = (
+    (engagementDistribution.low * 1) + 
+    (engagementDistribution.medium * 2) + 
+    (engagementDistribution.high * 3)
+  ) / total;
+  
+  return Math.round(score * 100) / 100;
+}
+
+function calculateAverageMessageLength(conversationHistory) {
+  if (!conversationHistory || conversationHistory.length === 0) return 0;
+  
+  const totalLength = conversationHistory.reduce((sum, msg) => sum + (msg.message?.length || 0), 0);
+  return Math.round(totalLength / conversationHistory.length);
+}
+
+function determineEngagementLevel(conversationHistory) {
+  if (!conversationHistory || conversationHistory.length === 0) return 'low';
+  
+  const messageCount = conversationHistory.length;
+  const avgLength = calculateAverageMessageLength(conversationHistory);
+  
+  if (messageCount >= 10 && avgLength >= 50) return 'high';
+  if (messageCount >= 5 && avgLength >= 25) return 'medium';
+  return 'low';
+}
+
+function determineSessionStatus(lastInteraction) {
+  if (!lastInteraction) return 'ended';
+  
+  const lastInteractionTime = new Date(lastInteraction).getTime();
+  const now = Date.now();
+  const timeDiff = now - lastInteractionTime;
+  
+  // Consider session active if last interaction was within 30 minutes
+  if (timeDiff < 30 * 60 * 1000) return 'active';
+  // Consider session idle if last interaction was within 2 hours
+  if (timeDiff < 2 * 60 * 60 * 1000) return 'idle';
+  return 'ended';
+}
+
+function getFavoriteAnimalTypes(interactionHistory) {
+  if (!interactionHistory || interactionHistory.length === 0) return [];
+  
+  const animalTypeCounts = new Map();
+  
+  interactionHistory.forEach(interaction => {
+    // This would need to be enhanced to extract animal types from case data
+    // For now, return empty array
+  });
+  
+  return Array.from(animalTypeCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([type]) => type);
+}
+
+function getPreferredActions(interactionHistory) {
+  if (!interactionHistory || interactionHistory.length === 0) return [];
+  
+  const actionCounts = new Map();
+  
+  interactionHistory.forEach(interaction => {
+    if (interaction.actions) {
+      interaction.actions.forEach((action) => {
+        actionCounts.set(action, (actionCounts.get(action) || 0) + 1);
+      });
+    }
+  });
+  
+  return Array.from(actionCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([action]) => action);
+}
+
+function calculateAverageSatisfaction(interactionHistory) {
+  if (!interactionHistory || interactionHistory.length === 0) return 0;
+  
+  const totalSatisfaction = interactionHistory.reduce((sum, interaction) => 
+    sum + (interaction.satisfaction || 0), 0);
+  
+  return Math.round((totalSatisfaction / interactionHistory.length) * 100) / 100;
+}
+
+function calculateEngagementTrend(interactionHistory) {
+  if (!interactionHistory || interactionHistory.length < 2) return 'stable';
+  
+  const recent = interactionHistory.slice(-5);
+  const older = interactionHistory.slice(-10, -5);
+  
+  const recentAvg = recent.reduce((sum, i) => sum + (i.satisfaction || 0), 0) / recent.length;
+  const olderAvg = older.length > 0 ? 
+    older.reduce((sum, i) => sum + (i.satisfaction || 0), 0) / older.length : recentAvg;
+  
+  if (recentAvg > olderAvg + 0.1) return 'increasing';
+  if (recentAvg < olderAvg - 0.1) return 'decreasing';
+  return 'stable';
+}
+
+function calculateDaysSinceLastActive(lastActive) {
+  if (!lastActive) return 0;
+  
+  const lastActiveTime = new Date(lastActive).getTime();
+  const now = Date.now();
+  const timeDiff = now - lastActiveTime;
+  
+  return Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+}
+
+function calculateProfileCompleteness(profileData) {
+  let completeness = 0;
+  const maxScore = 10;
+  
+  if (profileData.userId) completeness += 1;
+  if (profileData.preferences?.language) completeness += 1;
+  if (profileData.preferences?.communicationStyle) completeness += 1;
+  if (profileData.preferences?.animalTypes?.length > 0) completeness += 1;
+  if (profileData.preferences?.actionTypes?.length > 0) completeness += 1;
+  if (profileData.engagementLevel) completeness += 1;
+  if (profileData.lastActive) completeness += 1;
+  if (profileData.interactionHistory?.length > 0) completeness += 1;
+  if (profileData.insights) completeness += 1;
+  if (profileData.metadata) completeness += 1;
+  
+  return Math.round((completeness / maxScore) * 100);
+}
 
 // Start server
 app.listen(port, () => {
