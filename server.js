@@ -9,20 +9,8 @@ const admin = require('firebase-admin');
 
 // Updated to trigger new deployment with fixed secret
 
-// Load Twitter API credentials from environment variables (same as toto-bo)
-const TWITTER_CREDENTIALS = {
-  apiKey: process.env.TWITTER_API_KEY || '',
-  apiSecret: process.env.TWITTER_API_SECRET || '',
-  accessToken: process.env.TWITTER_ACCESS_TOKEN || '',
-  accessTokenSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET || ''
-};
-
-console.log('🔑 Twitter API credentials loaded:', {
-  apiKey: TWITTER_CREDENTIALS.apiKey ? `${TWITTER_CREDENTIALS.apiKey.substring(0, 8)}...` : 'NOT SET',
-  apiSecret: TWITTER_CREDENTIALS.apiSecret ? `${TWITTER_CREDENTIALS.apiSecret.substring(0, 8)}...` : 'NOT SET',
-  accessToken: TWITTER_CREDENTIALS.accessToken ? `${TWITTER_CREDENTIALS.accessToken.substring(0, 8)}...` : 'NOT SET',
-  accessTokenSecret: TWITTER_CREDENTIALS.accessTokenSecret ? `${TWITTER_CREDENTIALS.accessTokenSecret.substring(0, 8)}...` : 'NOT SET'
-});
+// Twitter web scraping (no API credentials needed)
+console.log('🔍 Twitter web scraping enabled (no API credentials needed)');
 
 // Initialize Firebase Admin SDK for toto-app-stg
 if (!admin.apps.length) {
@@ -448,13 +436,8 @@ app.get('/api/twitter/guardians', async (req, res) => {
       
       // Update the Twitter Agent with the fetched guardians
       if (dbGuardians.length > 0) {
-        // Initialize with empty credentials for now (will be set when testing)
-        const mockCredentials = {
-          apiKey: '',
-          apiSecret: '',
-          accessToken: '',
-          accessTokenSecret: ''
-        };
+        // Initialize with empty credentials (web scraping only)
+        const mockCredentials = {};
         await twitterAgent.initialize(mockCredentials, dbGuardians);
         guardians = twitterAgent.getGuardians();
       } else {
@@ -492,12 +475,7 @@ app.get('/api/twitter/guardians', async (req, res) => {
           }
         ];
         
-        const mockCredentials = {
-          apiKey: '',
-          apiSecret: '',
-          accessToken: '',
-          accessTokenSecret: ''
-        };
+        const mockCredentials = {};
         await twitterAgent.initialize(mockCredentials, mockGuardians);
         guardians = twitterAgent.getGuardians();
       }
@@ -527,12 +505,7 @@ app.get('/api/twitter/guardians', async (req, res) => {
         }
       ];
       
-      const mockCredentials = {
-        apiKey: '',
-        apiSecret: '',
-        accessToken: '',
-        accessTokenSecret: ''
-      };
+      const mockCredentials = {};
       await twitterAgent.initialize(mockCredentials, mockGuardians);
       guardians = twitterAgent.getGuardians();
     }
@@ -568,13 +541,8 @@ app.post('/api/twitter/monitor', async (req, res) => {
     const twitterAgent = totoAI.getTwitterAgent();
     
     // TODO: Initialize with real Twitter credentials and guardians
-    // For now, we'll use mock data
-    const mockCredentials = {
-      apiKey: 'mock_key',
-      apiSecret: 'mock_secret',
-      accessToken: 'mock_token',
-      accessTokenSecret: 'mock_token_secret'
-    };
+    // Use empty credentials for web scraping
+    const mockCredentials = {};
     
     const mockGuardians = [
       {
@@ -621,21 +589,8 @@ app.post('/api/twitter/test-connection', async (req, res) => {
     const twitterAgent = totoAI.getTwitterAgent();
     const { credentials } = req.body;
     
-    // Use environment variables if available, otherwise fall back to provided credentials
-    const finalCredentials = {
-      apiKey: TWITTER_CREDENTIALS.apiKey || credentials?.apiKey || '',
-      apiSecret: TWITTER_CREDENTIALS.apiSecret || credentials?.apiSecret || '',
-      accessToken: TWITTER_CREDENTIALS.accessToken || credentials?.accessToken || '',
-      accessTokenSecret: TWITTER_CREDENTIALS.accessTokenSecret || credentials?.accessTokenSecret || ''
-    };
-
-    // Check if we have valid credentials
-    if (!finalCredentials.apiKey || !finalCredentials.apiSecret || !finalCredentials.accessToken || !finalCredentials.accessTokenSecret) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Twitter API credentials not available. Please set environment variables or provide credentials manually.' 
-      });
-    }
+    // No credentials needed for web scraping
+    const finalCredentials = {};
     
     const result = await twitterAgent.testConnection(finalCredentials);
     res.json(result);
@@ -672,13 +627,8 @@ app.post('/api/twitter/fetch-real-tweets', async (req, res) => {
       return res.status(400).json({ success: false, error: 'guardianId is required' });
     }
 
-    // Use dummy credentials for web scraping (API is disabled)
-    const finalCredentials = {
-      apiKey: 'dummy',
-      apiSecret: 'dummy',
-      accessToken: 'dummy',
-      accessTokenSecret: 'dummy'
-    };
+    // No credentials needed for web scraping
+    const finalCredentials = {};
     
     // Get the actual guardian data from the Twitter Agent
     let existingGuardians = twitterAgent.getGuardians();
@@ -713,12 +663,7 @@ app.post('/api/twitter/fetch-real-tweets', async (req, res) => {
         });
         
         if (dbGuardians.length > 0) {
-          const mockCredentials = {
-            apiKey: '',
-            apiSecret: '',
-            accessToken: '',
-            accessTokenSecret: ''
-          };
+          const mockCredentials = {};
           await twitterAgent.initialize(mockCredentials, dbGuardians);
           existingGuardians = twitterAgent.getGuardians();
           console.log('Debug: Loaded guardians from database:', existingGuardians.map(g => ({ id: g.id, name: g.name })));

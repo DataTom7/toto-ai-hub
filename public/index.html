@@ -1160,24 +1160,8 @@ ${Object.entries(reviewStatus.itemsByUrgency).map(([urgency, count]) => `• ${u
             }
 
             function promptForTwitterCredentials() {
-                const apiKey = prompt('Enter Twitter API Key:');
-                if (!apiKey) return null;
-                
-                const apiSecret = prompt('Enter Twitter API Secret:');
-                if (!apiSecret) return null;
-                
-                const accessToken = prompt('Enter Twitter Access Token:');
-                if (!accessToken) return null;
-                
-                const accessTokenSecret = prompt('Enter Twitter Access Token Secret:');
-                if (!accessTokenSecret) return null;
-                
-                return {
-                    apiKey: apiKey.trim(),
-                    apiSecret: apiSecret.trim(),
-                    accessToken: accessToken.trim(),
-                    accessTokenSecret: accessTokenSecret.trim()
-                };
+                // No credentials needed for web scraping
+                return {};
             }
     </script>
 </body>

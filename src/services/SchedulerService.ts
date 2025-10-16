@@ -76,13 +76,8 @@ export class SchedulerService {
     // Ensure Twitter Agent is initialized with guardians
     if (!twitterAgent.getGuardians() || twitterAgent.getGuardians().length === 0) {
       console.log('🔄 Initializing Twitter Agent with guardians from database...');
-      // Use dummy credentials for web scraping
-      const dummyCredentials = {
-        apiKey: 'dummy',
-        apiSecret: 'dummy',
-        accessToken: 'dummy',
-        accessTokenSecret: 'dummy'
-      };
+      // No credentials needed for web scraping
+      const dummyCredentials = {};
       await twitterAgent.initializeWithDatabase(dummyCredentials);
     }
     

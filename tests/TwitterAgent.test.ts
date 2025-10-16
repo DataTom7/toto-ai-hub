@@ -9,12 +9,7 @@ describe('TwitterAgent', () => {
   beforeEach(() => {
     twitterAgent = new TwitterAgent();
     
-    mockCredentials = {
-      apiKey: 'test_api_key',
-      apiSecret: 'test_api_secret',
-      accessToken: 'test_access_token',
-      accessTokenSecret: 'test_access_token_secret'
-    };
+    mockCredentials = {};
 
     mockGuardians = [
       {

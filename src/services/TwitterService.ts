@@ -2,12 +2,10 @@ import { TwitterCredentials, TweetData, Guardian } from '../agents/TwitterAgent'
 import puppeteer from 'puppeteer';
 
 export class TwitterService {
-  private credentials: TwitterCredentials;
   private userCache: Map<string, string> = new Map(); // Cache username -> userID
 
   constructor(credentials: TwitterCredentials) {
-    this.credentials = credentials;
-    console.log('TwitterService initialized with web scraping only (API disabled)');
+    console.log('TwitterService initialized with web scraping only (no API credentials needed)');
   }
 
   /**

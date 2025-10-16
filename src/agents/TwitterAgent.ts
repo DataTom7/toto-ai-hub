@@ -8,12 +8,9 @@ import {
 } from "../types";
 import { TwitterService } from "../services/TwitterService";
 
-// Twitter-specific types
+// Twitter-specific types (scraping only, no API credentials needed)
 export interface TwitterCredentials {
-  apiKey: string;
-  apiSecret: string;
-  accessToken: string;
-  accessTokenSecret: string;
+  // No credentials needed for web scraping
 }
 
 export interface Guardian {
@@ -166,12 +163,7 @@ export class TwitterAgent extends BaseAgent {
     // Default configuration
     this.config = {
       ...baseConfig,
-      twitterCredentials: {
-        apiKey: '',
-        apiSecret: '',
-        accessToken: '',
-        accessTokenSecret: ''
-      },
+      twitterCredentials: {},
       guardians: [],
       monitoringInterval: 60, // 1 hour
       maxTweetsPerFetch: 10,
@@ -238,13 +230,9 @@ Be thorough but concise in your analysis.`;
     this.config.twitterCredentials = credentials;
     this.config.guardians = guardians;
     
-    // Only initialize Twitter service if we have valid credentials
-    if (credentials.apiKey && credentials.apiSecret && credentials.accessToken && credentials.accessTokenSecret) {
-      this.twitterService = new TwitterService(credentials);
-      console.log(`TwitterAgent initialized with ${guardians.length} guardians and Twitter service`);
-    } else {
-      console.log(`TwitterAgent initialized with ${guardians.length} guardians (no Twitter service - empty credentials)`);
-    }
+    // Initialize Twitter service for web scraping (no credentials needed)
+    this.twitterService = new TwitterService(credentials);
+    console.log(`TwitterAgent initialized with ${guardians.length} guardians and web scraping service`);
   }
 
   /**
@@ -1643,13 +1631,8 @@ Respond in JSON format:
   getConfiguration(): any {
     return {
       ...this.config,
-      // Don't expose sensitive credentials
-      twitterCredentials: {
-        apiKey: this.config.twitterCredentials.apiKey ? '***' : '',
-        apiSecret: this.config.twitterCredentials.apiSecret ? '***' : '',
-        accessToken: this.config.twitterCredentials.accessToken ? '***' : '',
-        accessTokenSecret: this.config.twitterCredentials.accessTokenSecret ? '***' : ''
-      }
+      // No credentials needed for web scraping
+      twitterCredentials: {}
     };
   }
 
