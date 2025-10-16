@@ -403,7 +403,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
       donate: {
         patterns: ['donate', 'donation', 'donar', 'donación', 'help financially', 'ayudar económicamente'],
         action: {
-        type: 'donate',
+          type: 'donate' as const,
           payload: { 
             action: 'donate',
             caseId: enhancedCaseData.id,
@@ -412,13 +412,13 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
           },
         label: 'Donate',
         description: 'Make a donation to help this case',
-          priority: enhancedCaseData.urgencyLevel === 'critical' ? 'high' : 'medium'
+          priority: enhancedCaseData.urgencyLevel === 'critical' ? 'high' as const : 'medium' as const
         }
       },
       share: {
         patterns: ['share', 'compartir', 'tell others', 'contar a otros', 'spread the word', 'difundir'],
         action: {
-        type: 'share',
+          type: 'share' as const,
           payload: { 
             action: 'share',
             caseId: enhancedCaseData.id,
@@ -429,13 +429,13 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
           },
         label: 'Share',
         description: 'Share this case with others',
-          priority: 'medium'
+          priority: 'medium' as const
         }
       },
       adopt: {
         patterns: ['adopt', 'adoptar', 'take home', 'llevar a casa', 'forever home', 'hogar permanente'],
         action: {
-        type: 'adopt',
+          type: 'adopt' as const,
           payload: { 
             action: 'adopt',
             caseId: enhancedCaseData.id,
@@ -443,13 +443,13 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
           },
         label: 'Adopt',
         description: 'Learn about adoption process',
-          priority: 'high'
+          priority: 'high' as const
         }
       },
       contact: {
         patterns: ['contact', 'contactar', 'get in touch', 'ponerse en contacto', 'talk to', 'hablar con'],
         action: {
-        type: 'contact',
+          type: 'contact' as const,
           payload: { 
             action: 'contact',
             caseId: enhancedCaseData.id,
@@ -457,13 +457,13 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
           },
         label: 'Contact Guardian',
         description: 'Get in touch with the case guardian',
-          priority: 'medium'
+          priority: 'medium' as const
         }
       },
       learn: {
         patterns: ['learn', 'aprender', 'know more', 'saber más', 'information', 'información', 'details', 'detalles'],
         action: {
-          type: 'learn',
+          type: 'learn' as const,
           payload: { 
             action: 'learn',
             caseId: enhancedCaseData.id,
@@ -471,7 +471,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
           },
           label: 'Learn More',
           description: 'Get more information about this case',
-          priority: 'low'
+          priority: 'low' as const
         }
       }
     };
@@ -489,11 +489,11 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
     // Add contextual actions based on case urgency and user profile
     if (enhancedCaseData.urgencyLevel === 'critical' && !actions.find(a => a.type === 'donate')) {
       actions.unshift({
-        type: 'donate',
+        type: 'donate' as const,
         payload: { action: 'donate', caseId: enhancedCaseData.id, urgency: 'critical' },
         label: 'Urgent Donation',
         description: 'This case needs immediate help',
-        priority: 'critical'
+        priority: 'critical' as const
       });
     }
 

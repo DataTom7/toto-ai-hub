@@ -317,9 +317,8 @@ export class TotoAPIGateway {
         const twitterAgent = this.totoAI.getTwitterAgent();
         response = await twitterAgent.processMessage(message, {
           userId: 'test-user',
-          platform: 'web',
-          sessionId: 'test-session',
-          twitterHandle: twitterHandle || 'test_handle'
+          userRole: 'user',
+          language: 'en'
         });
       } else {
         // Default to CaseAgent for testing
