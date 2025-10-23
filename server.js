@@ -945,6 +945,43 @@ app.post('/api/ai/knowledge/retrieve', async (req, res) => {
   }
 });
 
+// Get RAG memory statistics
+app.get('/api/ai/knowledge/memory', async (req, res) => {
+  try {
+    const ragService = apiGateway.getRAGService();
+    const memoryStats = ragService.getMemoryStats();
+    
+    res.json({
+      success: true,
+      memory: memoryStats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting memory stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Force memory cleanup
+app.post('/api/ai/knowledge/cleanup', async (req, res) => {
+  try {
+    const ragService = apiGateway.getRAGService();
+    ragService.forceCleanup();
+    
+    const memoryStats = ragService.getMemoryStats();
+    
+    res.json({
+      success: true,
+      message: 'Memory cleanup completed',
+      memory: memoryStats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error cleaning up memory:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Test AI system
 app.post('/api/ai/test', async (req, res) => {
   try {

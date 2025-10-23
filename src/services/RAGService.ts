@@ -33,6 +33,8 @@ export class RAGService {
   private genAI: GoogleGenerativeAI;
   private knowledgeChunks: KnowledgeChunk[] = [];
   private embeddingModel: any;
+  private maxChunks: number = 1000; // Limit knowledge chunks to prevent memory leaks
+  private maxCacheSize: number = 100; // Limit cache size
 
   constructor() {
     this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
@@ -69,14 +71,32 @@ export class RAGService {
         }
       }
       
-      // Add to knowledge base
+      // Add to knowledge base with memory management
       this.knowledgeChunks.push(...chunks);
+      
+      // Clean up old chunks if we exceed the limit
+      if (this.knowledgeChunks.length > this.maxChunks) {
+        this.cleanupOldChunks();
+      }
       
       console.log(`✅ Added ${chunks.length} knowledge chunks to RAG service`);
     } catch (error) {
       console.error('Error adding knowledge chunks:', error);
       throw new Error('Failed to add knowledge chunks');
     }
+  }
+
+  /**
+   * Clean up old knowledge chunks to prevent memory leaks
+   */
+  private cleanupOldChunks(): void {
+    // Sort by usage count and keep the most used chunks
+    this.knowledgeChunks.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+    
+    // Keep only the most used chunks
+    this.knowledgeChunks = this.knowledgeChunks.slice(0, this.maxChunks);
+    
+    console.log(`🧹 Cleaned up knowledge chunks, keeping ${this.knowledgeChunks.length} most used chunks`);
   }
 
   /**
@@ -270,5 +290,27 @@ export class RAGService {
     
     this.knowledgeChunks.splice(chunkIndex, 1);
     return true;
+  }
+
+  /**
+   * Get memory usage statistics
+   */
+  getMemoryStats(): { chunks: number; maxChunks: number; memoryUsage: string } {
+    const chunks = this.knowledgeChunks.length;
+    const memoryUsage = `${chunks}/${this.maxChunks} chunks`;
+    
+    return {
+      chunks,
+      maxChunks: this.maxChunks,
+      memoryUsage
+    };
+  }
+
+  /**
+   * Force cleanup of memory
+   */
+  forceCleanup(): void {
+    this.cleanupOldChunks();
+    console.log('🧹 Forced memory cleanup completed');
   }
 }
