@@ -8,23 +8,30 @@ export { TwitterAgent } from './agents/TwitterAgent';
 // Types
 export * from './types';
 
-// Services (to be implemented)
+// Services
+export { RAGService } from './services/RAGService';
 // export { OrchestratorService } from './services/OrchestratorService';
 // export { FirebaseService } from './services/FirebaseService';
 
 // Import for internal use
 import { CaseAgent } from './agents/CaseAgent';
 import { TwitterAgent } from './agents/TwitterAgent';
+import { RAGService } from './services/RAGService';
 import { AgentConfig } from './types';
 
 // Main class for easy integration
 export class TotoAI {
   private caseAgent: CaseAgent;
   private twitterAgent: TwitterAgent;
+  private ragService: RAGService;
 
   constructor() {
+    this.ragService = new RAGService();
     this.caseAgent = new CaseAgent();
     this.twitterAgent = new TwitterAgent();
+    
+    // Set RAG service for agents
+    this.caseAgent.setRAGService(this.ragService);
   }
 
   /**
@@ -39,6 +46,13 @@ export class TotoAI {
    */
   getTwitterAgent(): TwitterAgent {
     return this.twitterAgent;
+  }
+
+  /**
+   * Get the RAG service
+   */
+  getRAGService(): RAGService {
+    return this.ragService;
   }
 
   /**

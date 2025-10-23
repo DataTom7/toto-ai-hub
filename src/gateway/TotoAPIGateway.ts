@@ -1,6 +1,7 @@
 import { TotoAI } from '../index';
 import { CaseAgent } from '../agents/CaseAgent';
 import { TwitterAgent } from '../agents/TwitterAgent';
+import { RAGService, KnowledgeChunk } from '../services/RAGService';
 
 // Types for API Gateway
 export interface AnalyticsData {
@@ -50,6 +51,8 @@ export interface KnowledgeItem {
   category: string;
   lastUpdated: string;
   usageCount: number;
+  agentTypes: string[];
+  embedding?: number[];
 }
 
 export interface TestResponse {
@@ -84,11 +87,13 @@ export class TotoAPIGateway {
   private totoAI: TotoAI;
   private analyticsCache: AnalyticsData | null = null;
   private knowledgeBase: KnowledgeItem[] = [];
+  private ragService: RAGService;
   private lastAnalyticsUpdate: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
     this.totoAI = new TotoAI();
+    this.ragService = new RAGService();
     this.initializeKnowledgeBase();
   }
 
@@ -212,17 +217,30 @@ export class TotoAPIGateway {
   /**
    * Add knowledge item
    */
-  async addKnowledgeItem(title: string, content: string, category: string = 'general'): Promise<KnowledgeItem> {
+  async addKnowledgeItem(title: string, content: string, category: string = 'general', agentTypes: string[] = []): Promise<KnowledgeItem> {
     const newItem: KnowledgeItem = {
       id: `kb-${Date.now()}`,
       title: title.trim(),
       content: content.trim(),
       category: category,
       lastUpdated: new Date().toISOString(),
-      usageCount: 0
+      usageCount: 0,
+      agentTypes
     };
 
     this.knowledgeBase.push(newItem);
+    
+    // Add to RAG service
+    await this.ragService.addKnowledgeChunks([{
+      id: newItem.id,
+      title: newItem.title,
+      content: newItem.content,
+      category: newItem.category,
+      agentTypes: newItem.agentTypes,
+      lastUpdated: newItem.lastUpdated,
+      usageCount: newItem.usageCount
+    }]);
+    
     return newItem;
   }
 
@@ -231,7 +249,39 @@ export class TotoAPIGateway {
    */
   async resetKnowledgeBase(): Promise<void> {
     this.knowledgeBase = [];
+    this.ragService.clearKnowledgeChunks();
     this.initializeKnowledgeBase();
+  }
+
+  /**
+   * Retrieve knowledge using RAG
+   */
+  async retrieveKnowledge(query: string, agentType: string, context?: string): Promise<any> {
+    try {
+      const result = await this.ragService.retrieveKnowledge({
+        query,
+        agentType,
+        context,
+        maxResults: 3
+      });
+      
+      return result;
+    } catch (error) {
+      console.error('Error retrieving knowledge:', error);
+      return {
+        chunks: [],
+        totalResults: 0,
+        query,
+        agentType
+      };
+    }
+  }
+
+  /**
+   * Get RAG service instance (for direct access)
+   */
+  getRAGService(): RAGService {
+    return this.ragService;
   }
 
   /**
@@ -385,50 +435,210 @@ export class TotoAPIGateway {
   }
 
   /**
-   * Initialize default knowledge base
+   * Initialize default knowledge base with comprehensive entries
    */
   private initializeKnowledgeBase(): void {
     this.knowledgeBase = [
+      // Donations Knowledge Base
       {
-        id: 'kb-001',
-        title: 'Pet Rescue Emergency Procedures',
-        content: 'Emergency procedures for handling urgent pet rescue cases including medical emergencies, abuse situations, and immediate care requirements.',
-        category: 'emergency',
-        lastUpdated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        usageCount: 45
-      },
-      {
-        id: 'kb-002',
-        title: 'Donation Process Guidelines',
-        content: 'Step-by-step guidelines for processing donations, including verification, allocation, and reporting procedures.',
+        id: 'kb-donations-001',
+        title: 'Banking Alias System',
+        content: `BANKING ALIAS SETUP
+- Each guardian/admin must complete their banking alias when creating their guardian profile
+- Banking aliases follow Argentina's national banking alias system (each guardian creates their own unique alias)
+- Aliases are stored in the guardian's Firestore document and are guardian-specific (not case-specific)
+
+DONOR ACCESS TO BANKING ALIASES
+- In toto-app: The case agent provides the banking alias and basic bank transfer instructions when users show donation intent
+- In toto-bo: Banking aliases are displayed in case details for guardians/admin users
+- Users can make a standard transfer from their bank account or wallet using the guardian alias
+
+DONATION PROCESS
+- Donors transfer funds directly to the guardian's banking alias
+- Each guardian has one banking alias for all their cases
+- No intermediary processing - 100% of donations go directly to the guardian`,
         category: 'donations',
-        lastUpdated: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        usageCount: 78
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent']
       },
       {
-        id: 'kb-003',
-        title: 'Adoption Requirements',
-        content: 'Comprehensive list of adoption requirements, screening processes, and post-adoption support procedures.',
-        category: 'adoptions',
-        lastUpdated: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        usageCount: 32
+        id: 'kb-donations-002',
+        title: 'Donation Verification Process',
+        content: `- Donors should provide proof of transfer (bank document, wallet receipt, etc.) if they want the donation to count as verified and earn totitos
+- Verification happens weekly with guardians
+- If verification fails, we contact the donor for further verification instructions
+- In case a user claims for a not-verified donation, inform the user that we will contact the guardian for further information and ask them to provide more detailed information about the transfer
+- If the donor does not verify the donation, but the guardian does (with user-specific data), we notify the user to claim their totitos
+- No penalties for unverified donations`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent']
       },
       {
-        id: 'kb-004',
-        title: 'Volunteer Onboarding',
-        content: 'Complete volunteer onboarding process including training requirements, safety protocols, and role assignments.',
-        category: 'volunteering',
-        lastUpdated: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        usageCount: 23
+        id: 'kb-donations-003',
+        title: 'Totitos Loyalty System',
+        content: `- Totitos are earned based on number of verified donations (not amount)
+- Each verified donation earns loyalty points regardless of amount
+- Totitos can be exchanged for products and services
+- System is currently in development mode`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent']
       },
       {
-        id: 'kb-005',
-        title: 'Social Media Best Practices',
-        content: 'Guidelines for effective social media sharing of rescue cases, including content creation and engagement strategies.',
-        category: 'general',
-        lastUpdated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        usageCount: 67
+        id: 'kb-donations-004',
+        title: 'Donation Allocation Rules',
+        content: `- Donations go directly to the specific case/guardian
+- If a case exceeds its funding goal, excess goes to guardian for other cases
+- Each guardian sets their own funding goals
+- Funding goals can be modified if new needs arise
+- No centralized fund management`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent']
+      },
+      {
+        id: 'kb-donations-005',
+        title: 'Donor Experience',
+        content: `- Donors access case information through conversational interface
+- Automatic notifications sent for case updates after donation
+- No tax certificates provided (direct guardian donations)
+- International donations supported`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent']
+      },
+      
+      // Case Management Knowledge Base
+      {
+        id: 'kb-cases-001',
+        title: 'Case Creation Process',
+        content: `- Guardians and Admins can create cases
+- Required fields: name, description, guardianId, donationGoal, images, category
+- Optional fields: location, medicalNeeds, specialNeeds, tags
+- New cases start in 'draft' status by default
+- No review process required - cases go live immediately`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent']
+      },
+      {
+        id: 'kb-cases-002',
+        title: 'Case Status Workflow',
+        content: `- Draft → Active → Completed
+- Priority levels: 'urgent' or 'normal'
+- Status can be updated by admins or guardians
+- Status changes are tracked in case updates
+- Updates could trigger a status change, but not always necessary`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent']
+      },
+      {
+        id: 'kb-cases-003',
+        title: 'Case Documentation',
+        content: `- Each case requires: name, description, guardian information
+- Medical needs and special requirements tracked
+- Image galleries with full-screen preview
+- Case updates and history maintained`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent']
+      },
+      {
+        id: 'kb-cases-004',
+        title: 'Case Updates & Communication',
+        content: `- Frequency depends on each case's needs
+- Updates can include: status changes, medical progress, milestones, images
+- Automatic notifications to donors when case updates`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent']
+      },
+      {
+        id: 'kb-cases-005',
+        title: 'Case Categories',
+        content: `- Rescue: Initial rescue operations
+- Surgery: Medical procedures and treatments
+- Treatment: Ongoing medical care
+- Transit: Transportation and relocation
+- Foster: Temporary care arrangements`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent']
+      },
+      {
+        id: 'kb-cases-006',
+        title: 'Emergency Cases',
+        content: `- Urgent priority cases get immediate attention
+- Emergency cases can be created and activated instantly
+- Special handling for medical emergencies and abuse situations`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent']
+      },
+      
+      // Social Media Knowledge Base
+      {
+        id: 'kb-social-001',
+        title: 'Social Media Integration',
+        content: `- SharingAgent provides specific social media URLs for donors to share and like cases
+- Agents are available in toto-app and will be accessible on other platforms like web and WhatsApp
+- Trackable links provide impact feedback for shared content
+- Multi-platform support for case sharing and engagement`,
+        category: 'social_media',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['TwitterAgent', 'SharingAgent']
+      },
+      {
+        id: 'kb-social-002',
+        title: 'Case Sharing Process',
+        content: `- When users show intent to share a case, the case agent inquires about their preferred social media platform
+- The case agent should go to that specific case document in Firestore and share the URL corresponding to the social media app the user requested (Twitter, Instagram, Threads, Facebook, WhatsApp)
+- Users receive the appropriate sharing link for their chosen platform
+- Trackable links measure engagement and impact`,
+        category: 'social_media',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['TwitterAgent', 'SharingAgent']
       }
     ];
+
+    // Initialize RAG service with knowledge chunks
+    this.initializeRAGService();
+  }
+
+  /**
+   * Initialize RAG service with knowledge base chunks
+   */
+  private async initializeRAGService(): Promise<void> {
+    try {
+      const knowledgeChunks: KnowledgeChunk[] = this.knowledgeBase.map(item => ({
+        id: item.id,
+        title: item.title,
+        content: item.content,
+        category: item.category,
+        agentTypes: item.agentTypes,
+        lastUpdated: item.lastUpdated,
+        usageCount: item.usageCount
+      }));
+
+      await this.ragService.addKnowledgeChunks(knowledgeChunks);
+      console.log('✅ RAG service initialized with knowledge base');
+    } catch (error) {
+      console.error('Error initializing RAG service:', error);
+    }
   }
 }

@@ -899,13 +899,13 @@ app.get('/api/ai/knowledge', async (req, res) => {
 // Add knowledge item
 app.post('/api/ai/knowledge', async (req, res) => {
   try {
-    const { title, content, category } = req.body;
+    const { title, content, category, agentTypes } = req.body;
     
     if (!title || !content) {
       return res.status(400).json({ error: 'Title and content are required' });
     }
 
-    const newItem = await apiGateway.addKnowledgeItem(title, content, category);
+    const newItem = await apiGateway.addKnowledgeItem(title, content, category, agentTypes || []);
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating knowledge item:', error);
@@ -924,6 +924,23 @@ app.post('/api/ai/knowledge/reset', async (req, res) => {
     });
   } catch (error) {
     console.error('Error resetting knowledge base:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Retrieve knowledge using RAG
+app.post('/api/ai/knowledge/retrieve', async (req, res) => {
+  try {
+    const { query, agentType, context } = req.body;
+    
+    if (!query || !agentType) {
+      return res.status(400).json({ error: 'Query and agentType are required' });
+    }
+
+    const result = await apiGateway.retrieveKnowledge(query, agentType, context);
+    res.json(result);
+  } catch (error) {
+    console.error('Error retrieving knowledge:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

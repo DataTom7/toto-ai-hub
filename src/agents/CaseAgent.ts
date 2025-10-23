@@ -12,12 +12,14 @@ import {
   IntentAnalysis,
   AgentAnalytics
 } from "../types";
+import { RAGService } from '../services/RAGService';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
 export class CaseAgent extends BaseAgent {
   private conversationMemory: Map<string, ConversationMemory> = new Map();
   private userProfiles: Map<string, UserProfile> = new Map();
+  private ragService?: RAGService;
   private analytics: AgentAnalytics = {
     totalInteractions: 0,
     successfulInteractions: 0,
@@ -59,8 +61,101 @@ export class CaseAgent extends BaseAgent {
     super(config);
   }
 
-  protected getSystemPrompt(): string {
-    return `You are Toto, an advanced AI assistant specialized in pet rescue cases with emotional intelligence, memory, and contextual understanding.
+  /**
+   * Set RAG service for knowledge retrieval
+   */
+  setRAGService(ragService: RAGService): void {
+    this.ragService = ragService;
+  }
+
+  /**
+   * Retrieve relevant knowledge using RAG
+   */
+  private async retrieveRelevantKnowledge(message: string, context?: string): Promise<string> {
+    if (!this.ragService) {
+      return '';
+    }
+
+    try {
+      const result = await this.ragService.retrieveKnowledge({
+        query: message,
+        agentType: 'CaseAgent',
+        context,
+        maxResults: 3
+      });
+
+      if (result.chunks.length === 0) {
+        return '';
+      }
+
+      // Format knowledge chunks for the system prompt
+      const knowledgeContext = result.chunks.map(chunk => 
+        `**${chunk.title}**\n${chunk.content}`
+      ).join('\n\n');
+
+      return knowledgeContext;
+    } catch (error) {
+      console.error('Error retrieving knowledge:', error);
+      return '';
+    }
+  }
+
+  /**
+   * Process message with knowledge context
+   */
+  private async processMessageWithKnowledge(
+    message: string,
+    context: UserContext,
+    conversationContext?: ConversationContext,
+    knowledgeContext?: string
+  ): Promise<any> {
+    const startTime = Date.now();
+
+    try {
+      const systemPrompt = this.getSystemPrompt(knowledgeContext);
+      const fullPrompt = `${systemPrompt}\n\nUser Context: ${JSON.stringify(context)}\n\nUser Message: ${message}`;
+
+      const result = await this.model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        },
+      });
+
+      const response = result.response;
+      const text = response.text();
+
+      const processingTime = Date.now() - startTime;
+
+      return {
+        success: true,
+        message: text || 'I understand your request.',
+        metadata: {
+          agentType: this.config.name,
+          confidence: 0.8,
+          processingTime,
+        },
+      };
+
+    } catch (error) {
+      console.error(`Error in ${this.config.name}:`, error);
+      
+      return {
+        success: false,
+        message: this.getErrorMessage(),
+        error: error instanceof Error ? error.message : 'Unknown error',
+        metadata: {
+          agentType: this.config.name,
+          confidence: 0,
+          processingTime: Date.now() - startTime,
+        },
+      };
+    }
+  }
+
+  protected getSystemPrompt(knowledgeContext?: string): string {
+    const basePrompt = `You are Toto, an advanced AI assistant specialized in pet rescue cases with emotional intelligence, memory, and contextual understanding.
 
 🎯 CORE CAPABILITIES:
 - Natural, empathetic conversations about pet rescue cases
@@ -112,6 +207,18 @@ export class CaseAgent extends BaseAgent {
 - Emotional Intelligence: Respond appropriately to user's emotional state
 
 Always be helpful, empathetic, and contextually aware. Use your memory and intelligence to provide the most relevant and personalized experience.`;
+
+    // Add knowledge context if provided
+    if (knowledgeContext) {
+      return `${basePrompt}
+
+📚 RELEVANT KNOWLEDGE BASE INFORMATION:
+${knowledgeContext}
+
+Use this knowledge base information to provide accurate, up-to-date responses about donations, case management, and social media processes. Always reference this information when relevant to user questions.`;
+    }
+
+    return basePrompt;
   }
 
   /**
@@ -143,6 +250,13 @@ Always be helpful, empathetic, and contextually aware. Use your memory and intel
       const intentAnalysis = await this.analyzeUserIntent(message, memory, userProfile);
       const emotionalState = await this.detectEmotionalState(message);
 
+      // Retrieve relevant knowledge using RAG
+      const knowledgeContext = await this.retrieveRelevantKnowledge(message, JSON.stringify({
+        caseData: enhancedCaseData,
+        userContext: context,
+        conversationHistory: memory.conversationHistory
+      }));
+
       // Build comprehensive context
       const enhancedMessage = this.buildEnhancedContext(
         message,
@@ -155,8 +269,8 @@ Always be helpful, empathetic, and contextually aware. Use your memory and intel
         conversationContext
       );
 
-      // Process with enhanced context
-      const result = await this.processMessage(enhancedMessage, context, conversationContext);
+      // Process with enhanced context and knowledge
+      const result = await this.processMessageWithKnowledge(enhancedMessage, context, conversationContext, knowledgeContext);
 
       const processingTime = Date.now() - startTime;
 
