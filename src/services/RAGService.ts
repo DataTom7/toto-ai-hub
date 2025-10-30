@@ -6,6 +6,7 @@ export interface KnowledgeChunk {
   content: string;
   category: string;
   agentTypes: string[];
+  audience: string[]; // Target audience/recipients (e.g., ["donors", "investors", "guardians", "partners"]) or ["admin"] for internal
   embedding?: number[];
   lastUpdated: string;
   usageCount: number;

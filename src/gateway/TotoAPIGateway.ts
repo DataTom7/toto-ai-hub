@@ -51,7 +51,8 @@ export interface KnowledgeItem {
   category: string;
   lastUpdated: string;
   usageCount: number;
-  agentTypes: string[];
+  agentTypes: string[]; // Which agents can use this (e.g., ["CaseAgent", "DonationAgent"])
+  audience: string[]; // Target audience/recipients (e.g., ["donors", "investors", "guardians", "partners"]) or ["admin"] for internal
   embedding?: number[];
 }
 
@@ -217,7 +218,7 @@ export class TotoAPIGateway {
   /**
    * Add knowledge item
    */
-  async addKnowledgeItem(title: string, content: string, category: string = 'general', agentTypes: string[] = []): Promise<KnowledgeItem> {
+  async addKnowledgeItem(title: string, content: string, category: string = 'general', agentTypes: string[] = [], audience: string[] = []): Promise<KnowledgeItem> {
     const newItem: KnowledgeItem = {
       id: `kb-${Date.now()}`,
       title: title.trim(),
@@ -225,7 +226,8 @@ export class TotoAPIGateway {
       category: category,
       lastUpdated: new Date().toISOString(),
       usageCount: 0,
-      agentTypes
+      agentTypes,
+      audience
     };
 
     this.knowledgeBase.push(newItem);
@@ -237,6 +239,7 @@ export class TotoAPIGateway {
       content: newItem.content,
       category: newItem.category,
       agentTypes: newItem.agentTypes,
+      audience: newItem.audience,
       lastUpdated: newItem.lastUpdated,
       usageCount: newItem.usageCount
     }]);
@@ -460,58 +463,247 @@ DONATION PROCESS
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent', 'DonationAgent']
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-donations-002',
         title: 'Donation Verification Process',
-        content: `- Donors should provide proof of transfer (bank document, wallet receipt, etc.) if they want the donation to count as verified and earn totitos
+        content: `VERIFICATION PURPOSE
+- Donors should provide proof of transfer (bank document, wallet receipt, screenshot, etc.) if they want the donation to count as verified and earn totitos
+- Verification is optional but recommended to earn totitos and improve user rating
+- No penalties for unverified donations - donations still help the cause
+
+VERIFICATION PROCESS
 - Verification happens weekly with guardians
+- Guardians review and approve donations after cross-checking with their records
+- Once guardian approves, donor receives automatic notification
+- Donors then earn their totitos for verified donations
+
+IF VERIFICATION FAILS
 - If verification fails, we contact the donor for further verification instructions
-- In case a user claims for a not-verified donation, inform the user that we will contact the guardian for further information and ask them to provide more detailed information about the transfer
-- If the donor does not verify the donation, but the guardian does (with user-specific data), we notify the user to claim their totitos
-- No penalties for unverified donations`,
+- Ask donors to provide more detailed information about the transfer (date, amount, transaction ID)
+- Work collaboratively with donor to resolve any verification issues
+
+GUARDIAN-LED VERIFICATION
+- If the donor does not verify the donation, but the guardian verifies it independently (with user-specific data), we notify the user to claim their totitos
+- This ensures donors don't miss out on totitos even if they forget to upload receipt`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent', 'DonationAgent']
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-donations-003',
         title: 'Totitos Loyalty System',
-        content: `- Totitos are earned based on number of verified donations (not amount)
+        content: `TOTITOS EARNINGS
+- Totitos are earned based on number of verified donations (not amount)
 - Each verified donation earns loyalty points regardless of amount
-- Totitos can be exchanged for products and services
-- System is currently in development mode`,
+- Totitos can be exchanged for goods or services for pets
+- System is currently in development mode
+
+VERIFICATION TIMING
+- Donations are verified on a weekly basis with guardians
+- Guardians approve verifications after review
+- Once verified, donors receive notification and earn their totitos
+- Verification confirmation is sent to the donor automatically`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent', 'DonationAgent']
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-donations-004',
         title: 'Donation Allocation Rules',
-        content: `- Donations go directly to the specific case/guardian
-- If a case exceeds its funding goal, excess goes to guardian for other cases
+        content: `CASE-SPECIFIC DONATIONS
+- Donations go directly to the specific case/guardian
+- If a case exceeds its funding goal, excess donations are reassigned to the next urgent case under that same guardian's care
 - Each guardian sets their own funding goals
 - Funding goals can be modified if new needs arise
-- No centralized fund management`,
+- No centralized fund management
+
+COMMUNICATION TO DONORS
+- When a case reaches its goal, inform donors that their donation will be reassigned to the guardian's next urgent case
+- Frame this positively: "In the fortunate event that the case reaches the goal, your donation will be reassigned to the next urgent case of that specific guardian"
+- Emphasize that their contribution continues to help pets in need`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent', 'DonationAgent']
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-donations-005',
-        title: 'Donor Experience',
-        content: `- Donors access case information through conversational interface
+        title: 'Donor Experience Overview',
+        content: `PLATFORM ACCESS
+- Donors access case information through conversational interface (chat with Toto)
+- Available in toto-app, with future availability on web and WhatsApp
+- Conversational approach makes donation process simple and personal
+
+NOTIFICATIONS AND UPDATES
 - Automatic notifications sent for case updates after donation
-- No tax certificates provided (direct guardian donations)
-- International donations supported`,
+- Case conversations stored in donor's inbox for easy access
+- Real-time updates keep donors informed about case progress
+
+TAX AND DOCUMENTATION
+- No tax certificates provided (direct guardian donations, not through organization)
+- Donations go directly from donor to guardian's bank account
+- This enables 100% of donations to reach the pets without intermediaries
+
+INTERNATIONAL SUPPORT
+- International donations supported
+- Platform accessible from anywhere
+- Multiple payment methods accepted (bank transfers, wallets)`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent', 'DonationAgent']
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-006',
+        title: 'Donation Amounts and Minimums',
+        content: `- Minimum donation amount is $10
+- Donors can choose any amount from $10 and above
+- No maximum donation limit
+- When showing donation intent, agents should emphasize that every donation helps, starting from $10`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-007',
+        title: 'Toto Rescue Fund (TRF)',
+        content: `PURPOSE
+- The Toto Rescue Fund (TRF) is available for cases with urgent needs that arise on very short notice
+- Used for medical needs that must be paid in advance
+- Automatically disperses donations to the most urgent cases on a daily basis
+
+DONATION OPTIONS
+- Donors can choose to donate to: (1) a specific case, (2) a specific guardian (for their multiple cases), or (3) the Toto Rescue Fund
+- TRF provides an alternative for donors who want to help without selecting a specific case
+- Donations to different guardians require separate transactions
+
+COMMUNICATION
+- Explain that TRF ensures urgent cases receive immediate funding
+- Emphasize that TRF automatically allocates to the most urgent cases daily`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-008',
+        title: 'Donation Flow and Conversation Guidance',
+        content: `CONVERSATION FLOW
+- When users show donation intent, express gratitude and emphasize the importance of their contribution: "It's very important that we can count with your effort to help [case name]"
+- State the minimum donation amount: "You can donate from $10 to assist with the needs of this case under [guardian name]'s care"
+- Actively ask: "How much would you like to donate?"
+- Once amount is confirmed, provide the banking alias and basic transfer instructions
+- Offer to help verify the donation: "If you would like to improve your user scoring, you can verify your donation by sending me the receipt"
+- Explain the benefits: "This will help you be a verified donor and collect totitos that can be exchanged for goods or services for our furry friends"
+
+RECEIPT UPLOAD
+- Donors can upload receipt directly in the conversation interface
+- Accept bank documents, wallet receipts, or any proof of transfer
+- Confirm receipt has been received`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-009',
+        title: 'User Rating and Totitos Calculation System',
+        content: `USER RATING SYSTEM (STARS)
+- Users have a 1-5 star rating system
+- Rating affects totitos multiplier: 1 star = 1x, 2 stars = 2x, 3 stars = 3x, 4 stars = 4x, 5 stars = 5x
+- Rating factors include: active rate, number of donations, interactions with agents, guardian/user reviews
+
+TOTITOS CALCULATION
+- Each action (like a verified donation) has a specific base value
+- Total totitos = base value × user star rating
+- Example: If base value is 10 totitos and user has 3 stars, they earn 30 totitos
+- Users earn totitos for every verified donation they make
+- Totitos can be exchanged for goods or services for pets
+
+COMMUNICATION
+- Explain that user rating multiplies totitos earnings
+- Mention that active participation, donations, and positive interactions improve rating
+- Encourage verification to maximize totitos earnings`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-010',
+        title: 'Donor Inbox and Case Communication',
+        content: `INBOX SYSTEM
+- After a user donates to a case, that case's conversation is stored in their inbox
+- Users can access their inbox from the bottom navbar
+- Each case has its own conversation thread in the inbox
+
+CASE UPDATES AND NOTIFICATIONS
+- When a case receives an update, a message is automatically sent to the specific case conversation in the donor's inbox
+- Updates appear as unread messages in the inbox
+- Users receive notifications to check their inbox when new case updates arrive
+- This ensures donors stay informed about the cases they've supported
+
+PROFILE ACCESS
+- Users can access their profile from the bottom navbar
+- Profile shows: donation history, totitos earned, user rating/stars
+- All donation and contribution information is accessible in the profile`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-011',
+        title: 'Donation Refunds and Corrections',
+        content: `REFUND REQUESTS
+- If a donor accidentally donates the wrong amount and requests a refund, agents should:
+  1. Acknowledge the situation with empathy
+  2. Explain that the guardian will be notified of the refund request
+  3. Clarify that the final decision rests with the guardian
+  4. Do not promise refunds - it's the guardian's decision
+
+COMMUNICATION APPROACH
+- Be understanding and helpful: "I understand the situation. I can notify the guardian about your refund request"
+- Set expectations: "The guardian will review your request and make the decision"
+- Encourage patience while the guardian reviews the request`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-012',
+        title: 'Donation Allocation to Guardians',
+        content: `GUARDIAN-SPECIFIC DONATIONS
+- Donors can choose to donate directly to a guardian rather than a specific case
+- When donating to a guardian, the allocation to specific cases is determined by the guardian's criteria
+- However, urgency is a shared concern between all guardians, so urgent needs are prioritized
+
+COMMUNICATION
+- Explain that guardian donations help support all cases under that guardian's care
+- Mention that the guardian will allocate based on urgency and need
+- If donor wants to support multiple guardians, they need to make separate donations`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
       },
       
       // Case Management Knowledge Base
@@ -526,7 +718,8 @@ DONATION PROCESS
         category: 'case_management',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent']
+        agentTypes: ['CaseAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-cases-002',
@@ -539,7 +732,8 @@ DONATION PROCESS
         category: 'case_management',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent']
+        agentTypes: ['CaseAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-cases-003',
@@ -551,7 +745,8 @@ DONATION PROCESS
         category: 'case_management',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent']
+        agentTypes: ['CaseAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-cases-004',
@@ -562,7 +757,8 @@ DONATION PROCESS
         category: 'case_management',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent']
+        agentTypes: ['CaseAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-cases-005',
@@ -575,7 +771,8 @@ DONATION PROCESS
         category: 'case_management',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent']
+        agentTypes: ['CaseAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-cases-006',
@@ -586,7 +783,8 @@ DONATION PROCESS
         category: 'case_management',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['CaseAgent']
+        agentTypes: ['CaseAgent'],
+        audience: ['donors']
       },
       
       // Social Media Knowledge Base
@@ -600,7 +798,8 @@ DONATION PROCESS
         category: 'social_media',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['TwitterAgent', 'SharingAgent']
+        agentTypes: ['TwitterAgent', 'SharingAgent'],
+        audience: ['donors']
       },
       {
         id: 'kb-social-002',
@@ -612,7 +811,8 @@ DONATION PROCESS
         category: 'social_media',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['TwitterAgent', 'SharingAgent']
+        agentTypes: ['TwitterAgent', 'SharingAgent'],
+        audience: ['donors']
       }
     ];
 
@@ -631,6 +831,7 @@ DONATION PROCESS
         content: item.content,
         category: item.category,
         agentTypes: item.agentTypes,
+        audience: item.audience || [],
         lastUpdated: item.lastUpdated,
         usageCount: item.usageCount
       }));

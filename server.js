@@ -12,42 +12,113 @@ const admin = require('firebase-admin');
 // Twitter web scraping (no API credentials needed)
 console.log('🔍 Twitter web scraping enabled (no API credentials needed)');
 
-// Initialize Firebase Admin SDK for toto-app-stg
-if (!admin.apps.length) {
-  try {
-    let serviceAccount = null;
+// Initialize Firebase Admin SDK for toto-app-stg and toto-bo
+let totoAppStgApp = null;
+let totoBoApp = null;
+const fs = require('fs');
+
+// Initialize toto-app-stg Firebase Admin
+try {
+  let serviceAccount = null;
+  
+  // Try environment variable first (for production)
+  const serviceAccountJson = process.env.TOTO_APP_STG_SERVICE_ACCOUNT_KEY;
+  if (serviceAccountJson) {
+    serviceAccount = JSON.parse(serviceAccountJson);
+    console.log('✅ Using toto-app-stg service account from environment variable');
+  } else {
+    // Try local file (for development)
+    const serviceAccountPath = path.join(__dirname, 'toto-f9d2f-stg-firebase-adminsdk-fbsvc-d4bdd9b852.json');
     
-    // Try environment variable first (for production)
-    const serviceAccountJson = process.env.TOTO_APP_STG_SERVICE_ACCOUNT_KEY;
-    if (serviceAccountJson) {
-      serviceAccount = JSON.parse(serviceAccountJson);
-      console.log('✅ Using service account from environment variable');
-    } else {
-      // Try local file (for development)
-      const fs = require('fs');
-      const serviceAccountPath = path.join(__dirname, 'toto-f9d2f-stg-firebase-adminsdk-fbsvc-d4bdd9b852.json');
-      
-      if (fs.existsSync(serviceAccountPath)) {
-        const serviceAccountFile = fs.readFileSync(serviceAccountPath, 'utf8');
-        serviceAccount = JSON.parse(serviceAccountFile);
-        console.log('✅ Using local service account file');
-      }
+    if (fs.existsSync(serviceAccountPath)) {
+      const serviceAccountFile = fs.readFileSync(serviceAccountPath, 'utf8');
+      serviceAccount = JSON.parse(serviceAccountFile);
+      console.log('✅ Using local toto-app-stg service account file');
     }
-    
-    if (serviceAccount) {
-      admin.initializeApp({
+  }
+  
+  if (serviceAccount) {
+    // Check if app already exists
+    try {
+      totoAppStgApp = admin.app(); // Get default app
+      console.log('✅ toto-app-stg Firebase Admin already initialized as default');
+    } catch {
+      // Initialize as DEFAULT app (no name) so admin.firestore() works
+      totoAppStgApp = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: 'toto-f9d2f-stg'
       });
-      console.log('✅ Firebase Admin SDK initialized for toto-app-stg');
-    } else {
-      console.log('⚠️ No service account credentials found, skipping toto-app-stg connection');
+      console.log('✅ Firebase Admin SDK initialized for toto-app-stg as DEFAULT app');
     }
-  } catch (error) {
-    console.error('❌ Failed to initialize Firebase Admin SDK:', error.message);
-    console.log('Note: Service account credentials not available or invalid');
+  } else {
+    console.log('⚠️ No toto-app-stg service account credentials found, skipping connection');
   }
+} catch (error) {
+  console.error('❌ Failed to initialize toto-app-stg Firebase Admin SDK:', error.message);
 }
+
+// Initialize toto-bo Firebase Admin
+try {
+  let totoBoServiceAccount = null;
+  
+  // Try environment variable first
+  const totoBoServiceAccountJson = process.env.TOTO_BO_SERVICE_ACCOUNT_KEY;
+  if (totoBoServiceAccountJson) {
+    totoBoServiceAccount = JSON.parse(totoBoServiceAccountJson);
+    console.log('✅ Using toto-bo service account from environment variable');
+  } else {
+    // Try to find toto-bo service account file (might not exist locally)
+    // Note: This is expected for development - toto-bo credentials may not be available
+    console.log('⚠️ TOTO_BO_SERVICE_ACCOUNT_KEY not found in environment variables');
+    console.log('   Social media posts will use API calls to toto-bo instead');
+  }
+  
+  if (totoBoServiceAccount) {
+    // Check if app already exists
+    try {
+      totoBoApp = admin.app('toto-bo');
+      console.log('✅ toto-bo Firebase Admin already initialized');
+    } catch {
+      totoBoApp = admin.initializeApp({
+        credential: admin.credential.cert(totoBoServiceAccount),
+      }, 'toto-bo');
+      console.log('✅ Firebase Admin SDK initialized for toto-bo');
+    }
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize toto-bo Firebase Admin SDK:', error.message);
+  console.log('   Social media posts will use API calls to toto-bo instead');
+}
+
+// Helper functions to get Firestore and Storage instances
+const getTotoBoFirestore = () => {
+  if (totoBoApp) {
+    return admin.firestore(totoBoApp);
+  }
+  // Fallback to default app (toto-app-stg) for local development
+  // Both toto-bo and toto-app-stg use the same database in dev
+  if (totoAppStgApp) {
+    console.log('⚠️ Using toto-app-stg Firestore as fallback for social media posts');
+    return admin.firestore(totoAppStgApp);
+  }
+  return null;
+};
+
+const getTotoBoStorage = () => {
+  if (totoBoApp) {
+    return admin.storage(totoBoApp);
+  }
+  // Fallback to default app (toto-app-stg) for local development
+  if (totoAppStgApp) {
+    console.log('⚠️ Using toto-app-stg Storage as fallback for social media images');
+    return admin.storage(totoAppStgApp);
+  }
+  return null;
+};
+
+// Make helpers available globally for services
+global.getTotoBoFirestore = getTotoBoFirestore;
+global.getTotoBoStorage = getTotoBoStorage;
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -230,6 +301,26 @@ app.get('/api/scheduler/status', (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+// Unified Social Media Monitoring Endpoint
+app.get('/api/social-media/monitor', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Social Media Monitoring endpoint is available. Use POST to trigger monitoring.' 
+  });
+});
+
+app.post('/api/social-media/monitor', async (req, res) => {
+  try {
+    const { guardianId } = req.body || {};
+    console.log('📡 Received POST request to /api/social-media/monitor', guardianId ? `for guardian: ${guardianId}` : '(all guardians)');
+    const results = await schedulerService.triggerSocialMediaMonitoring(guardianId);
+    res.json({ success: true, results });
+  } catch (error) {
+    console.error('❌ Error in /api/social-media/monitor:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -693,6 +784,351 @@ app.post('/api/twitter/fetch-real-tweets', async (req, res) => {
   }
 });
 
+// ============================================================
+// INSTAGRAM AGENT ENDPOINTS
+// ============================================================
+
+// Get Instagram agent configuration
+app.get('/api/instagram/config', (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const config = instagramAgent.getConfiguration();
+    res.json({ success: true, config });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update Instagram agent configuration
+app.put('/api/instagram/config', (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const { config } = req.body;
+    
+    const result = instagramAgent.updateConfiguration(config);
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get Instagram agent analytics/history
+app.get('/api/instagram/analytics', (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const stats = instagramAgent.getMonitoringStats();
+    res.json({ success: true, analytics: stats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get guardian monitoring status
+app.get('/api/instagram/guardians', async (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    let guardians = instagramAgent.getGuardians();
+    
+    // Always try to fetch from toto-bo database first
+    try {
+      const db = admin.firestore();
+      // Fetch users with guardian role
+      const guardiansSnapshot = await db.collection('users')
+        .where('role', '==', 'guardian')
+        .orderBy('createdAt', 'desc')
+        .get();
+      
+      const dbGuardians = guardiansSnapshot.docs.map(doc => {
+        const userData = doc.data();
+        const instagramHandle = userData.contactInfo?.socialLinks?.instagram || 'unknown';
+        // Clean up Instagram handle (remove @, URLs, etc.)
+        const cleanHandle = instagramHandle
+          .replace('@', '')
+          .replace('https://instagram.com/', '')
+          .replace('https://www.instagram.com/', '')
+          .replace('instagram.com/', '')
+          .replace(/\/$/, '');
+        
+        return {
+          id: doc.id,
+          name: userData.name || 'Unknown Guardian',
+          instagramHandle: cleanHandle !== 'unknown' ? cleanHandle : '',
+          instagramUserId: userData.instagramUserId,
+          accessToken: userData.instagramAccessToken,
+          isActive: userData.status === 'active',
+          lastPostFetch: null,
+          createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+          updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date()
+        };
+      }).filter(g => g.instagramHandle); // Only include guardians with Instagram handles
+      
+      // Update the Instagram Agent with the fetched guardians
+      if (dbGuardians.length > 0) {
+        // Initialize with empty credentials (web scraping or API if tokens available)
+        const credentials = {};
+        await instagramAgent.initialize(credentials, dbGuardians);
+        guardians = instagramAgent.getGuardians();
+      } else {
+        // If no guardians in database, create some mock guardians for testing
+        const mockGuardians = [
+          {
+            id: 'guardian_1',
+            name: 'Maria Fernandez',
+            instagramHandle: 'maria_fernandez',
+            instagramUserId: undefined,
+            accessToken: undefined,
+            isActive: true,
+            lastPostFetch: null,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        ];
+        
+        const credentials = {};
+        await instagramAgent.initialize(credentials, mockGuardians);
+        guardians = instagramAgent.getGuardians();
+      }
+    } catch (dbError) {
+      console.warn('Could not fetch guardians from database:', dbError.message);
+      // If database fetch fails, use mock guardians
+      const mockGuardians = [
+        {
+          id: 'guardian_1',
+          name: 'Maria Fernandez',
+          instagramHandle: 'maria_fernandez',
+          instagramUserId: undefined,
+          accessToken: undefined,
+          isActive: true,
+          lastPostFetch: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+      
+      const credentials = {};
+      await instagramAgent.initialize(credentials, mockGuardians);
+      guardians = instagramAgent.getGuardians();
+    }
+    
+    res.json({ success: true, guardians });
+  } catch (error) {
+    console.error('Error fetching guardians:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update guardian monitoring status
+app.put('/api/instagram/guardians/:guardianId', (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const { guardianId } = req.params;
+    const { isActive, ...updates } = req.body;
+    
+    const result = instagramAgent.updateGuardian(guardianId, { isActive, ...updates });
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Run Instagram monitoring cycle
+app.post('/api/instagram/monitor', async (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    
+    // Initialize with credentials (empty for web scraping, or from request body)
+    const { credentials = {} } = req.body;
+    
+    // Load guardians from database or use provided ones
+    let guardians = instagramAgent.getGuardians();
+    if (guardians.length === 0) {
+      try {
+        const db = admin.firestore();
+        const guardiansSnapshot = await db.collection('users')
+          .where('role', '==', 'guardian')
+          .get();
+        
+        guardians = guardiansSnapshot.docs.map(doc => {
+          const userData = doc.data();
+          const instagramHandle = userData.contactInfo?.socialLinks?.instagram || '';
+          const cleanHandle = instagramHandle
+            .replace('@', '')
+            .replace('https://instagram.com/', '')
+            .replace('https://www.instagram.com/', '')
+            .replace('instagram.com/', '')
+            .replace(/\/$/, '');
+          
+          return {
+            id: doc.id,
+            name: userData.name || 'Unknown Guardian',
+            instagramHandle: cleanHandle,
+            instagramUserId: userData.instagramUserId,
+            accessToken: userData.instagramAccessToken,
+            isActive: userData.status === 'active',
+            lastPostFetch: null,
+            createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+            updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date()
+          };
+        }).filter(g => g.instagramHandle);
+      } catch (dbError) {
+        console.warn('Could not load guardians from database:', dbError.message);
+      }
+    }
+    
+    if (guardians.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No guardians with Instagram accounts found' 
+      });
+    }
+    
+    await instagramAgent.initialize(credentials, guardians);
+    const result = await instagramAgent.runMonitoringCycle();
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error running Instagram monitoring:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// Get review queue status
+app.get('/api/instagram/review-queue', (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const reviewStatus = instagramAgent.getReviewQueueStatus();
+    res.json({ success: true, reviewStatus });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get detailed review queue items (for dashboard)
+app.get('/api/instagram/review-queue/items', (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const { status, type, urgency, limit } = req.query;
+    
+    // Get review queue items with filtering
+    const allItems = instagramAgent.getReviewQueueItems();
+    
+    let filteredItems = allItems;
+    
+    if (status) {
+      filteredItems = filteredItems.filter(item => item.status === status);
+    }
+    if (type) {
+      filteredItems = filteredItems.filter(item => item.type === type);
+    }
+    if (urgency) {
+      filteredItems = filteredItems.filter(item => item.urgency === urgency);
+    }
+    
+    // Sort by creation date (newest first)
+    filteredItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    
+    // Apply limit if provided
+    const limitNum = limit ? parseInt(limit) : undefined;
+    if (limitNum) {
+      filteredItems = filteredItems.slice(0, limitNum);
+    }
+    
+    res.json({ success: true, items: filteredItems, total: allItems.length });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get specific review item details
+app.get('/api/instagram/review-queue/items/:itemId', (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const { itemId } = req.params;
+    const item = instagramAgent.getReviewItem(itemId);
+    
+    if (!item) {
+      return res.status(404).json({ success: false, error: 'Review item not found' });
+    }
+    
+    res.json({ success: true, item });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Approve a review item
+app.post('/api/instagram/review-queue/items/:itemId/approve', async (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const { itemId } = req.params;
+    const { notes, reviewedBy } = req.body;
+    
+    const result = await instagramAgent.approveReviewItem(itemId, { notes, reviewedBy });
+    
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Reject a review item
+app.post('/api/instagram/review-queue/items/:itemId/reject', async (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const { itemId } = req.params;
+    const { notes, reviewedBy, reason } = req.body;
+    
+    const result = await instagramAgent.rejectReviewItem(itemId, { notes, reviewedBy, reason });
+    
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Test Instagram connection
+app.post('/api/instagram/test-connection', async (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const { credentials = {} } = req.body;
+    
+    const result = await instagramAgent.testConnection(credentials);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get monitoring statistics
+app.get('/api/instagram/stats', (req, res) => {
+  try {
+    const instagramAgent = totoAI.getInstagramAgent();
+    const stats = instagramAgent.getMonitoringStats();
+    res.json({ success: true, stats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Get cases from toto-app-stg
 app.get('/api/cases', async (req, res) => {
   try {
@@ -899,13 +1335,13 @@ app.get('/api/ai/knowledge', async (req, res) => {
 // Add knowledge item
 app.post('/api/ai/knowledge', async (req, res) => {
   try {
-    const { title, content, category, agentTypes } = req.body;
+    const { title, content, category, agentTypes, audience } = req.body;
     
     if (!title || !content) {
       return res.status(400).json({ error: 'Title and content are required' });
     }
 
-    const newItem = await apiGateway.addKnowledgeItem(title, content, category, agentTypes || []);
+    const newItem = await apiGateway.addKnowledgeItem(title, content, category, agentTypes || [], audience || []);
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating knowledge item:', error);
@@ -1391,6 +1827,100 @@ function calculateProfileCompleteness(profileData) {
   
   return Math.round((completeness / maxScore) * 100);
 }
+
+// Test endpoint to diagnose Firestore save issues
+app.post('/api/test-save', async (req, res) => {
+  const diagnostics = {
+    timestamp: new Date().toISOString(),
+    tests: []
+  };
+
+  try {
+    // Test 1: Check if getTotoBoFirestore is available
+    const getTotoBoFirestoreFunc = global.getTotoBoFirestore;
+    diagnostics.tests.push({
+      test: 'getTotoBoFirestore function exists',
+      passed: typeof getTotoBoFirestoreFunc === 'function',
+      result: typeof getTotoBoFirestoreFunc
+    });
+
+    // Test 2: Try to get Firestore instance
+    let db = null;
+    if (getTotoBoFirestoreFunc) {
+      db = getTotoBoFirestoreFunc();
+      diagnostics.tests.push({
+        test: 'getTotoBoFirestore returns instance',
+        passed: db !== null,
+        result: db ? 'Firestore instance obtained' : 'null returned'
+      });
+    }
+
+    // Test 3: Try to save a test document
+    if (db) {
+      const testPostId = `test_${Date.now()}`;
+      const testDoc = {
+        platform: 'twitter',
+        guardianId: 'test_guardian',
+        guardianName: 'Test Guardian',
+        postId: testPostId,
+        postContent: 'Test post for diagnostics',
+        postUrl: 'https://test.com',
+        images: [],
+        imageFileNames: [],
+        recommendedAction: 'dismiss',
+        status: 'pending',
+        urgency: 'low',
+        confidence: 0.9,
+        metadata: {},
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+
+      const docRef = db.collection('socialMediaPosts').doc(testPostId);
+      await docRef.set(testDoc);
+      
+      diagnostics.tests.push({
+        test: 'Save test document to Firestore',
+        passed: true,
+        result: `Saved with ID: ${testPostId}`
+      });
+
+      // Test 4: Try to read it back
+      const readDoc = await docRef.get();
+      diagnostics.tests.push({
+        test: 'Read test document back',
+        passed: readDoc.exists,
+        result: readDoc.exists ? 'Document found' : 'Document not found'
+      });
+
+      // Clean up
+      await docRef.delete();
+      diagnostics.tests.push({
+        test: 'Delete test document',
+        passed: true,
+        result: 'Cleaned up test data'
+      });
+    }
+
+    diagnostics.summary = {
+      allPassed: diagnostics.tests.every(t => t.passed),
+      totalTests: diagnostics.tests.length,
+      passedTests: diagnostics.tests.filter(t => t.passed).length
+    };
+
+    res.json(diagnostics);
+
+  } catch (error) {
+    diagnostics.error = {
+      message: error.message,
+      stack: error.stack
+    };
+    diagnostics.summary = {
+      allPassed: false,
+      error: 'Exception occurred during testing'
+    };
+    res.status(500).json(diagnostics);
+  }
+});
 
 // Start server
 app.listen(port, () => {
