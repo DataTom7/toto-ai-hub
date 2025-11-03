@@ -316,11 +316,35 @@ app.post('/api/social-media/monitor', async (req, res) => {
   try {
     const { guardianId } = req.body || {};
     console.log('📡 Received POST request to /api/social-media/monitor', guardianId ? `for guardian: ${guardianId}` : '(all guardians)');
+    
+    // FORCE SAVE A TEST POST TO PROVE MECHANISM WORKS
+    const SocialMediaPostService = require('./dist/services/SocialMediaPostService').SocialMediaPostService;
+    const postService = new SocialMediaPostService();
+    const testPost = {
+      platform: 'twitter',
+      guardianId: guardianId || 'test',
+      guardianName: 'Monitoring Test',
+      postId: `monitor_test_${Date.now()}`,
+      postContent: `Test post created during monitoring at ${new Date().toISOString()}`,
+      postUrl: 'https://test.com',
+      images: [],
+      imageFileNames: [],
+      recommendedAction: 'dismiss',
+      status: 'pending',
+      urgency: 'low',
+      confidence: 0.9,
+      metadata: {}
+    };
+    console.log('🧪 Force-saving test post during monitoring...');
+    const testSaveId = await postService.savePost(testPost);
+    console.log(`🧪 Test post save result: ${testSaveId}`);
+    
     const results = await schedulerService.triggerSocialMediaMonitoring(guardianId);
-    res.json({ success: true, results });
+    res.json({ success: true, results, testPostSaved: !!testSaveId });
   } catch (error) {
     console.error('❌ Error in /api/social-media/monitor:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ success: false, error: error.message, stack: error.stack });
   }
 });
 
@@ -1827,6 +1851,146 @@ function calculateProfileCompleteness(profileData) {
   
   return Math.round((completeness / maxScore) * 100);
 }
+
+// Check agent configuration
+app.get('/api/check-agent-config', async (req, res) => {
+  try {
+    const twitterAgent = totoAI.getTwitterAgent();
+    const config = {
+      reviewQueueEnabled: twitterAgent.config?.reviewPolicy?.reviewQueueEnabled,
+      requireManualReview: twitterAgent.config?.reviewPolicy?.requireManualReview,
+      autoApproveThreshold: twitterAgent.config?.reviewPolicy?.autoApproveThreshold,
+      guardiansCount: twitterAgent.getGuardians()?.length,
+      guardians: twitterAgent.getGuardians()?.map(g => ({ id: g.id, name: g.name, twitterHandle: g.twitterHandle }))
+    };
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Direct test to save a post to Firestore
+app.post('/api/direct-save-test', async (req, res) => {
+  try {
+    console.log('🧪 Direct Firestore save test...');
+    
+    const { SocialMediaPostService } = require('./dist/services/SocialMediaPostService.js');
+    const service = new SocialMediaPostService();
+    
+    const testPost = {
+      platform: 'twitter',
+      guardianId: 'test_guardian_' + Date.now(),
+      guardianName: 'Test Guardian',
+      postId: 'direct_test_' + Date.now(),
+      postContent: 'This is a direct test post',
+      postUrl: 'https://twitter.com/test',
+      images: [],
+      imageFileNames: [],
+      recommendedAction: 'dismiss',
+      status: 'pending',
+      urgency: 'low',
+      confidence: 0.9,
+      metadata: {}
+    };
+    
+    console.log('📝 Attempting to save post directly:', testPost.postId);
+    const savedId = await service.savePost(testPost);
+    
+    if (savedId) {
+      console.log('✅ Post saved successfully:', savedId);
+      res.json({ success: true, savedId, message: 'Post saved successfully' });
+    } else {
+      console.error('❌ savePost returned null');
+      res.json({ success: false, message: 'savePost returned null' });
+    }
+    
+  } catch (error) {
+    console.error('❌ Direct save test failed:', error);
+    res.status(500).json({ success: false, error: error.message, stack: error.stack });
+  }
+});
+
+// Debug endpoint to check agent configuration
+app.get('/api/debug/agent-config', (req, res) => {
+  try {
+    const twitterAgent = totoAI.getTwitterAgent();
+    const instagramAgent = totoAI.getInstagramAgent();
+    
+    const config = {
+      twitter: {
+        guardiansCount: twitterAgent.getGuardians()?.length || 0,
+        guardians: twitterAgent.getGuardians()?.map(g => ({
+          id: g.id,
+          name: g.name,
+          twitterHandle: g.twitterHandle
+        })) || [],
+        reviewQueueEnabled: twitterAgent.config?.reviewPolicy?.reviewQueueEnabled,
+        requireManualReview: twitterAgent.config?.reviewPolicy?.requireManualReview,
+        autoApproveThreshold: twitterAgent.config?.reviewPolicy?.autoApproveThreshold
+      },
+      instagram: {
+        guardiansCount: instagramAgent.getGuardians()?.length || 0,
+        guardians: instagramAgent.getGuardians()?.map(g => ({
+          id: g.id,
+          name: g.name,
+          instagramHandle: g.instagramHandle
+        })) || [],
+        reviewQueueEnabled: instagramAgent.config?.reviewPolicy?.reviewQueueEnabled
+      }
+    };
+    
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Test endpoint to manually trigger Twitter analysis (for debugging)
+app.post('/api/test-twitter-analysis', async (req, res) => {
+  try {
+    console.log('🧪 Testing Twitter analysis and save flow...');
+    
+    const twitterAgent = totoAI.getTwitterAgent();
+    
+    // Check config
+    console.log('Config reviewQueueEnabled:', twitterAgent.config?.reviewPolicy?.reviewQueueEnabled);
+    console.log('Config guardians count:', twitterAgent.getGuardians()?.length);
+    
+    // Create a test tweet
+    const testTweet = {
+      id: 'test_' + Date.now(),
+      content: 'Test tweet for debugging - rescued puppy doing well',
+      author: {
+        name: 'Test Guardian',
+        handle: 'testguardian',
+        profileImageUrl: ''
+      },
+      metrics: { likes: 0, retweets: 0, replies: 0 },
+      media: { images: [], videos: [] },
+      createdAt: new Date(),
+      fetchedAt: new Date()
+    };
+    
+    console.log('🔍 Calling analyzeTweetsAndCreateUpdates...');
+    const result = await twitterAgent.analyzeTweetsAndCreateUpdates([testTweet]);
+    
+    console.log('📊 Analysis result:', JSON.stringify(result, null, 2));
+    
+    res.json({
+      success: true,
+      message: 'Test completed - check console for detailed logs',
+      result
+    });
+    
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
 
 // Test endpoint to diagnose Firestore save issues
 app.post('/api/test-save', async (req, res) => {

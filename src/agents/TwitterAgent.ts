@@ -7,6 +7,9 @@ import {
   ConversationContext 
 } from "../types";
 import { TwitterService } from "../services/TwitterService";
+import { SocialMediaPostService } from "../services/SocialMediaPostService";
+import { ImageService } from "../services/ImageService";
+import { AgentFeedbackService } from "../services/AgentFeedbackService";
 
 // Twitter-specific types (scraping only, no API credentials needed)
 export interface TwitterCredentials {
@@ -138,6 +141,9 @@ export class TwitterAgent extends BaseAgent {
   private reviewQueue: ReviewItem[] = [];
   private twitterService: TwitterService | null = null;
   private userCache: Map<string, string> = new Map(); // Cache username -> userID
+  private socialMediaPostService!: SocialMediaPostService;
+  private imageService!: ImageService;
+  private feedbackService!: AgentFeedbackService;
 
   constructor(config?: Partial<TwitterAgentConfig>) {
     const baseConfig: AgentConfig = {
@@ -232,6 +238,9 @@ Be thorough but concise in your analysis.`;
     
     // Initialize Twitter service for web scraping (no credentials needed)
     this.twitterService = new TwitterService(credentials);
+    this.socialMediaPostService = new SocialMediaPostService();
+    this.imageService = new ImageService();
+    this.feedbackService = new AgentFeedbackService();
     console.log(`TwitterAgent initialized with ${guardians.length} guardians and web scraping service`);
   }
 
@@ -246,6 +255,9 @@ Be thorough but concise in your analysis.`;
     
     // Initialize Twitter service
     this.twitterService = new TwitterService(credentials);
+    this.socialMediaPostService = new SocialMediaPostService();
+    this.imageService = new ImageService();
+    this.feedbackService = new AgentFeedbackService();
     console.log(`TwitterAgent initialized with ${this.config.guardians.length} guardians from database`);
   }
 
@@ -320,21 +332,50 @@ Be thorough but concise in your analysis.`;
   /**
    * Analyze tweets for case relevance and create updates
    */
-  async analyzeTweetsAndCreateUpdates(tweets: TweetData[]): Promise<TwitterAgentResponse> {
+  async analyzeTweetsAndCreateUpdates(tweets: TweetData[], guardianId?: string): Promise<TwitterAgentResponse> {
     const startTime = Date.now();
     const analysisResults: TweetAnalysis[] = [];
     let caseUpdatesCreated = 0;
 
-    console.log(`Analyzing ${tweets.length} tweets for case relevance`);
+    console.log(`\n========== analyzeTweetsAndCreateUpdates CALLED ==========`);
+    console.log(`Tweets to analyze: ${tweets.length}`);
+    console.log(`Guardian ID provided: ${guardianId || 'NONE'}`);
+    console.log(`Total guardians loaded: ${this.config.guardians.length}`);
+    console.log(`Guardians: ${this.config.guardians.map(g => g.name).join(', ')}`);
+    console.log(`reviewQueueEnabled: ${this.config.reviewPolicy.reviewQueueEnabled}`);
+    console.log(`========================================================\n`);
 
     for (const tweet of tweets) {
       try {
-        // Find the guardian for this tweet
-        const guardian = this.config.guardians.find((g: Guardian) => 
-          g.twitterHandle === tweet.author.handle || g.twitterUserId === tweet.author.handle
-        );
+        console.log(`\n🔍 Processing tweet ${tweet.id} from @${tweet.author.handle}`);
+        
+        // Find the guardian - use provided guardianId if available (much more reliable!)
+        let guardian: Guardian | undefined;
+        
+        if (guardianId) {
+          console.log(`   Using provided guardianId: ${guardianId}`);
+          guardian = this.config.guardians.find((g: Guardian) => g.id === guardianId);
+          if (guardian) {
+            console.log(`✅ Guardian FOUND by ID: ${guardian.name}`);
+          } else {
+            console.error(`❌ Guardian NOT FOUND for provided ID: ${guardianId}`);
+          }
+        } else {
+          // Fallback to handle matching (legacy behavior, less reliable)
+          console.log(`   No guardianId provided, trying to match by handle...`);
+          console.log(`   Available guardians: ${this.config.guardians.map(g => `@${g.twitterHandle}`).join(', ')}`);
+          guardian = this.config.guardians.find((g: Guardian) => 
+            g.twitterHandle === tweet.author.handle || g.twitterUserId === tweet.author.handle
+          );
+          if (guardian) {
+            console.log(`✅ Guardian MATCHED by handle: ${guardian.name} (@${guardian.twitterHandle})`);
+          }
+        }
+        
         if (!guardian) {
-          console.warn(`Guardian not found for tweet author: ${tweet.author.handle}`);
+          console.error(`❌ Guardian NOT FOUND for tweet ${tweet.id}`);
+          console.error(`   Tweet author: @${tweet.author.handle}`);
+          console.error(`   SKIPPING THIS TWEET!`);
           continue;
         }
 
@@ -346,27 +387,31 @@ Be thorough but concise in your analysis.`;
         analysisResults.push(analysis);
 
         // Handle different scenarios based on case analysis
+        // Save ALL posts to review queue (not just case-related ones)
+        let reviewType: 'case_creation' | 'case_update' | 'case_enrichment' = 'case_update';
+        
         if (caseAnalysis.shouldCreateNewCase && caseAnalysis.newCaseData) {
-          // Add case creation to review queue
-          const reviewItem = await this.createReviewItem('case_creation', tweet, analysis, caseAnalysis);
-          if (reviewItem) {
-            await this.addToReviewQueue(reviewItem);
-            console.log(`📋 Case creation queued for review: ${caseAnalysis.newCaseData.name}`);
-          }
+          reviewType = 'case_creation';
+          console.log(`📋 Case creation detected: ${caseAnalysis.newCaseData.name}`);
         } else if (analysis.isCaseRelated && 
                    !analysis.extractedInfo.fundraisingRequest && 
                    !analysis.isDuplicate &&
                    analysis.caseUpdateType !== 'duplicate') {
-          // Add case update to review queue
-          const reviewItem = await this.createReviewItem('case_update', tweet, analysis, caseAnalysis);
-          if (reviewItem) {
-            await this.addToReviewQueue(reviewItem);
-            console.log(`📋 Case update queued for review: ${analysis.caseUpdateType}`);
-          }
+          reviewType = 'case_update';
+          console.log(`📋 Case update detected: ${analysis.caseUpdateType}`);
         } else if (analysis.isDuplicate) {
-          console.log(`Skipping duplicate tweet ${tweet.id}: ${analysis.duplicateReason}`);
-        } else if (!analysis.isCaseRelated) {
-          console.log(`Skipping non-case-related tweet ${tweet.id}`);
+          console.log(`📋 Duplicate tweet detected: ${analysis.duplicateReason}`);
+        } else {
+          console.log(`📋 Non-case-related tweet - will be added for review/dismissal`);
+        }
+
+        // Create and save review item for ALL posts (users can review and dismiss if needed)
+        const reviewItem = await this.createReviewItem(reviewType, tweet, analysis, caseAnalysis, guardian);
+        if (reviewItem) {
+          await this.addToReviewQueue(reviewItem);
+          console.log(`✅ Tweet ${tweet.id} added to review queue`);
+        } else {
+          console.warn(`⚠️ Failed to create review item for tweet ${tweet.id}`);
         }
       } catch (error) {
         console.error(`Error analyzing tweet ${tweet.id}:`, error);
@@ -497,23 +542,31 @@ Be thorough but concise in your analysis.`;
    */
   private async findCasesForGuardian(guardianId: string): Promise<any[]> {
     try {
-      // TODO: Implement actual Firestore query
-      // For now, return mock data
-      return [
-        {
-          id: 'case_123',
-          name: 'Luna Rescue Case',
-          description: 'Luna is a 2-year-old dog who needs surgery for her broken leg',
-          status: 'active',
-          animalType: 'Dog',
-          medicalCondition: 'Broken leg',
-          location: 'Buenos Aires',
-          currentAmount: 5000,
-          targetAmount: 10000,
-          additionalImages: ['image1.jpg'],
-          updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000) // 1 day ago
-        }
-      ];
+      console.log(`🔍 Finding cases for guardian: ${guardianId}`);
+      
+      // Query toto-app-stg Firestore for cases belonging to this guardian
+      const admin = (await import('firebase-admin')).default;
+      const db = admin.firestore(); // Uses default app (toto-app-stg)
+      
+      const casesSnapshot = await db.collection('cases')
+        .where('guardianId', '==', guardianId)
+        .where('status', 'in', ['active', 'draft', 'in_progress'])
+        .orderBy('updatedAt', 'desc')
+        .limit(10)
+        .get();
+      
+      if (casesSnapshot.empty) {
+        console.log(`ℹ️ No active cases found for guardian: ${guardianId}`);
+        return [];
+      }
+      
+      const cases = casesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      console.log(`✅ Found ${cases.length} case(s) for guardian ${guardianId}`);
+      return cases;
     } catch (error) {
       console.error('Error finding cases for guardian:', error);
       return [];
@@ -1302,15 +1355,22 @@ Respond in JSON format:
     type: 'case_creation' | 'case_update' | 'case_enrichment',
     tweet: TweetData,
     analysis: TweetAnalysis,
-    caseAnalysis?: any
+    caseAnalysis?: any,
+    guardian?: Guardian  // Accept guardian as parameter to avoid handle matching issues
   ): Promise<ReviewItem | null> {
     try {
-        const guardian = this.config.guardians.find((g: Guardian) => 
+      // Use provided guardian or fall back to handle matching (less reliable)
+      if (!guardian) {
+        guardian = this.config.guardians.find((g: Guardian) => 
           g.twitterHandle === tweet.author.handle || g.twitterUserId === tweet.author.handle
         );
-      if (!guardian) {
-        console.warn(`Guardian not found for tweet author: ${tweet.author.handle}`);
-        return null;
+        if (!guardian) {
+          console.error(`❌ Guardian not found for tweet author: ${tweet.author.handle} - createReviewItem will return null!`);
+          return null;
+        }
+        console.log(`⚠️ Guardian matched by handle (fallback): ${guardian.name}`);
+      } else {
+        console.log(`✅ Guardian provided directly: ${guardian.name}`);
       }
 
       // Check if auto-approval is possible
@@ -1350,11 +1410,91 @@ Respond in JSON format:
    */
   private async addToReviewQueue(reviewItem: ReviewItem): Promise<void> {
     try {
+      console.log(`🔵 [addToReviewQueue] Called for tweet ${reviewItem.tweetId}`);
+      console.log(`🔵 [addToReviewQueue] reviewQueueEnabled = ${this.config.reviewPolicy.reviewQueueEnabled}`);
+      
       if (!this.config.reviewPolicy.reviewQueueEnabled) {
-        console.log('Review queue is disabled, skipping review item');
+        console.log('❌ Review queue is DISABLED, skipping review item');
+        return;
+      }
+      
+      console.log('✅ Review queue is ENABLED, proceeding...');
+
+      // Get guardian info
+      const guardian = this.config.guardians.find((g: Guardian) => g.id === reviewItem.guardianId);
+      if (!guardian) {
+        console.error(`Guardian not found for review item: ${reviewItem.guardianId}`);
         return;
       }
 
+      // Process images if any
+      const imageUrls = reviewItem.metadata?.images || [];
+      const processedImages: string[] = [];
+      const imageFileNames: string[] = [];
+
+      if (imageUrls.length > 0) {
+        try {
+          // Process each image individually to track file names
+          for (let i = 0; i < imageUrls.length; i++) {
+            const result = await this.imageService.processAndUploadImage(
+              imageUrls[i],
+              'twitter',
+              reviewItem.tweetId,
+              i
+            );
+            if (result) {
+              processedImages.push(result.url);
+              imageFileNames.push(result.fileName);
+            }
+          }
+        } catch (error) {
+          console.error('Error processing images:', error);
+          // Continue without images if processing fails
+        }
+      }
+
+      // Determine recommended action
+      let recommendedAction: 'create_case' | 'create_update' | 'dismiss' = 'dismiss';
+      if (reviewItem.type === 'case_creation') {
+        recommendedAction = 'create_case';
+      } else if (reviewItem.type === 'case_update' || reviewItem.type === 'case_enrichment') {
+        recommendedAction = 'create_update';
+      }
+
+      // Save to Firestore via SocialMediaPostService
+      const postData: any = {
+        platform: 'twitter' as const,
+        guardianId: reviewItem.guardianId,
+        guardianName: guardian.name,
+        postId: reviewItem.tweetId,
+        postContent: reviewItem.tweetContent,
+        postUrl: `https://twitter.com/${reviewItem.tweetAuthor}/status/${reviewItem.tweetId}`,
+        images: processedImages,
+        imageFileNames: imageFileNames,
+        analysisResult: reviewItem.metadata?.analysisResult,
+        recommendedAction,
+        status: (reviewItem.status === 'auto_approved' ? 'approved' : 'pending') as 'pending' | 'approved' | 'rejected' | 'dismissed',
+        urgency: reviewItem.urgency,
+        confidence: reviewItem.confidence,
+        metadata: {
+          tweetData: reviewItem.originalTweet,
+          originalPlatformData: reviewItem
+        }
+      };
+      
+      // Only add matchedCaseId if it exists (avoid undefined in Firestore)
+      if (reviewItem.caseId) {
+        postData.matchedCaseId = reviewItem.caseId;
+      }
+
+      const savedPostId = await this.socialMediaPostService.savePost(postData);
+      if (savedPostId) {
+        console.log(`✅ Saved review item to Firestore: ${savedPostId}`);
+      } else {
+        console.warn('⚠️ Failed to save review item to Firestore, but continuing...');
+      }
+
+      // Also keep in-memory queue for backward compatibility
       this.reviewQueue.push(reviewItem);
 
       // If auto-approved, execute the action immediately

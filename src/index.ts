@@ -4,18 +4,23 @@
 export { BaseAgent } from './agents/BaseAgent';
 export { CaseAgent } from './agents/CaseAgent';
 export { TwitterAgent } from './agents/TwitterAgent';
+export { InstagramAgent } from './agents/InstagramAgent';
 
 // Types
 export * from './types';
 
 // Services
 export { RAGService } from './services/RAGService';
+export { SocialMediaPostService } from './services/SocialMediaPostService';
+export { ImageService } from './services/ImageService';
+export { AgentFeedbackService } from './services/AgentFeedbackService';
 // export { OrchestratorService } from './services/OrchestratorService';
 // export { FirebaseService } from './services/FirebaseService';
 
 // Import for internal use
 import { CaseAgent } from './agents/CaseAgent';
 import { TwitterAgent } from './agents/TwitterAgent';
+import { InstagramAgent } from './agents/InstagramAgent';
 import { RAGService } from './services/RAGService';
 import { AgentConfig } from './types';
 
@@ -23,12 +28,14 @@ import { AgentConfig } from './types';
 export class TotoAI {
   private caseAgent: CaseAgent;
   private twitterAgent: TwitterAgent;
+  private instagramAgent: InstagramAgent;
   private ragService: RAGService;
 
   constructor() {
     this.ragService = new RAGService();
     this.caseAgent = new CaseAgent();
     this.twitterAgent = new TwitterAgent();
+    this.instagramAgent = new InstagramAgent();
     
     // Set RAG service for agents
     this.caseAgent.setRAGService(this.ragService);
@@ -46,6 +53,13 @@ export class TotoAI {
    */
   getTwitterAgent(): TwitterAgent {
     return this.twitterAgent;
+  }
+
+  /**
+   * Get the Instagram agent
+   */
+  getInstagramAgent(): InstagramAgent {
+    return this.instagramAgent;
   }
 
   /**
@@ -79,6 +93,7 @@ export class TotoAI {
     return [
       this.caseAgent.getAgentInfo(),
       this.twitterAgent.getAgentInfo(),
+      this.instagramAgent.getAgentInfo(),
     ];
   }
 }
