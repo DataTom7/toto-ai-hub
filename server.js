@@ -2064,12 +2064,33 @@ app.post('/api/test-save', async (req, res) => {
   }
 });
 
+// Initialize job worker
+const { JobWorkerService } = require('./dist/services/JobWorkerService');
+const jobWorker = new JobWorkerService(schedulerService);
+
 // Start server
 app.listen(port, () => {
   console.log(`TotoAI server running on port ${port}`);
   console.log(`Health check: http://localhost:${port}/health`);
   console.log(`Available agents: http://localhost:${port}/api/agents`);
-  
+
   // Start the scheduler
   schedulerService.startAll();
+
+  // Start job worker (polls every 10 seconds)
+  jobWorker.start(10000);
+  console.log('✅ Job worker started');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  jobWorker.stop();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  jobWorker.stop();
+  process.exit(0);
 });
