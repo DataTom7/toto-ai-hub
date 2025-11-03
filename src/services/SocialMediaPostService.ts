@@ -1,5 +1,35 @@
 import * as admin from 'firebase-admin';
 
+// Retry helper with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | unknown;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+
+      // Don't retry on client errors
+      if (error instanceof Error && (error.message.includes('permission') || error.message.includes('not found'))) {
+        throw error;
+      }
+
+      if (attempt < maxRetries) {
+        const delay = initialDelay * Math.pow(2, attempt);
+        console.warn(`⏳ Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 export interface SocialMediaPost {
   id: string;
   platform: 'twitter' | 'instagram';
@@ -71,7 +101,11 @@ export class SocialMediaPostService {
 
       // Use postId as document ID to prevent duplicates
       const docRef = db.collection(this.COLLECTION_NAME).doc(post.postId);
-      await docRef.set(postData);
+
+      // Save with retry logic
+      await retryWithBackoff(async () => {
+        await docRef.set(postData);
+      });
 
       console.log(`✅ Successfully saved social media post to Firestore: ${post.postId}`);
       return docRef.id;
@@ -94,21 +128,25 @@ export class SocialMediaPostService {
     try {
       const totoBoUrl = process.env.TOTO_BO_URL || 'http://localhost:5000';
       console.log(`📡 Saving post via API to: ${totoBoUrl}/api/social-media/posts`);
-      
-      const response = await fetch(`${totoBoUrl}/api/social-media/posts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(post),
-      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API returned ${response.status}: ${errorText}`);
-      }
+      // API call with retry logic
+      const data = await retryWithBackoff(async () => {
+        const response = await fetch(`${totoBoUrl}/api/social-media/posts`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(post),
+        });
 
-      const data = await response.json();
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API returned ${response.status}: ${errorText}`);
+        }
+
+        return await response.json();
+      }, 5, 2000); // More retries for API calls, longer initial delay
+
       console.log(`✅ Successfully saved post via API: ${data.id || post.postId}`);
       return data.id || post.postId;
     } catch (error) {
@@ -226,7 +264,11 @@ export class SocialMediaPostService {
         updateData.reviewNotes = reviewNotes;
       }
 
-      await db.collection(this.COLLECTION_NAME).doc(postId).update(updateData);
+      // Update with retry logic
+      await retryWithBackoff(async () => {
+        await db.collection(this.COLLECTION_NAME).doc(postId).update(updateData);
+      });
+
       console.log(`✅ Updated post ${postId} status to ${status}`);
       return true;
     } catch (error) {
@@ -245,10 +287,13 @@ export class SocialMediaPostService {
         return false;
       }
 
-      await db.collection(this.COLLECTION_NAME).doc(postId).update({
-        matchedCaseId: caseId,
-        matchedCaseName: caseName,
-        caseId: caseId // Also set caseId for updates
+      // Update with retry logic
+      await retryWithBackoff(async () => {
+        await db.collection(this.COLLECTION_NAME).doc(postId).update({
+          matchedCaseId: caseId,
+          matchedCaseName: caseName,
+          caseId: caseId // Also set caseId for updates
+        });
       });
 
       console.log(`✅ Updated post ${postId} with matched case: ${caseId}`);
