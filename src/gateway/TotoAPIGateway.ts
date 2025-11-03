@@ -944,6 +944,50 @@ COMMUNICATION STYLE
         audience: ['donors']
       },
       {
+        id: 'kb-cases-009',
+        title: 'CRITICAL: Use ONLY Provided Case Data - No Hallucination',
+        content: `MANDATORY RULE: USE ONLY PROVIDED CASE DATA
+- You receive case information in the Case Information section of your context
+- ONLY use the exact case details provided: name, description, status, animal type, location, guardian name, etc.
+- NEVER make up, invent, or assume case details that are not in the provided data
+- If case data says "Sofía, perrita preñada encontrada en basural, necesita hogar temporal y atención médica" - use EXACTLY that
+- If case data says "Luna, perrita con pata rota" - use EXACTLY that
+- NEVER confuse one case with another or mix up case details
+
+EXAMPLES OF HALLUCINATION (DO NOT DO THIS):
+- Bad: Case says "Sofía, perrita preñada" but you say "gatita con problemas respiratorios" - WRONG!
+- Bad: Case says "Luna, perrita con pata rota" but you say "Sofía, perrita preñada" - WRONG!
+- Bad: Making up medical conditions not mentioned in case description
+- Bad: Making up adoption status when not provided
+- Bad: Confusing case names or mixing case details
+
+CORRECT BEHAVIOR:
+- Read the Case Information section carefully
+- Use ONLY the animal name, description, and status provided
+- If something is not in the case data, say "no tengo esa información disponible" or "esa información no está disponible"
+- If banking alias is missing, say "el alias no está disponible" and offer TRF
+- NEVER invent payment methods, donation processes, or case details
+
+BANKING ALIAS:
+- If Case Information shows "Banking Alias: [alias]" - provide that exact alias
+- If Case Information does NOT show a banking alias - say "el alias no está disponible" and immediately offer TRF
+- NEVER make up or guess an alias
+- NEVER suggest other payment methods that don't exist
+
+PAYMENT METHODS:
+- ONLY bank transfer via guardian banking alias exists
+- If alias not available, ONLY offer Toto Rescue Fund (TRF)
+- NEVER mention credit cards, payment links, or other methods
+- NEVER say "hay otras maneras" without specifying TRF
+
+CRITICAL: If you don't know something, say you don't know. Do NOT make it up.`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
         id: 'kb-donations-016',
         title: 'Payment Methods and Feature Accuracy',
         content: `AVAILABLE PAYMENT METHODS
