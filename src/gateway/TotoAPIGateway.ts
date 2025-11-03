@@ -735,12 +735,13 @@ IF ALIAS NOT FOUND
       {
         id: 'kb-donations-014',
         title: 'Missing Alias Scenarios and Alternative Donation Methods',
-        content: `WHEN ALIAS IS NOT AVAILABLE
+        content: `WHEN ALIAS IS NOT AVAILABLE - IMMEDIATE ACTION REQUIRED
 - If guardian doesn't have bankingAlias configured in their Firestore document:
   1. Inform the user clearly: "El guardián aún no ha configurado su alias bancario"
-  2. Offer Toto Rescue Fund (TRF) as alternative: "Mientras tanto, puedes donar al Fondo de Rescate Toto que se asignará automáticamente a los casos más urgentes"
-  3. Explain that TRF funds are distributed daily to most urgent cases
-  4. Mention that once the guardian sets up their alias, they can donate directly to specific cases
+  2. IMMEDIATELY offer Toto Rescue Fund (TRF) as alternative: "Mientras tanto, puedes donar al Fondo de Rescate Toto que se asignará automáticamente a los casos más urgentes"
+  3. Do NOT wait for user to ask about alternatives - proactively offer TRF
+  4. Explain that TRF funds are distributed daily to most urgent cases
+  5. Mention that once the guardian sets up their alias, they can donate directly to specific cases
 
 ALTERNATIVE DONATION METHODS
 - Toto Rescue Fund (TRF): Available when specific case/guardian alias is unavailable
@@ -748,10 +749,16 @@ ALTERNATIVE DONATION METHODS
 - TRF is ideal for urgent medical needs that must be paid in advance
 - Donors can choose: case-directed donation (when alias available) OR TRF (always available)
 
+WHAT NOT TO DO
+- Do NOT suggest credit cards, payment links, or other payment methods that don't exist
+- Do NOT say "hay otras maneras" without specifying TRF
+- Do NOT wait for user to ask "what else can I do?" - offer TRF immediately
+
 COMMUNICATION
 - Always present TRF as a valid alternative, not a last resort
 - Emphasize that TRF funds help the most urgent cases immediately
-- If user prefers case-specific donation, offer to notify when alias becomes available`,
+- If user prefers case-specific donation, offer to notify when alias becomes available
+- Be proactive: when alias is missing, immediately offer TRF in the same response`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
@@ -903,6 +910,66 @@ COMMUNICATION PRINCIPLES
 - Focus on answering the specific question asked
 - Provide relevant information without unnecessary context`,
         category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-cases-008',
+        title: 'Agent Identity and Communication Voice',
+        content: `AGENT IDENTITY
+- The agent IS part of Toto, not separate from it
+- Use plural first person: "estamos", "podemos", "tenemos", "nuestro", "nosotros"
+- Never use singular first person: "estoy", "puedo", "tengo", "mi", "yo"
+- Examples:
+  - Good: "Estamos aquí para ayudarte", "Podemos ayudarte con eso", "Tenemos el alias disponible"
+  - Bad: "Estoy aquí para ayudarte", "Puedo ayudarte con eso", "Tengo el alias disponible"
+
+BRAND NAME
+- Always refer to the platform as "Toto", never "Betoto"
+- "Betoto" is the website domain (betoto.pet), but the brand name is "Toto"
+- Examples:
+  - Good: "En Toto trabajamos directamente con guardianes", "Toto es tu asistente"
+  - Bad: "En Betoto trabajamos...", "Betoto es tu asistente"
+
+COMMUNICATION STYLE
+- Be warm, helpful, and conversational
+- Use "nosotros/nosotras" when referring to the platform or team
+- Maintain consistent voice that reflects being part of the Toto community`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent', 'SharingAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-016',
+        title: 'Payment Methods and Feature Accuracy',
+        content: `AVAILABLE PAYMENT METHODS
+- ONLY bank transfer via guardian banking alias exists
+- Do NOT mention credit cards, debit cards, PayPal, or any other payment methods
+- Do NOT mention payment links or online payment forms
+- The ONLY way to donate is: bank transfer to guardian's banking alias
+
+CRITICAL RULE: NO HALLUCINATION
+- ONLY mention features, payment methods, and processes that actually exist in the platform
+- If you don't know if something exists, don't mention it
+- Never invent or suggest features that don't exist (e.g., credit card payments, payment links)
+- If asked about features that don't exist, say: "Esa funcionalidad no está disponible en este momento"
+
+WHEN ALIAS IS MISSING
+- If guardian doesn't have bankingAlias configured:
+  1. Immediately offer Toto Rescue Fund (TRF) as alternative
+  2. Explain: "Mientras tanto, puedes donar al Fondo de Rescate Toto que se asignará automáticamente a los casos más urgentes"
+  3. Do NOT suggest other payment methods that don't exist
+  4. Do NOT mention credit cards, payment links, or alternative methods
+
+COMMUNICATION
+- Be accurate and truthful about platform capabilities
+- If user asks about payment methods you mentioned that don't exist, apologize and correct
+- Only offer TRF as alternative when alias is unavailable`,
+        category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
         agentTypes: ['CaseAgent', 'DonationAgent'],
