@@ -1,7 +1,6 @@
 {
   "watch": [
     "server.js",
-    "dist/**/*.js",
     "public/**/*.html",
     "public/**/*.css",
     "public/**/*.js"
@@ -9,7 +8,7 @@
   "ext": "js,html,css",
   "ignore": [
     "node_modules/**/*",
-    "dist/**/*.map"
+    "dist/**/*"
   ],
   "delay": 1000,
   "env": {

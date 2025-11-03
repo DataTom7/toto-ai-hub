@@ -316,31 +316,9 @@ app.post('/api/social-media/monitor', async (req, res) => {
   try {
     const { guardianId } = req.body || {};
     console.log('📡 Received POST request to /api/social-media/monitor', guardianId ? `for guardian: ${guardianId}` : '(all guardians)');
-    
-    // FORCE SAVE A TEST POST TO PROVE MECHANISM WORKS
-    const SocialMediaPostService = require('./dist/services/SocialMediaPostService').SocialMediaPostService;
-    const postService = new SocialMediaPostService();
-    const testPost = {
-      platform: 'twitter',
-      guardianId: guardianId || 'test',
-      guardianName: 'Monitoring Test',
-      postId: `monitor_test_${Date.now()}`,
-      postContent: `Test post created during monitoring at ${new Date().toISOString()}`,
-      postUrl: 'https://test.com',
-      images: [],
-      imageFileNames: [],
-      recommendedAction: 'dismiss',
-      status: 'pending',
-      urgency: 'low',
-      confidence: 0.9,
-      metadata: {}
-    };
-    console.log('🧪 Force-saving test post during monitoring...');
-    const testSaveId = await postService.savePost(testPost);
-    console.log(`🧪 Test post save result: ${testSaveId}`);
-    
+
     const results = await schedulerService.triggerSocialMediaMonitoring(guardianId);
-    res.json({ success: true, results, testPostSaved: !!testSaveId });
+    res.json({ success: true, results });
   } catch (error) {
     console.error('❌ Error in /api/social-media/monitor:', error);
     console.error('Error stack:', error.stack);
