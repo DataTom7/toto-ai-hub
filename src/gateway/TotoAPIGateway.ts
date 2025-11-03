@@ -565,10 +565,11 @@ INTERNATIONAL SUPPORT
       {
         id: 'kb-donations-006',
         title: 'Donation Amounts and Minimums',
-        content: `- Minimum donation amount is $10
-- Donors can choose any amount from $10 and above
+        content: `- There is NO minimum donation amount
+- Donors can donate any amount they wish
+- Every donation helps, regardless of size
 - No maximum donation limit
-- When showing donation intent, agents should emphasize that every donation helps, starting from $10`,
+- When showing donation intent, agents should emphasize that every donation helps, no matter the amount`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
@@ -705,6 +706,91 @@ COMMUNICATION
         agentTypes: ['CaseAgent', 'DonationAgent'],
         audience: ['donors']
       },
+      {
+        id: 'kb-donations-013',
+        title: 'Banking Alias Provision and Retrieval',
+        content: `AGENT RESPONSIBILITY
+- When users show donation intent, the agent MUST provide the banking alias directly
+- The agent should retrieve the alias from the guardian's Firestore document (caseData.guardianId -> guardian document -> bankingAlias field)
+- NEVER tell users to "find it in a profile" or "look in a section" - these don't exist in toto-app
+- Provide the alias immediately when donation intent is expressed
+
+ALIAS FORMAT
+- Banking aliases follow Argentina's national banking alias system
+- Each guardian has one unique alias for all their cases
+- Present the alias clearly: "El alias bancario del guardián es [ALIAS]"
+- Provide basic transfer instructions: "Puedes hacer una transferencia estándar desde tu banco o billetera usando este alias"
+
+IF ALIAS NOT FOUND
+- If the guardian document doesn't have a bankingAlias field, inform the user
+- Offer alternative: suggest donating to Toto Rescue Fund (TRF) which can be allocated to urgent cases
+- Escalate: inform the user that the guardian needs to complete their banking alias setup
+- Do NOT make up or guess an alias`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-014',
+        title: 'Missing Alias Scenarios and Alternative Donation Methods',
+        content: `WHEN ALIAS IS NOT AVAILABLE
+- If guardian doesn't have bankingAlias configured in their Firestore document:
+  1. Inform the user clearly: "El guardián aún no ha configurado su alias bancario"
+  2. Offer Toto Rescue Fund (TRF) as alternative: "Mientras tanto, puedes donar al Fondo de Rescate Toto que se asignará automáticamente a los casos más urgentes"
+  3. Explain that TRF funds are distributed daily to most urgent cases
+  4. Mention that once the guardian sets up their alias, they can donate directly to specific cases
+
+ALTERNATIVE DONATION METHODS
+- Toto Rescue Fund (TRF): Available when specific case/guardian alias is unavailable
+- TRF funds are automatically allocated to most urgent cases on a daily basis
+- TRF is ideal for urgent medical needs that must be paid in advance
+- Donors can choose: case-directed donation (when alias available) OR TRF (always available)
+
+COMMUNICATION
+- Always present TRF as a valid alternative, not a last resort
+- Emphasize that TRF funds help the most urgent cases immediately
+- If user prefers case-specific donation, offer to notify when alias becomes available`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-015',
+        title: 'Donation Transparency and Verification Details',
+        content: `VERIFICATION PROCESS FOR DONORS
+- After making a transfer, donors can verify their donation by sending the receipt/comprobante
+- Donors upload the bank transfer receipt through the conversation
+- Verification happens weekly: guardian verifies donations with the platform
+- Once verified, donor receives notification and earns Totitos
+
+VERIFICATION OUTCOMES
+- If donor verifies: They earn Totitos and get confirmation notification
+- If donor doesn't verify BUT guardian verifies (with user-specific data): Donor is notified to claim their Totitos
+- If verification fails: Platform contacts donor for further verification instructions
+- If donor doesn't verify at all: No Totitos earned, but donation still reaches the pet
+
+TRANSPARENCY FEATURES
+- All donations are registered and tracked
+- Donations are used exclusively for the pet's care (case-specific)
+- Donors receive automatic notifications when case gets updates
+- Case updates show progress: medical treatment, milestones, recovery status
+- Donors can see their donation history in their profile
+
+COMMUNICATION
+- Emphasize that 100% of donations go directly to the guardian (no fees)
+- Explain that verification helps track donations and reward donors with Totitos
+- Mention that donors will receive updates automatically after donating
+- Clarify that even unverified donations reach the pets, but verification enables Totitos rewards`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
       
       // Case Management Knowledge Base
       {
@@ -784,6 +870,42 @@ COMMUNICATION
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
         agentTypes: ['CaseAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-cases-007',
+        title: 'Agent Conversation Behavior Guidelines',
+        content: `AVOID UNNECESSARY REPETITION
+- Do NOT repeat case introduction information (name, description, situation) in every message
+- Only mention case details when directly relevant to the user's question
+- If user asks about donation process, focus on answering that - don't reintroduce the case
+- If user asks about verification, focus on verification - don't repeat case story
+
+CONVERSATION FLOW
+- First message: Introduce the case with name, description, and needs (appropriate)
+- Subsequent messages: Address user's specific questions without repeating case introduction
+- Only reference case details when they're directly relevant to the current question
+- Keep responses concise and focused on what the user asked
+
+EXAMPLE GOOD BEHAVIOR
+- User: "¿Cómo dono?"
+- Good: "Para donar, puedes transferir al alias bancario del guardián. Te doy el alias..."
+- Bad: "Sofía, una perrita preñada encontrada en un basural, necesita ayuda. Para donar, puedes transferir..."
+
+EXAMPLE GOOD BEHAVIOR
+- User: "¿Cómo verifico mi donación?"
+- Good: "Puedes verificar enviando el comprobante de transferencia. Te explico el proceso..."
+- Bad: "Sofía necesita ayuda urgente. Para verificar tu donación, puedes enviar el comprobante..."
+
+COMMUNICATION PRINCIPLES
+- Be helpful and informative, not repetitive
+- Trust that the user remembers the case from the first message
+- Focus on answering the specific question asked
+- Provide relevant information without unnecessary context`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
         audience: ['donors']
       },
       
