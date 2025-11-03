@@ -1305,6 +1305,49 @@ Respond in JSON format:
         console.log(`[DEBUG] Processing ${rawTweets.length} raw tweets...`);
         for (const tweet of rawTweets) {
           console.log(`[DEBUG] Processing tweet:`, JSON.stringify(tweet, null, 2));
+          
+          // Extract media URLs from the tweet
+          const imageUrls: string[] = [];
+          const videoUrls: string[] = [];
+          
+          // Check for media in various possible locations
+          if (tweet.media && Array.isArray(tweet.media)) {
+            for (const media of tweet.media) {
+              if (media.type === 'photo' && media.url) {
+                imageUrls.push(media.url);
+              } else if ((media.type === 'video' || media.type === 'animated_gif') && media.url) {
+                videoUrls.push(media.url);
+              }
+            }
+          }
+          
+          // Also check entities.urls for media links
+          if (tweet.entities?.urls && Array.isArray(tweet.entities.urls)) {
+            for (const urlEntity of tweet.entities.urls) {
+              if (urlEntity.expanded_url && 
+                  (urlEntity.expanded_url.includes('/photo/') || 
+                   urlEntity.expanded_url.match(/\.(jpg|jpeg|png|gif|webp)$/i))) {
+                imageUrls.push(urlEntity.expanded_url);
+              }
+            }
+          }
+          
+          // Check for photos in extended_entities (Twitter API v1.1 style)
+          if (tweet.extended_entities?.media && Array.isArray(tweet.extended_entities.media)) {
+            for (const media of tweet.extended_entities.media) {
+              if (media.type === 'photo' && media.media_url_https) {
+                imageUrls.push(media.media_url_https);
+              } else if ((media.type === 'video' || media.type === 'animated_gif') && media.video_info?.variants) {
+                const mp4Variant = media.video_info.variants.find((v: any) => v.content_type === 'video/mp4');
+                if (mp4Variant?.url) {
+                  videoUrls.push(mp4Variant.url);
+                }
+              }
+            }
+          }
+          
+          console.log(`[DEBUG] Extracted ${imageUrls.length} images and ${videoUrls.length} videos from tweet`);
+          
           const tweetData: TweetData = {
             id: tweet.id,
             content: tweet.text,
@@ -1319,8 +1362,8 @@ Respond in JSON format:
               replies: tweet.public_metrics?.reply_count || 0
             },
             media: {
-              images: [],
-              videos: []
+              images: imageUrls,
+              videos: videoUrls
             },
             createdAt: new Date(tweet.created_at!),
             fetchedAt: new Date()
