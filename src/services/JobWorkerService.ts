@@ -103,27 +103,47 @@ export class JobWorkerService {
     }
 
     try {
-      // Get pending jobs (limit 5 at a time to avoid overload)
+      // Get pending jobs (without orderBy to avoid composite index requirement)
+      // We'll sort client-side instead
       const snapshot = await db
         .collection(this.COLLECTION_NAME)
         .where('status', '==', 'pending')
-        .orderBy('createdAt', 'asc')
-        .limit(5)
         .get();
 
       if (snapshot.empty) {
         return; // No jobs to process
       }
 
-      console.log(`📋 Found ${snapshot.size} pending job(s) to process`);
-
-      // Process each job
-      for (const doc of snapshot.docs) {
-        const job = {
+      // Sort client-side by createdAt (oldest first)
+      const jobs = snapshot.docs
+        .map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        } as MonitoringJob;
+        } as any)) // Type as any first to access createdAt
+        .sort((a: any, b: any) => {
+          const aTime = a.createdAt instanceof admin.firestore.Timestamp 
+            ? a.createdAt.toMillis() 
+            : a.createdAt instanceof Date 
+              ? a.createdAt.getTime() 
+              : 0;
+          const bTime = b.createdAt instanceof admin.firestore.Timestamp 
+            ? b.createdAt.toMillis() 
+            : b.createdAt instanceof Date 
+              ? b.createdAt.getTime() 
+              : 0;
+          return aTime - bTime;
+        })
+        .slice(0, 5) // Limit to 5 jobs
+        .map((job: any) => job as MonitoringJob);
 
+      if (jobs.length === 0) {
+        return;
+      }
+
+      console.log(`📋 Found ${jobs.length} pending job(s) to process`);
+
+      // Process each job
+      for (const job of jobs) {
         await this.processJob(job);
       }
     } catch (error) {

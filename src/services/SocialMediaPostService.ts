@@ -70,13 +70,67 @@ export class SocialMediaPostService {
    */
   private getFirestore(): admin.firestore.Firestore | null {
     const getTotoBoFirestore = (global as any).getTotoBoFirestore as (() => admin.firestore.Firestore | null) | undefined;
-    
+
     if (!getTotoBoFirestore) {
       console.warn('getTotoBoFirestore not available - Firebase Admin not initialized for toto-bo');
       return null;
     }
 
     return getTotoBoFirestore();
+  }
+
+  /**
+   * Remove undefined values and sanitize for Firestore
+   * Firestore does not accept: undefined, functions, Date objects (needs conversion), circular refs
+   */
+  private removeUndefinedFields(obj: any, seen = new WeakSet()): any {
+    // Handle null/undefined
+    if (obj === null || obj === undefined) {
+      return null;
+    }
+
+    // Handle primitives
+    if (typeof obj !== 'object') {
+      // Functions are not allowed in Firestore
+      if (typeof obj === 'function') {
+        return null;
+      }
+      return obj;
+    }
+
+    // Handle Date objects - convert to ISO string
+    if (obj instanceof Date) {
+      return obj.toISOString();
+    }
+
+    // Handle Firestore FieldValue (don't modify these)
+    if (obj.constructor && obj.constructor.name === 'FieldValue') {
+      return obj;
+    }
+
+    // Detect circular references
+    if (seen.has(obj)) {
+      console.warn('⚠️ Circular reference detected, skipping...');
+      return null;
+    }
+    seen.add(obj);
+
+    // Handle Arrays
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.removeUndefinedFields(item, seen)).filter(item => item !== null);
+    }
+
+    // Handle Objects
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        const cleanedValue = this.removeUndefinedFields(value, seen);
+        if (cleanedValue !== null || value === null) {
+          cleaned[key] = cleanedValue;
+        }
+      }
+    }
+    return cleaned;
   }
 
   /**
@@ -99,12 +153,15 @@ export class SocialMediaPostService {
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       };
 
+      // Remove undefined fields (Firestore does not accept undefined values)
+      const cleanedPostData = this.removeUndefinedFields(postData);
+
       // Use postId as document ID to prevent duplicates
       const docRef = db.collection(this.COLLECTION_NAME).doc(post.postId);
 
       // Save with retry logic
       await retryWithBackoff(async () => {
-        await docRef.set(postData);
+        await docRef.set(cleanedPostData);
       });
 
       console.log(`✅ Successfully saved social media post to Firestore: ${post.postId}`);

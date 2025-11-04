@@ -456,10 +456,14 @@ DONOR ACCESS TO BANKING ALIASES
 - In toto-bo: Banking aliases are displayed in case details for guardians/admin users
 - Users can make a standard transfer from their bank account or wallet using the guardian alias
 
-DONATION PROCESS
-- Donors transfer funds directly to the guardian's banking alias
+DONATION PROCESS - CRITICAL: NOT "THROUGH THE PLATFORM"
+- Donations are DIRECT bank transfers from donor's bank account or wallet to guardian's banking alias
+- Do NOT say "through our platform" or "through the platform" - this is incorrect
+- Say: "direct transfer to the guardian's banking alias" or "transfer from your bank/wallet to the guardian's alias"
+- There is NO platform processing - money goes directly from donor to guardian
 - Each guardian has one banking alias for all their cases
-- No intermediary processing - 100% of donations go directly to the guardian`,
+- No intermediary processing - 100% of donations go directly to the guardian
+- The agent only provides the banking alias and instructions - the actual transfer happens outside the platform`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
@@ -982,6 +986,39 @@ PAYMENT METHODS:
 
 CRITICAL: If you don't know something, say you don't know. Do NOT make it up.`,
         category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-017',
+        title: 'How to Explain Donation Process - Direct Transfer Only',
+        content: `CRITICAL: DONATIONS ARE NOT "THROUGH THE PLATFORM"
+- NEVER say "through our platform", "through the platform", "directly through our platform", or similar phrases
+- Donations are DIRECT bank transfers from donor's bank account or wallet to guardian's banking alias
+- The platform (Toto) only provides the banking alias and instructions - money never goes through Toto
+
+CORRECT LANGUAGE TO USE:
+- "Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián"
+- "La donación va directamente del guardián a tu cuenta bancaria/billetera"
+- "Transferirás directamente al guardián usando el alias bancario"
+- "El dinero va directamente al guardián, sin intermediarios"
+
+INCORRECT LANGUAGE (DO NOT USE):
+- "Puedes donar a través de nuestra plataforma" - WRONG
+- "Directamente a través de nuestra plataforma" - WRONG
+- "Usando nuestra plataforma" - WRONG
+- "A través de Toto" - WRONG
+
+THE PROCESS:
+1. Agent provides guardian's banking alias
+2. Donor transfers money from their bank/wallet to that alias
+3. Transfer happens outside Toto platform
+4. Donor can optionally upload receipt for verification
+5. Guardian verifies donation weekly
+6. Donor earns totitos if verified`,
+        category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
         agentTypes: ['CaseAgent', 'DonationAgent'],

@@ -54,6 +54,32 @@ export class TwitterService {
           const retweetElement = tweet.querySelector('[data-testid="retweet"]');
           const replyElement = tweet.querySelector('[data-testid="reply"]');
           
+          // Extract tweet ID from the link
+          let tweetId = `scraped_${Date.now()}_${i}`;
+          const tweetLink = tweet.querySelector('a[href*="/status/"]');
+          if (tweetLink) {
+            const href = tweetLink.getAttribute('href');
+            const match = href?.match(/\/status\/(\d+)/);
+            if (match && match[1]) {
+              tweetId = match[1];
+            }
+          }
+          
+          // Extract images from tweet
+          const imageElements = tweet.querySelectorAll('img[src*="/media/"]');
+          const media: any[] = [];
+          
+          imageElements.forEach((img: any) => {
+            const src = img.src;
+            // Filter out profile images and emoji
+            if (src && src.includes('/media/') && !src.includes('profile_images') && !src.includes('emoji')) {
+              media.push({
+                type: 'photo',
+                url: src.replace(/&name=\w+/, '&name=large') // Get large version
+              });
+            }
+          });
+          
           if (textElement) {
             const text = textElement.textContent?.trim() || '';
             const time = timeElement?.getAttribute('datetime') || new Date().toISOString();
@@ -62,7 +88,7 @@ export class TwitterService {
             const replies = replyElement?.textContent?.trim() || '0';
             
             results.push({
-              id: `scraped_${Date.now()}_${i}`,
+              id: tweetId,
               text: text,
               created_at: time,
               public_metrics: {
@@ -70,7 +96,8 @@ export class TwitterService {
                 retweet_count: parseInt(retweets.replace(/[^\d]/g, '')) || 0,
                 reply_count: parseInt(replies.replace(/[^\d]/g, '')) || 0
               },
-              author_id: username
+              author_id: username,
+              media: media.length > 0 ? media : undefined
             });
           }
         }

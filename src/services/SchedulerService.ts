@@ -193,7 +193,7 @@ export class SchedulerService {
    * Unified social media monitoring method
    * Processes both Twitter and Instagram agents with batch processing
    */
-  private async runSocialMediaMonitoring(filterGuardianId?: string) {
+  private async runSocialMediaMonitoring(filterGuardianId?: string, filterPlatform?: 'twitter' | 'instagram') {
     const results = {
       twitter: {
         totalGuardians: 0,
@@ -213,7 +213,8 @@ export class SchedulerService {
       endTime: null as Date | null
     };
 
-    // Process Twitter Agent
+    // Process Twitter Agent (skip if Instagram-only filter)
+    if (filterPlatform !== 'instagram') {
     try {
       const twitterAgent = this.totoAI.getTwitterAgent();
       if (!twitterAgent.getGuardians() || twitterAgent.getGuardians().length === 0) {
@@ -272,8 +273,10 @@ export class SchedulerService {
       console.error('❌ Error in Twitter Agent monitoring:', error);
       results.twitter.errors++;
     }
+    } // End Twitter-only filter
 
-    // Process Instagram Agent
+    // Process Instagram Agent (skip if Twitter-only filter)
+    if (filterPlatform !== 'twitter') {
     try {
       const instagramAgent = this.totoAI.getInstagramAgent();
       if (!instagramAgent.getGuardians() || instagramAgent.getGuardians().length === 0) {
@@ -294,10 +297,14 @@ export class SchedulerService {
 
       if (instagramGuardians.length > 0) {
         console.log(`🔍 Processing ${instagramGuardians.length} Instagram guardians...`);
+        if (filterGuardianId) {
+          console.log(`   📌 Passing guardianId filter to Instagram agent: "${filterGuardianId}"`);
+        } else {
+          console.log(`   ⚠️ NO guardianId filter - will process ALL guardians`);
+        }
         try {
-          // Instagram agent processes all guardians at once in runMonitoringCycle
-          // So we just call it once (it handles batching internally via the service)
-          const response = await instagramAgent.runMonitoringCycle();
+          // Pass guardianId filter to Instagram agent if filtering by specific guardian
+          const response = await instagramAgent.runMonitoringCycle(filterGuardianId);
           
           if (response.success) {
             results.instagram.successfulFetches = instagramGuardians.length;
@@ -317,6 +324,7 @@ export class SchedulerService {
       console.error('❌ Error in Instagram Agent monitoring:', error);
       results.instagram.errors++;
     }
+    } // End Instagram-only filter
 
     results.endTime = new Date();
     const duration = results.endTime.getTime() - results.startTime.getTime();
@@ -361,13 +369,14 @@ export class SchedulerService {
   /**
    * Manually trigger social media monitoring
    * @param guardianId Optional guardian ID to filter monitoring to a specific guardian
+   * @param platform Optional platform to filter monitoring ('twitter' or 'instagram')
    */
-  async triggerSocialMediaMonitoring(guardianId?: string) {
+  async triggerSocialMediaMonitoring(guardianId?: string, platform?: 'twitter' | 'instagram') {
     if (guardianId) {
-      console.log(`🚀 Manually triggering Social Media monitoring for guardian: ${guardianId}...`);
+      console.log(`🚀 Manually triggering Social Media monitoring for guardian: ${guardianId}${platform ? ` (${platform} only)` : ''}...`);
     } else {
-      console.log('🚀 Manually triggering Social Media monitoring for all guardians...');
+      console.log(`🚀 Manually triggering Social Media monitoring for all guardians${platform ? ` (${platform} only)` : ''}...`);
     }
-    return await this.runSocialMediaMonitoring(guardianId);
+    return await this.runSocialMediaMonitoring(guardianId, platform);
   }
 }

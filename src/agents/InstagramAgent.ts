@@ -342,23 +342,44 @@ Be thorough but concise in your analysis, paying special attention to visual con
   }
 
   /**
-   * Fetch posts from all active guardians
+   * Fetch posts from active guardians (optionally filter by guardianId)
    */
-  async fetchGuardianPosts(): Promise<InstagramPost[]> {
+  async fetchGuardianPosts(guardianId?: string): Promise<InstagramPost[]> {
     if (!this.instagramService) {
       throw new Error('Instagram service not initialized');
     }
 
+    console.log(`\n🔍 [fetchGuardianPosts] Called with guardianId: ${guardianId || 'undefined'}`);
+    console.log(`   Total guardians in config: ${this.config.guardians.length}`);
+    
     const allPosts: InstagramPost[] = [];
-    const activeGuardians = this.config.guardians.filter((g: Guardian) => g.isActive);
+    let activeGuardians = this.config.guardians.filter((g: Guardian) => g.isActive);
+    
+    console.log(`   Active guardians before filter: ${activeGuardians.length}`);
+    console.log(`   Active guardian IDs: ${activeGuardians.map(g => g.id).join(', ')}`);
+    
+    if (guardianId) {
+      console.log(`🔍 FILTERING by guardianId: "${guardianId}"`);
+      const beforeFilter = activeGuardians.length;
+      activeGuardians = activeGuardians.filter((g: Guardian) => {
+        const matches = g.id === guardianId;
+        if (!matches) {
+          console.log(`   ⚠️ Guardian "${g.id}" doesn't match filter "${guardianId}"`);
+        }
+        return matches;
+      });
+      console.log(`   Filtered from ${beforeFilter} to ${activeGuardians.length} guardian(s)`);
+    }
 
-    console.log(`Fetching posts from ${activeGuardians.length} active guardians`);
+    console.log(`✅ Fetching posts from ${activeGuardians.length} active guardian(s)`);
 
     for (const guardian of activeGuardians) {
       try {
+        console.log(`\n📱 Processing guardian: ${guardian.name} (@${guardian.instagramHandle})`);
         let posts: InstagramPost[] = [];
         
         if (guardian.accessToken && guardian.instagramUserId) {
+          console.log(`   Using Instagram API for @${guardian.instagramHandle}`);
           // Use API if access token available
           posts = await this.instagramService.getUserPosts(
             guardian.instagramUserId, 
@@ -366,12 +387,15 @@ Be thorough but concise in your analysis, paying special attention to visual con
             guardian.accessToken
           );
         } else {
+          console.log(`   Using web scraping for @${guardian.instagramHandle}`);
           // Fallback to web scraping
           posts = await this.instagramService.scrapeUserPosts(
             guardian.instagramHandle,
             this.config.maxPostsPerFetch
           );
         }
+        
+        console.log(`   Scraping returned ${posts.length} posts for @${guardian.instagramHandle}`);
         
         // Add author information to posts
         posts = posts.map(post => ({
@@ -384,11 +408,17 @@ Be thorough but concise in your analysis, paying special attention to visual con
         }));
         
         allPosts.push(...posts);
-        console.log(`Fetched ${posts.length} posts from @${guardian.instagramHandle}`);
+        console.log(`✅ Successfully fetched ${posts.length} posts from @${guardian.instagramHandle}`);
       } catch (error) {
-        console.error(`Error fetching posts for @${guardian.instagramHandle}:`, error);
+        console.error(`❌ Error fetching posts for @${guardian.instagramHandle}:`, error);
+        if (error instanceof Error) {
+          console.error(`   Error message: ${error.message}`);
+          console.error(`   Error stack: ${error.stack}`);
+        }
       }
     }
+    
+    console.log(`\n📊 Total posts fetched: ${allPosts.length} from ${activeGuardians.length} guardians`);
 
     return allPosts;
   }
@@ -513,13 +543,19 @@ Be thorough but concise in your analysis, paying special attention to visual con
 
   /**
    * Main method to run the complete Instagram monitoring process
+   * @param guardianId Optional guardian ID to filter monitoring to a specific guardian
    */
-  async runMonitoringCycle(): Promise<InstagramAgentResponse> {
+  async runMonitoringCycle(guardianId?: string): Promise<InstagramAgentResponse> {
     try {
-      console.log('Starting Instagram monitoring cycle...');
+      console.log(`\n🚀 Starting Instagram monitoring cycle...`);
+      if (guardianId) {
+        console.log(`   🔍 FILTERING ENABLED for guardian ID: "${guardianId}"`);
+      } else {
+        console.log(`   ⚠️ NO FILTER - processing ALL guardians`);
+      }
 
-      // Step 1: Fetch posts from all guardians
-      const posts = await this.fetchGuardianPosts();
+      // Step 1: Fetch posts from guardians (filtered by guardianId if provided)
+      const posts = await this.fetchGuardianPosts(guardianId);
       
       // Step 2: Fetch stories from all guardians (optional, as they expire quickly)
       const stories = await this.fetchGuardianStories();

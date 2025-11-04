@@ -7,7 +7,7 @@ const { TotoAI } = require('./dist/index.js');
 const { SchedulerService } = require('./dist/services/SchedulerService');
 const admin = require('firebase-admin');
 
-// Updated to trigger new deployment with fixed secret
+// Updated to trigger new deployment - Instagram login re-enabled with correct credentials
 
 // Twitter web scraping (no API credentials needed)
 console.log('🔍 Twitter web scraping enabled (no API credentials needed)');
@@ -15,6 +15,7 @@ console.log('🔍 Twitter web scraping enabled (no API credentials needed)');
 // Initialize Firebase Admin SDK for toto-app-stg and toto-bo
 let totoAppStgApp = null;
 let totoBoApp = null;
+let totoBoFirestoreInstance = null; // Cache Firestore instance with settings
 const fs = require('fs');
 
 // Initialize toto-app-stg Firebase Admin
@@ -67,10 +68,18 @@ try {
     totoBoServiceAccount = JSON.parse(totoBoServiceAccountJson);
     console.log('✅ Using toto-bo service account from environment variable');
   } else {
-    // Try to find toto-bo service account file (might not exist locally)
-    // Note: This is expected for development - toto-bo credentials may not be available
-    console.log('⚠️ TOTO_BO_SERVICE_ACCOUNT_KEY not found in environment variables');
-    console.log('   Social media posts will use API calls to toto-bo instead');
+    // Try local file (for development)
+    const totoBoServiceAccountPath = path.join(__dirname, 'toto-bo-stg-firebase-adminsdk-fbsvc-369557e118.json');
+    
+    if (fs.existsSync(totoBoServiceAccountPath)) {
+      const totoBoServiceAccountFile = fs.readFileSync(totoBoServiceAccountPath, 'utf8');
+      totoBoServiceAccount = JSON.parse(totoBoServiceAccountFile);
+      console.log('✅ Using local toto-bo-stg service account file');
+    } else {
+      console.log('⚠️ TOTO_BO_SERVICE_ACCOUNT_KEY not found in environment variables');
+      console.log('⚠️ Local toto-bo service account file not found');
+      console.log('   Social media posts will use API calls to toto-bo instead');
+    }
   }
   
   if (totoBoServiceAccount) {
@@ -81,8 +90,20 @@ try {
     } catch {
       totoBoApp = admin.initializeApp({
         credential: admin.credential.cert(totoBoServiceAccount),
+        projectId: 'toto-bo-stg'
       }, 'toto-bo');
-      console.log('✅ Firebase Admin SDK initialized for toto-bo');
+      console.log('✅ Firebase Admin SDK initialized for toto-bo-stg');
+    }
+
+    // Initialize Firestore with settings (must be done once) and cache it
+    try {
+      totoBoFirestoreInstance = admin.firestore(totoBoApp);
+      totoBoFirestoreInstance.settings({ ignoreUndefinedProperties: true });
+      console.log('✅ Firestore configured to ignore undefined properties');
+    } catch (error) {
+      // Firestore already initialized with settings
+      console.log('⚠️ Firestore settings already configured');
+      totoBoFirestoreInstance = admin.firestore(totoBoApp);
     }
   }
 } catch (error) {
@@ -92,15 +113,10 @@ try {
 
 // Helper functions to get Firestore and Storage instances
 const getTotoBoFirestore = () => {
-  if (totoBoApp) {
-    return admin.firestore(totoBoApp);
+  if (totoBoFirestoreInstance) {
+    return totoBoFirestoreInstance;
   }
-  // Fallback to default app (toto-app-stg) for local development
-  // Both toto-bo and toto-app-stg use the same database in dev
-  if (totoAppStgApp) {
-    console.log('⚠️ Using toto-app-stg Firestore as fallback for social media posts');
-    return admin.firestore(totoAppStgApp);
-  }
+  console.log('⚠️ toto-bo Firestore not available - social media posts will use API fallback');
   return null;
 };
 
@@ -108,11 +124,7 @@ const getTotoBoStorage = () => {
   if (totoBoApp) {
     return admin.storage(totoBoApp);
   }
-  // Fallback to default app (toto-app-stg) for local development
-  if (totoAppStgApp) {
-    console.log('⚠️ Using toto-app-stg Storage as fallback for social media images');
-    return admin.storage(totoAppStgApp);
-  }
+  console.log('⚠️ toto-bo Storage not available - social media images will use API fallback');
   return null;
 };
 
@@ -314,10 +326,10 @@ app.get('/api/social-media/monitor', (req, res) => {
 
 app.post('/api/social-media/monitor', async (req, res) => {
   try {
-    const { guardianId } = req.body || {};
-    console.log('📡 Received POST request to /api/social-media/monitor', guardianId ? `for guardian: ${guardianId}` : '(all guardians)');
+    const { guardianId, platform } = req.body || {};
+    console.log('📡 Received POST request to /api/social-media/monitor', guardianId ? `for guardian: ${guardianId}` : '(all guardians)', platform ? `(${platform} only)` : '');
 
-    const results = await schedulerService.triggerSocialMediaMonitoring(guardianId);
+    const results = await schedulerService.triggerSocialMediaMonitoring(guardianId, platform);
     res.json({ success: true, results });
   } catch (error) {
     console.error('❌ Error in /api/social-media/monitor:', error);
