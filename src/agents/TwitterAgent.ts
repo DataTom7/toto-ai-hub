@@ -11,6 +11,7 @@ import { FunctionDeclaration, FunctionCall } from "@google/generative-ai";
 import { TwitterService } from "../services/TwitterService";
 import { SocialMediaPostService } from "../services/SocialMediaPostService";
 import { ImageService } from "../services/ImageService";
+import { ImageAnalysisService, ImageAnalysis } from "../services/ImageAnalysisService";
 import { AgentFeedbackService } from "../services/AgentFeedbackService";
 
 // Twitter-specific types (scraping only, no API credentials needed)
@@ -101,6 +102,7 @@ export interface TweetAnalysis {
   };
   isDuplicate?: boolean;
   duplicateReason?: string;
+  imageAnalysis?: ImageAnalysis; // NEW: Multi-modal image analysis from Gemini vision
 }
 
 export interface ReviewItem {
@@ -145,6 +147,7 @@ export class TwitterAgent extends BaseAgent {
   private userCache: Map<string, string> = new Map(); // Cache username -> userID
   private socialMediaPostService!: SocialMediaPostService;
   private imageService!: ImageService;
+  private imageAnalysisService!: ImageAnalysisService;
   private feedbackService!: AgentFeedbackService;
 
   constructor(config?: Partial<TwitterAgentConfig>) {
@@ -250,6 +253,7 @@ Be thorough but concise in your analysis.`;
     this.twitterService = new TwitterService(credentials);
     this.socialMediaPostService = new SocialMediaPostService();
     this.imageService = new ImageService();
+    this.imageAnalysisService = new ImageAnalysisService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`TwitterAgent initialized with ${guardians.length} guardians and web scraping service`);
   }
@@ -267,6 +271,7 @@ Be thorough but concise in your analysis.`;
     this.twitterService = new TwitterService(credentials);
     this.socialMediaPostService = new SocialMediaPostService();
     this.imageService = new ImageService();
+    this.imageAnalysisService = new ImageAnalysisService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`TwitterAgent initialized with ${this.config.guardians.length} guardians from database`);
   }
@@ -882,6 +887,33 @@ Respond with JSON:
    * Analyze a single tweet for case relevance
    */
   private async analyzeTweet(tweet: TweetData, caseAnalysis?: any): Promise<TweetAnalysis> {
+    // NEW: Analyze images with Gemini vision if present
+    let imageAnalysis: ImageAnalysis | undefined;
+    const tweetImages = tweet.media?.images || tweet.imageUrls || [];
+
+    if (tweetImages.length > 0) {
+      try {
+        console.log(`🖼️  Tweet has ${tweetImages.length} image(s), analyzing with Gemini vision...`);
+        imageAnalysis = await this.imageAnalysisService.analyzeMultipleImages(
+          tweetImages,
+          {
+            postText: tweet.content,
+            platform: 'twitter',
+            guardianName: tweet.author.name,
+          }
+        );
+        console.log(`✅ Image analysis complete - Urgency: ${imageAnalysis.urgencyLevel}, Confidence: ${(imageAnalysis.confidence * 100).toFixed(1)}%`);
+
+        // If image shows critical condition, log it
+        if (imageAnalysis.urgencyLevel === 'critical' || imageAnalysis.urgencyLevel === 'high') {
+          console.log(`⚠️  HIGH URGENCY detected in image: ${imageAnalysis.healthIndicators.visibleInjuries.join(', ')}`);
+        }
+      } catch (error) {
+        console.error('Error analyzing tweet images:', error);
+        // Continue without image analysis
+      }
+    }
+
     const caseContext = caseAnalysis ? `
 Existing Case Information:
 - Name: ${caseAnalysis.existingCase?.name || 'Unknown'}
@@ -968,6 +1000,15 @@ Respond in JSON format:
         const analysis = this.convertFunctionCallsToTweetAnalysis(functionResult.functionCalls, tweet, caseAnalysis);
         if (analysis) {
           console.log(`✅ Converted function call to TweetAnalysis: ${JSON.stringify(analysis, null, 2)}`);
+          // Add image analysis if available
+          if (imageAnalysis) {
+            analysis.imageAnalysis = imageAnalysis;
+            // Boost urgency if image analysis shows higher urgency
+            if (imageAnalysis.urgencyLevel === 'critical' && analysis.urgency !== 'critical') {
+              console.log(`⚠️  Boosting urgency to 'critical' based on image analysis`);
+              analysis.urgency = 'critical';
+            }
+          }
           return analysis;
         }
         console.log('⚠️ Function call conversion returned null, falling back to legacy parsing');
@@ -996,8 +1037,20 @@ Respond in JSON format:
       // Clean up any extra whitespace
       jsonString = jsonString.trim();
 
-      const analysis = JSON.parse(jsonString);
-      return analysis as TweetAnalysis;
+      const analysis = JSON.parse(jsonString) as TweetAnalysis;
+      // Add image analysis if available
+      if (imageAnalysis) {
+        analysis.imageAnalysis = imageAnalysis;
+        // Boost urgency if image analysis shows higher urgency
+        if (imageAnalysis.urgencyLevel === 'critical' && analysis.urgency !== 'critical') {
+          console.log(`⚠️  Boosting urgency to 'critical' based on image analysis`);
+          analysis.urgency = 'critical';
+        } else if (imageAnalysis.urgencyLevel === 'high' && (analysis.urgency === 'low' || analysis.urgency === 'medium')) {
+          console.log(`⚠️  Boosting urgency to 'high' based on image analysis`);
+          analysis.urgency = 'high';
+        }
+      }
+      return analysis;
     } catch (error) {
       console.error('Error analyzing tweet:', error);
       // Return default analysis
@@ -1011,6 +1064,7 @@ Respond in JSON format:
           fundraisingRequest: false,
           emergency: false,
         },
+        imageAnalysis, // Include image analysis even on error
       };
     }
   }

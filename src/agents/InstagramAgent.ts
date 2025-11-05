@@ -11,6 +11,7 @@ import { FunctionDeclaration, FunctionCall } from "@google/generative-ai";
 import { InstagramService } from "../services/InstagramService";
 import { SocialMediaPostService } from "../services/SocialMediaPostService";
 import { ImageService } from "../services/ImageService";
+import { ImageAnalysisService, ImageAnalysis } from "../services/ImageAnalysisService";
 import { AgentFeedbackService } from "../services/AgentFeedbackService";
 
 // Instagram-specific types
@@ -133,6 +134,7 @@ export interface PostAnalysis {
   };
   isDuplicate?: boolean;
   duplicateReason?: string;
+  imageAnalysis?: ImageAnalysis; // NEW: Multi-modal image analysis from Gemini vision
 }
 
 export interface ReviewItem {
@@ -177,6 +179,7 @@ export class InstagramAgent extends BaseAgent {
   private instagramService: InstagramService | null = null;
   private socialMediaPostService!: SocialMediaPostService;
   private imageService!: ImageService;
+  private imageAnalysisService!: ImageAnalysisService;
   private feedbackService!: AgentFeedbackService;
 
   constructor(config?: Partial<InstagramAgentConfig>) {
@@ -287,6 +290,7 @@ Be thorough but concise in your analysis, paying special attention to visual con
     this.instagramService = new InstagramService(credentials);
     this.socialMediaPostService = new SocialMediaPostService();
     this.imageService = new ImageService();
+    this.imageAnalysisService = new ImageAnalysisService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`InstagramAgent initialized with ${guardians.length} guardians`);
   }
@@ -304,6 +308,7 @@ Be thorough but concise in your analysis, paying special attention to visual con
     this.instagramService = new InstagramService(credentials);
     this.socialMediaPostService = new SocialMediaPostService();
     this.imageService = new ImageService();
+    this.imageAnalysisService = new ImageAnalysisService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`InstagramAgent initialized with ${this.config.guardians.length} guardians from database`);
   }
@@ -1005,6 +1010,33 @@ Respond with JSON:
    * Analyze a single post for case relevance
    */
   private async analyzePost(post: InstagramPost, caseAnalysis?: any): Promise<PostAnalysis> {
+    // NEW: Analyze images with Gemini vision if present
+    let imageAnalysis: ImageAnalysis | undefined;
+    const postImages = [...post.media.images, ...post.media.carousel];
+
+    if (postImages.length > 0) {
+      try {
+        console.log(`🖼️  Post has ${postImages.length} image(s), analyzing with Gemini vision...`);
+        imageAnalysis = await this.imageAnalysisService.analyzeMultipleImages(
+          postImages,
+          {
+            postText: post.caption,
+            platform: 'instagram',
+            guardianName: post.author.name,
+          }
+        );
+        console.log(`✅ Image analysis complete - Urgency: ${imageAnalysis.urgencyLevel}, Confidence: ${(imageAnalysis.confidence * 100).toFixed(1)}%`);
+
+        // If image shows critical condition, log it
+        if (imageAnalysis.urgencyLevel === 'critical' || imageAnalysis.urgencyLevel === 'high') {
+          console.log(`⚠️  HIGH URGENCY detected in image: ${imageAnalysis.healthIndicators.visibleInjuries.join(', ')}`);
+        }
+      } catch (error) {
+        console.error('Error analyzing Instagram images:', error);
+        // Continue without image analysis
+      }
+    }
+
     const caseContext = caseAnalysis ? `
 Existing Case Information:
 - Name: ${caseAnalysis.existingCase?.name || 'Unknown'}
@@ -1109,6 +1141,15 @@ Respond in JSON format:
           if (allMedia.length > 0 && !analysis.extractedInfo.newImages) {
             analysis.extractedInfo.newImages = allMedia;
           }
+          // Add image analysis if available
+          if (imageAnalysis) {
+            analysis.imageAnalysis = imageAnalysis;
+            // Boost urgency if image analysis shows higher urgency
+            if (imageAnalysis.urgencyLevel === 'critical' && analysis.urgency !== 'critical') {
+              console.log(`⚠️  Boosting urgency to 'critical' based on image analysis`);
+              analysis.urgency = 'critical';
+            }
+          }
           console.log(`✅ Converted function call to PostAnalysis: ${JSON.stringify(analysis, null, 2)}`);
           return analysis;
         }
@@ -1147,7 +1188,21 @@ Respond in JSON format:
         analysis.extractedInfo.newImages = allMedia;
       }
 
-      return analysis as PostAnalysis;
+      const typedAnalysis = analysis as PostAnalysis;
+      // Add image analysis if available
+      if (imageAnalysis) {
+        typedAnalysis.imageAnalysis = imageAnalysis;
+        // Boost urgency if image analysis shows higher urgency
+        if (imageAnalysis.urgencyLevel === 'critical' && typedAnalysis.urgency !== 'critical') {
+          console.log(`⚠️  Boosting urgency to 'critical' based on image analysis`);
+          typedAnalysis.urgency = 'critical';
+        } else if (imageAnalysis.urgencyLevel === 'high' && (typedAnalysis.urgency === 'low' || typedAnalysis.urgency === 'medium')) {
+          console.log(`⚠️  Boosting urgency to 'high' based on image analysis`);
+          typedAnalysis.urgency = 'high';
+        }
+      }
+
+      return typedAnalysis;
     } catch (error) {
       console.error('Error analyzing post:', error);
       // Return default analysis
@@ -1161,6 +1216,7 @@ Respond in JSON format:
           fundraisingRequest: false,
           emergency: false,
         },
+        imageAnalysis, // Include image analysis even on error
       };
     }
   }
