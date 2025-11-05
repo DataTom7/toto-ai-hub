@@ -1,12 +1,18 @@
 import * as cron from 'node-cron';
 import { TotoAI } from '../index';
+import { GuardianInsightsService } from './GuardianInsightsService';
+import { SocialMediaPostService } from './SocialMediaPostService';
 
 export class SchedulerService {
   private totoAI: TotoAI;
   private tasks: Map<string, cron.ScheduledTask> = new Map();
+  private guardianInsightsService: GuardianInsightsService;
+  private socialMediaPostService: SocialMediaPostService;
 
   constructor(totoAI: TotoAI) {
     this.totoAI = totoAI;
+    this.guardianInsightsService = new GuardianInsightsService();
+    this.socialMediaPostService = new SocialMediaPostService();
   }
 
   /**
@@ -334,6 +340,14 @@ export class SchedulerService {
     console.log(`   Instagram: ${results.instagram.totalGuardians} guardians, ${results.instagram.successfulFetches} successful, ${results.instagram.totalPosts} posts, ${results.instagram.proposedActions} actions`);
     console.log(`   Total Duration: ${Math.round(duration / 1000)}s`);
 
+    // Extract guardian insights from posts (async, don't block)
+    if (results.twitter.totalPosts > 0 || results.instagram.totalPosts > 0) {
+      console.log('🔍 Extracting guardian insights from posts...');
+      this.extractGuardianInsights(filterGuardianId).catch(error => {
+        console.error('❌ Error extracting guardian insights:', error);
+      });
+    }
+
     return results;
   }
 
@@ -364,6 +378,79 @@ export class SchedulerService {
     }
 
     console.log(`✅ Completed ${platform} processing for all ${guardians.length} guardians`);
+  }
+
+  /**
+   * Extract guardian insights from recently saved posts
+   */
+  private async extractGuardianInsights(filterGuardianId?: string): Promise<void> {
+    try {
+      if (!this.socialMediaPostService) {
+        console.warn('⚠️ SocialMediaPostService not available - skipping insights extraction');
+        return;
+      }
+
+      // Get all guardians that were monitored
+      const guardians: Array<{ id: string; name: string }> = [];
+      
+      if (filterGuardianId) {
+        // Get specific guardian
+        const twitterAgent = this.totoAI.getTwitterAgent();
+        const instagramAgent = this.totoAI.getInstagramAgent();
+        const twitterGuardians = twitterAgent.getGuardians().filter(g => g.id === filterGuardianId);
+        const instagramGuardians = instagramAgent.getGuardians().filter(g => g.id === filterGuardianId);
+        guardians.push(...twitterGuardians, ...instagramGuardians);
+      } else {
+        // Get all guardians
+        const twitterAgent = this.totoAI.getTwitterAgent();
+        const instagramAgent = this.totoAI.getInstagramAgent();
+        guardians.push(...twitterAgent.getGuardians(), ...instagramAgent.getGuardians());
+      }
+
+      // Remove duplicates
+      const uniqueGuardians = Array.from(new Map(guardians.map(g => [g.id, g])).values());
+
+      console.log(`🔍 Processing insights for ${uniqueGuardians.length} guardian(s)...`);
+
+      for (const guardian of uniqueGuardians) {
+        try {
+          // Fetch recent posts for this guardian (last 30 days)
+          const posts = await this.socialMediaPostService.getPosts({
+            guardianId: guardian.id,
+            limit: 100 // Get up to 100 recent posts
+          });
+
+          if (posts.length === 0) {
+            console.log(`   ⚠️ No posts found for ${guardian.name} - skipping`);
+            continue;
+          }
+
+          console.log(`   📊 Processing ${posts.length} posts for ${guardian.name}...`);
+
+          // Process posts to extract insights
+          const postsForProcessing = posts.map(p => ({
+            id: p.postId,
+            platform: p.platform,
+            postContent: p.postContent,
+            postUrl: p.postUrl,
+            createdAt: p.createdAt instanceof Date ? p.createdAt : new Date(p.createdAt as any)
+          }));
+
+          await this.guardianInsightsService.processGuardianPosts(
+            guardian.id,
+            postsForProcessing
+          );
+
+          console.log(`   ✅ Extracted insights for ${guardian.name}`);
+        } catch (error) {
+          console.error(`   ❌ Error processing insights for ${guardian.name}:`, error);
+        }
+      }
+
+      console.log('✅ Guardian insights extraction completed');
+    } catch (error) {
+      console.error('❌ Error in guardian insights extraction:', error);
+    }
   }
 
   /**

@@ -16,10 +16,17 @@ import { RAGService } from '../services/RAGService';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
+/**
+ * CaseAgent - Handles case-related conversations with users
+ * Default Audience: 'donors' (can be overridden based on userRole)
+ * This agent serves primarily donor-facing interactions, but adapts to guardian/admin roles
+ */
 export class CaseAgent extends BaseAgent {
   private conversationMemory: Map<string, ConversationMemory> = new Map();
   private userProfiles: Map<string, UserProfile> = new Map();
   private ragService?: RAGService;
+  // Default audience for KB retrieval - primarily serves donors
+  private readonly DEFAULT_AUDIENCE = 'donors';
   private analytics: AgentAnalytics = {
     totalInteractions: 0,
     successfulInteractions: 0,
@@ -71,16 +78,31 @@ export class CaseAgent extends BaseAgent {
   /**
    * Retrieve relevant knowledge using RAG
    */
-  private async retrieveRelevantKnowledge(message: string, context?: string): Promise<string> {
+  private async retrieveRelevantKnowledge(message: string, context?: string, userContext?: UserContext): Promise<string> {
     if (!this.ragService) {
       return '';
     }
 
     try {
+      // Determine audience from user context (default to 'donors' for CaseAgent)
+      // CaseAgent primarily serves donors, but adapts based on user role
+      let audience = this.DEFAULT_AUDIENCE;
+      if (userContext?.userRole) {
+        // Map user roles to audience types
+        if (userContext.userRole === 'guardian' || userContext.userRole === 'admin') {
+          audience = 'guardians';
+        } else if (userContext.userRole === 'investor' || userContext.userRole === 'lead_investor') {
+          audience = 'investors';
+        } else if (userContext.userRole === 'partner') {
+          audience = 'partners';
+        }
+      }
+
       const result = await this.ragService.retrieveKnowledge({
         query: message,
         agentType: 'CaseAgent',
         context,
+        audience, // Pass audience for relevance scoring
         maxResults: 3
       });
 
@@ -165,6 +187,35 @@ export class CaseAgent extends BaseAgent {
 - NEVER confuse one case with another or mix up case details
 - If banking alias is missing from Case Information, say "el alias no está disponible" and immediately offer TRF
 - CRITICAL: If you don't know something, say you don't know. Do NOT make it up.
+
+🚨 CRITICAL: TRF DEFINITION (NEVER INVENT TRANSLATIONS)
+- TRF = "Toto Rescue Fund" (English) or "Fondo de Rescate de Toto" (Spanish)
+- When explaining TRF, ALWAYS say: "TRF (Toto Rescue Fund)" or "TRF (Fondo de Rescate de Toto)"
+- NEVER translate TRF as "Transferencia Rápida de Fondos" - this is WRONG
+- NEVER invent other Spanish translations like "Transferencia de Rescate Felino" or "Transferencia Rápida y Fácil" - these are WRONG
+- If you mention TRF, you MUST clarify: "TRF es el Fondo de Rescate de Toto" or "TRF (Toto Rescue Fund)"
+
+🚨 CRITICAL: DONATION PROCESS (NEVER SAY "THROUGH THE PLATFORM")
+- Donations are DIRECT bank transfers from donor's bank account/wallet to guardian's banking alias
+- NEVER say "through our platform", "through the platform", "directly through our platform", or "a través de la plataforma" - this is WRONG
+- CORRECT: "transferencia directa desde tu banco/billetera al alias del guardián" or "direct transfer to the guardian's banking alias"
+- The platform ONLY provides the banking alias - money goes directly from donor to guardian, NO platform processing
+- Say: "Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián"
+
+🚨 CRITICAL: TOTITOS SYSTEM (ALWAYS EXPLAIN WHEN ASKED)
+- Totitos are a loyalty/reward system for verified donations and sharing cases
+- Users earn totitos for verified donations (amount doesn't matter, only that it's verified)
+- Sharing cases on social media also earns totitos
+- User rating (1-5 stars) multiplies totitos: 1 star = 1x, 2 stars = 2x, etc.
+- Totitos can be exchanged for goods or services for pets
+- Users can see totitos in their profile (bottom navbar)
+- When asked about totitos, explain: "Totitos son un sistema de recompensas por donaciones verificadas"
+
+🚨 CRITICAL: MINIMUM DONATION AMOUNT
+- There is NO minimum donation amount - NEVER say there is a minimum
+- Say: "No hay un monto mínimo para donar, ¡cada ayuda cuenta!" or "You can donate any amount - every donation helps!"
+- Every donation helps, regardless of size
+- Never mention "$10 minimum" or any minimum amount
 
 🎯 CORE CAPABILITIES:
 - Natural, empathetic conversations about pet rescue cases
@@ -259,12 +310,12 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       const intentAnalysis = await this.analyzeUserIntent(message, memory, userProfile);
       const emotionalState = await this.detectEmotionalState(message);
 
-      // Retrieve relevant knowledge using RAG
+      // Retrieve relevant knowledge using RAG (pass user context for audience determination)
       const knowledgeContext = await this.retrieveRelevantKnowledge(message, JSON.stringify({
         caseData: enhancedCaseData,
         userContext: context,
         conversationHistory: memory.conversationHistory
-      }));
+      }), context);
 
       // Build comprehensive context
       const enhancedMessage = this.buildEnhancedContext(
@@ -414,9 +465,47 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
 
   // ===== ENHANCED CASE DATA =====
 
+  /**
+   * Fetch guardian banking alias from Firestore if not provided in caseData
+   */
+  private async fetchGuardianBankingAlias(guardianId: string): Promise<string | undefined> {
+    if (!guardianId || guardianId === 'unknown') {
+      return undefined;
+    }
+
+    try {
+      const admin = (await import('firebase-admin')).default;
+      const db = admin.firestore(); // Uses default app (toto-app-stg)
+      
+      const guardianDoc = await db.collection('users').doc(guardianId).get();
+      
+      if (guardianDoc.exists) {
+        const guardianData = guardianDoc.data();
+        // Get primary alias (first in array or legacy field)
+        return guardianData?.bankingAccountAlias || 
+          (guardianData?.bankingAccountAliases && guardianData.bankingAccountAliases.length > 0 
+            ? guardianData.bankingAccountAliases[0] 
+            : undefined);
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.warn(`Could not fetch guardian banking alias for guardian ${guardianId}:`, error);
+      return undefined;
+    }
+  }
+
   private async enhanceCaseData(caseData: CaseData): Promise<EnhancedCaseData> {
+    // Fetch guardian banking alias from Firestore if not provided
+    let guardianBankingAlias = caseData.guardianBankingAlias;
+    
+    if (!guardianBankingAlias && caseData.guardianId) {
+      guardianBankingAlias = await this.fetchGuardianBankingAlias(caseData.guardianId);
+    }
+
     const enhanced: EnhancedCaseData = {
       ...caseData,
+      guardianBankingAlias: guardianBankingAlias, // Ensure it's set from Firestore if missing
       urgencyLevel: this.determineUrgencyLevel(caseData),
       fundingProgress: this.calculateFundingProgress(caseData),
       medicalHistory: this.extractMedicalHistory(caseData),
@@ -540,16 +629,17 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
       },
       share: {
         patterns: ['share', 'compartir', 'tell others', 'contar a otros', 'spread the word', 'difundir'],
-        action: {
-          type: 'share' as const,
-          payload: { 
-            action: 'share',
-            caseId: enhancedCaseData.id,
-            socialMedia: {
-              twitter: enhancedCaseData.guardianTwitter,
-              instagram: enhancedCaseData.guardianInstagram
-            }
-          },
+          action: {
+            type: 'share' as const,
+            payload: { 
+              action: 'share',
+              caseId: enhancedCaseData.id,
+              socialMedia: {
+                twitter: enhancedCaseData.guardianTwitter,
+                instagram: enhancedCaseData.guardianInstagram,
+                facebook: enhancedCaseData.guardianFacebook
+              }
+            },
         label: 'Share',
         description: 'Share this case with others',
           priority: 'medium' as const
@@ -873,7 +963,8 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
 - Funding Progress: ${enhancedCaseData.fundingProgress ? `${enhancedCaseData.fundingProgress.percentage.toFixed(1)}%` : 'N/A'}
 ${enhancedCaseData.guardianBankingAlias ? `- Banking Alias: ${enhancedCaseData.guardianBankingAlias}` : ''}
 ${enhancedCaseData.guardianTwitter ? `- Guardian Twitter: @${enhancedCaseData.guardianTwitter}` : ''}
-${enhancedCaseData.guardianInstagram ? `- Guardian Instagram: @${enhancedCaseData.guardianInstagram}` : ''}`;
+${enhancedCaseData.guardianInstagram ? `- Guardian Instagram: @${enhancedCaseData.guardianInstagram}` : ''}
+${enhancedCaseData.guardianFacebook ? `- Guardian Facebook: ${enhancedCaseData.guardianFacebook}` : ''}`;
   }
 
   private buildIntentContext(intentAnalysis: any, emotionalState: string): string {

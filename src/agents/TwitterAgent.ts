@@ -388,17 +388,24 @@ Be thorough but concise in your analysis.`;
 
         // Handle different scenarios based on case analysis
         // Save ALL posts to review queue (not just case-related ones)
-        let reviewType: 'case_creation' | 'case_update' | 'case_enrichment' = 'case_update';
+        // Default to 'case_creation' - only use 'case_update' if an existing case is found
+        let reviewType: 'case_creation' | 'case_update' | 'case_enrichment' = 'case_creation';
         
         if (caseAnalysis.shouldCreateNewCase && caseAnalysis.newCaseData) {
           reviewType = 'case_creation';
           console.log(`📋 Case creation detected: ${caseAnalysis.newCaseData.name}`);
-        } else if (analysis.isCaseRelated && 
+        } else if (caseAnalysis.existingCase && 
+                   analysis.isCaseRelated && 
                    !analysis.extractedInfo.fundraisingRequest && 
                    !analysis.isDuplicate &&
                    analysis.caseUpdateType !== 'duplicate') {
+          // Only set to 'case_update' if an existing case was found
           reviewType = 'case_update';
-          console.log(`📋 Case update detected: ${analysis.caseUpdateType}`);
+          console.log(`📋 Case update detected: ${analysis.caseUpdateType} for case ${caseAnalysis.existingCase.id}`);
+        } else if (analysis.isCaseRelated && !caseAnalysis.existingCase) {
+          // Case-related but no existing case found - should create new case
+          reviewType = 'case_creation';
+          console.log(`📋 Case-related tweet but no existing case found - will create new case`);
         } else if (analysis.isDuplicate) {
           console.log(`📋 Duplicate tweet detected: ${analysis.duplicateReason}`);
         } else {

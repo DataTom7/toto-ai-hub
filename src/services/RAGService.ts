@@ -16,6 +16,7 @@ export interface RAGQuery {
   query: string;
   agentType: string;
   context?: string;
+  audience?: string; // Target audience for relevance scoring (e.g., 'guardians', 'donors')
   maxResults?: number;
 }
 
@@ -172,24 +173,38 @@ export class RAGService {
 
   /**
    * Retrieve relevant knowledge chunks based on query and agent type
+   * All entries are accessible, but relevance is determined by audience and semantic similarity
    */
   async retrieveKnowledge(query: RAGQuery): Promise<RAGResult> {
     try {
-      const { query: userQuery, agentType, context, maxResults = 3 } = query;
+      const { query: userQuery, agentType, context, audience, maxResults = 3 } = query;
       
       // Generate embedding for the query
       const queryEmbedding = await this.generateEmbedding(userQuery);
       
-      // Filter chunks by agent type
+      // Filter chunks by agent type (technical constraint - which agent can use this)
       const agentFilteredChunks = this.knowledgeChunks.filter(chunk => 
-        chunk.agentTypes.includes(agentType)
+        chunk.agentTypes.length === 0 || chunk.agentTypes.includes(agentType)
       );
       
-      // Calculate similarity scores
-      const scoredChunks = agentFilteredChunks.map(chunk => ({
-        chunk,
-        score: this.calculateSimilarity(queryEmbedding, chunk.embedding || [])
-      }));
+      // Calculate similarity scores with audience relevance boost
+      const scoredChunks = agentFilteredChunks.map(chunk => {
+        let similarityScore = this.calculateSimilarity(queryEmbedding, chunk.embedding || []);
+        
+        // Boost relevance if audience matches (but don't filter out - all entries are accessible)
+        if (audience && chunk.audience && chunk.audience.length > 0) {
+          const audienceMatch = chunk.audience.includes(audience);
+          if (audienceMatch) {
+            // Boost score by 20% for audience match
+            similarityScore = similarityScore * 1.2;
+          }
+        }
+        
+        return {
+          chunk,
+          score: similarityScore
+        };
+      });
       
       // Sort by similarity score and get top results
       const topChunks = scoredChunks

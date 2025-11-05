@@ -1,0 +1,192 @@
+﻿[
+    {
+        "scenario":  "First-time donor wants to donate ",
+        "conversation":  1,
+        "finalResponse":  "¡Qué bueno que ya hiciste la transferencia! Ahora, ¿te gustaría seguir el caso de Luna (luna-case-1) para ver cómo evoluciona? También podrías compartir su historia para que más personas la conozcan.\n",
+        "messages":  [
+                         {
+                             "content":  "Â¡Hola! Vi el caso de Luna. Me gustarÃ­a ayudar.",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "¡Hola! Luna es una perrita callejera muy dulce en Buenos Aires que necesita tu ayuda. Fue encontrada con una pata rota y necesita cirugía para volver a caminar. ¿Cómo te gustaría ayudar a Luna?\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         },
+                         {
+                             "content":  "Quiero donar $50. Â¿CÃ³mo lo hago?",
+                             "timestamp":  "2024-01-01T10:00:02Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "¡Hola! Luna es una perrita callejera en Buenos Aires que necesita cirugía en su patita rota para poder caminar de nuevo. Actualmente, el caso está activo.\n\nPara donar, el alias no está disponible. ¿Te gustaría que te proporcione el TRF para ayudar a Luna?\n",
+                             "timestamp":  "2024-01-01T10:00:03Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "User asks about minimum donation",
+        "conversation":  2,
+        "finalResponse":  "¡Entendido! Max es un gato adulto en Córdoba que necesita esterilización y vacunación. Actualmente, su caso está activo.\n\nComo quieres donar, ¿te gustaría saber cómo puedes ayudar a Max específicamente?\n",
+        "messages":  [
+                         {
+                             "content":  "Hola, vi el caso de Max. Â¿CuÃ¡l es el monto mÃ­nimo para donar?",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Hola Usuario Prueba. Max es un gato adulto en Córdoba que necesita esterilización y vacunación. Su caso está activo.\n\nNo tengo esa información disponible sobre un monto mínimo para donar. Sin embargo, ¿te gustaría saber el TRF (Transferencia Rápida de Fondos) para ayudar a Max?\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Case with missing banking alias",
+        "conversation":  3,
+        "finalResponse":  "Hola Usuario Prueba. Bella es una perrita en Rosario que necesita tratamiento médico urgente. Su caso está activo.\n\nTRF significa Transferencia Rápida de Fondos. Como el alias no está disponible, esta es la forma más ágil de colaborar directamente con Ana López, la persona a cargo de Bella. ¿Te gustaría que te explique cómo funciona?\n",
+        "messages":  [
+                         {
+                             "content":  "Quiero donar $30 para ayudar a Bella.",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "¡Hola! Bella, una perrita en Rosario, necesita tratamiento médico urgente. ¿Te gustaría hacer una donación para ayudar a Ana López a cubrir los gastos?\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "User asks about transparency and verification",
+        "conversation":  4,
+        "finalResponse":  "Hola Usuario Prueba. Rocky es un perrito en Mendoza que necesita una cirugía de cadera. Su caso está activo y estamos buscando ayuda para financiar su tratamiento.\n\nSí, puedo ayudarte a verificar tu donación. ¿Tienes el ID de la transacción o el alias bancario que usaste para donar a Pedro Sánchez? Si usaste transferencia bancaria, el alias no está disponible, pero te puedo ofrecer el TRF.\n",
+        "messages":  [
+                         {
+                             "content":  "Quiero donar pero me preocupa que el dinero llegue realmente al animal. Â¿CÃ³mo garantizan la transparencia?",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Entiendo tu preocupación, Usuario Prueba. Rocky, un perrito de Mendoza, necesita una cirugía de cadera. Actualmente su caso está activo.\n\nPara garantizar la transparencia, cada caso tiene un responsable (Pedro Sánchez en este caso). Sin embargo, el alias no está disponible. ¿Te gustaría que te ofrezca un TRF (Transferencia de Rescate Felino)?\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "User asks what happens after donation",
+        "conversation":  5,
+        "finalResponse":  "Entiendo tu pregunta, Usuario Prueba. Si el caso de Lola alcanza su meta, tu donación se utilizará para cubrir otros gastos veterinarios necesarios para Lola. ¿Te gustaría saber más sobre cómo puedes ayudar a Lola?\n",
+        "messages":  [
+                         {
+                             "content":  "Acabo de donar $20. Â¿QuÃ© pasa ahora? Â¿RecibirÃ© actualizaciones?",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "¡Qué bueno que donaste para ayudar a Lola! Ella necesita tratamiento para parásitos y tu ayuda es muy importante. Te mantendremos al tanto de su progreso. ¿Te gustaría compartir su caso para que más personas la apoyen?\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "User asks about Totitos system",
+        "conversation":  6,
+        "finalResponse":  "¡Hola! Te cuento sobre Simba: es un gatito en Buenos Aires que necesita su vacunación completa. Está en estado activo bajo el cuidado de María González.\n\nEn cuanto a los Totitos y cómo ganarlos, esa información no está disponible. ¿Hay algo más en lo que te pueda ayudar sobre Simba o algún otro caso?\n",
+        "messages":  [
+                         {
+                             "content":  "EscuchÃ© que hay un sistema de recompensas. Â¿QuÃ© son los Totitos?",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Hola Usuario Prueba,\n\nHe escuchado tu pregunta sobre los Totitos. No tengo esa información disponible. ¿Te gustaría saber más sobre Simba, el gatito de Buenos Aires que necesita vacunación?\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "User wants to share case",
+        "conversation":  7,
+        "finalResponse":  "¡Qué bueno que compartiste el caso de Nina! No tengo información sobre \"Totitos\". ¿Hay algo más en lo que te pueda ayudar con Nina, como hacer una donación o considerar la adopción?\n",
+        "messages":  [
+                         {
+                             "content":  "Me encantÃ³ la historia de Nina. Â¿CÃ³mo puedo compartirla en mis redes sociales?",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "¡Qué bueno que te haya gustado la historia de Nina! Nina es una perrita que necesita un hogar temporal en Buenos Aires. Con tu ayuda, podemos encontrarle un hogar.\n\nPara compartir la historia de Nina en tus redes sociales, puedes copiar y pegar el enlace de su caso. ¿Te gustaría que te proporcione el enlace ahora? También, si deseas ayudar a Nina de otra manera, podrías considerar hacer una donación.\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "User asks about adoption",
+        "conversation":  8,
+        "finalResponse":  "Toby, un adorable perrito en Buenos Aires, está buscando un hogar permanente. María González es su actual guardiana.\n\n¿A qué caso te refieres? No tengo esa información disponible para Toby. ¿Te refieres a los requisitos generales de adopción?\n",
+        "messages":  [
+                         {
+                             "content":  "Me interesa adoptar a Toby. Â¿CÃ³mo funciona el proceso de adopciÃ³n?",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "¡Hola! Toby, un adorable perro en Buenos Aires, está listo para encontrar un hogar. María González es su actual guardiana.\n\nPara iniciar el proceso de adopción, necesito más información sobre tus preferencias. ¿Tienes otros perros o mascotas? ¿Qué tipo de hogar podrías ofrecerle a Toby?\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "User asks about multiple cases",
+        "conversation":  9,
+        "finalResponse":  "Entiendo que te gustaría donar a casos de diferentes guardianes. No tengo esa información disponible sobre otros guardianes en este momento. ¿Te gustaría hacer una donación para ayudar a Luna, la perrita que necesita cirugía y está bajo el cuidado de María González en Buenos Aires?\n",
+        "messages":  [
+                         {
+                             "content":  "Quiero ayudar a varios casos. Â¿Puedo donar a mÃºltiples animales a la vez?",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "¡Hola! Entiendo que quieres ayudar a varios casos. Luna (luna-case-9) es una perrita en Buenos Aires que necesita cirugía y su caso está activo.\n\nCon gusto te ayudo con tu donación. ¿Tienes una lista de los casos a los que te gustaría donar o prefieres que te sugiera algunos?\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Confused user needs clarification",
+        "conversation":  10,
+        "finalResponse":  "¡Entendido! Chico, un perrito en Buenos Aires, necesita atención veterinaria. María González es su contacto. ¿Hay algo en particular sobre Chico en lo que te pueda ayudar?\n",
+        "messages":  [
+                         {
+                             "content":  "No entiendo cÃ³mo funciona esto. Â¿CÃ³mo dono? Â¿Es a travÃ©s de la plataforma?",
+                             "timestamp":  "2024-01-01T10:00:00Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Hola Usuario Prueba. Chico, un perrito en Buenos Aires, necesita atención veterinaria. Actualmente su caso está activo.\n\nPara donar a través de la plataforma, puedes hacer clic en el botón de donación que aparece en la página del caso de Chico. ¿Te gustaría que te guíe a la página de donación?\n",
+                             "timestamp":  "2024-01-01T10:00:01Z",
+                             "role":  "assistant"
+                         },
+                         {
+                             "content":  "Entonces, Â¿hago la transferencia desde mi banco directamente al alias?",
+                             "timestamp":  "2024-01-01T10:00:02Z",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Chico es un perrito en Buenos Aires que necesita atención veterinaria. Está bajo el cuidado de María González y su caso está activo.\n\nPara hacer una transferencia, necesito saber el alias. Esa información no está disponible, pero puedo ofrecerte el TRF (Transferencia Rápida y Fácil) si te interesa. ¿Te parece bien?\n",
+                             "timestamp":  "2024-01-01T10:00:03Z",
+                             "role":  "assistant"
+                         }
+                     ]
+    }
+]

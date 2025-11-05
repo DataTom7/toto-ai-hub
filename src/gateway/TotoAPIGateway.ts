@@ -2,6 +2,7 @@ import { TotoAI } from '../index';
 import { CaseAgent } from '../agents/CaseAgent';
 import { TwitterAgent } from '../agents/TwitterAgent';
 import { RAGService, KnowledgeChunk } from '../services/RAGService';
+import { KnowledgeBaseService, KnowledgeItem as KBKnowledgeItem } from '../services/KnowledgeBaseService';
 
 // Types for API Gateway
 export interface AnalyticsData {
@@ -44,17 +45,8 @@ export interface AgentData {
   updatedAt: string;
 }
 
-export interface KnowledgeItem {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  lastUpdated: string;
-  usageCount: number;
-  agentTypes: string[]; // Which agents can use this (e.g., ["CaseAgent", "DonationAgent"])
-  audience: string[]; // Target audience/recipients (e.g., ["donors", "investors", "guardians", "partners"]) or ["admin"] for internal
-  embedding?: number[];
-}
+// Re-export KnowledgeItem from KnowledgeBaseService for backward compatibility
+export type KnowledgeItem = KBKnowledgeItem;
 
 export interface TestResponse {
   success: boolean;
@@ -87,7 +79,7 @@ export interface TrainingResult {
 export class TotoAPIGateway {
   private totoAI: TotoAI;
   private analyticsCache: AnalyticsData | null = null;
-  private knowledgeBase: KnowledgeItem[] = [];
+  private knowledgeBaseService: KnowledgeBaseService;
   private ragService: RAGService;
   private lastAnalyticsUpdate: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -95,7 +87,25 @@ export class TotoAPIGateway {
   constructor() {
     this.totoAI = new TotoAI();
     this.ragService = new RAGService();
-    this.initializeKnowledgeBase();
+    this.knowledgeBaseService = new KnowledgeBaseService();
+    // Note: initializeKnowledgeBase() is no longer called here
+    // KnowledgeBaseService will initialize from Firestore on first use
+  }
+
+  /**
+   * Initialize knowledge base service and RAG service
+   * Should be called after Firebase Admin is initialized
+   */
+  async initialize(): Promise<void> {
+    await this.knowledgeBaseService.initialize();
+    await this.initializeRAGService();
+  }
+
+  /**
+   * Get knowledge base service (for server endpoints)
+   */
+  getKnowledgeBaseService(): KnowledgeBaseService {
+    return this.knowledgeBaseService;
   }
 
   /**
@@ -212,25 +222,21 @@ export class TotoAPIGateway {
    * Get knowledge base items
    */
   async getKnowledgeBase(): Promise<KnowledgeItem[]> {
-    return this.knowledgeBase;
+    return await this.knowledgeBaseService.getAll();
   }
 
   /**
    * Add knowledge item
    */
-  async addKnowledgeItem(title: string, content: string, category: string = 'general', agentTypes: string[] = [], audience: string[] = []): Promise<KnowledgeItem> {
-    const newItem: KnowledgeItem = {
-      id: `kb-${Date.now()}`,
-      title: title.trim(),
-      content: content.trim(),
-      category: category,
-      lastUpdated: new Date().toISOString(),
-      usageCount: 0,
+  async addKnowledgeItem(title: string, content: string, category: string = 'general', agentTypes: string[] = [], audience: string[] = [], metadata?: { guardianId?: string; guardianName?: string; isGuardianSpecific?: boolean; [key: string]: any }): Promise<KnowledgeItem> {
+    const newItem = await this.knowledgeBaseService.add({
+      title,
+      content,
+      category,
       agentTypes,
-      audience
-    };
-
-    this.knowledgeBase.push(newItem);
+      audience,
+      metadata
+    });
     
     // Add to RAG service
     await this.ragService.addKnowledgeChunks([{
@@ -249,22 +255,25 @@ export class TotoAPIGateway {
 
   /**
    * Reset knowledge base
+   * Note: This will reinitialize from Firestore, not from hardcoded entries
    */
   async resetKnowledgeBase(): Promise<void> {
-    this.knowledgeBase = [];
     this.ragService.clearKnowledgeChunks();
-    this.initializeKnowledgeBase();
+    await this.knowledgeBaseService.refreshCache();
+    await this.initializeRAGService();
   }
 
   /**
    * Retrieve knowledge using RAG
+   * All KB entries are accessible, but relevance is determined by audience
    */
-  async retrieveKnowledge(query: string, agentType: string, context?: string): Promise<any> {
+  async retrieveKnowledge(query: string, agentType: string, context?: string, audience?: string): Promise<any> {
     try {
       const result = await this.ragService.retrieveKnowledge({
         query,
         agentType,
         context,
+        audience, // Audience for relevance scoring (e.g., 'guardians', 'donors', 'investors')
         maxResults: 3
       });
       
@@ -438,10 +447,11 @@ export class TotoAPIGateway {
   }
 
   /**
-   * Initialize default knowledge base with comprehensive entries
+   * Get hardcoded knowledge base entries (for migration purposes)
+   * @deprecated Use KnowledgeBaseService instead. This is only for migration.
    */
-  private initializeKnowledgeBase(): void {
-    this.knowledgeBase = [
+  getHardcodedKnowledgeBase(): KnowledgeItem[] {
+    return [
       // Donations Knowledge Base
       {
         id: 'kb-donations-001',
@@ -500,18 +510,48 @@ GUARDIAN-LED VERIFICATION
       },
       {
         id: 'kb-donations-003',
-        title: 'Totitos Loyalty System',
-        content: `TOTITOS EARNINGS
-- Totitos are earned based on number of verified donations (not amount)
-- Each verified donation earns loyalty points regardless of amount
+        title: 'Totitos Loyalty System - Complete Guide',
+        content: `WHAT ARE TOTITOS?
+- Totitos are a loyalty/reward system for verified donors
+- Totitos are earned for verified donations and other actions (sharing, interactions)
 - Totitos can be exchanged for goods or services for pets
-- System is currently in development mode
+- System tracks all donor contributions and rewards active participation
 
-VERIFICATION TIMING
-- Donations are verified on a weekly basis with guardians
-- Guardians approve verifications after review
-- Once verified, donors receive notification and earn their totitos
-- Verification confirmation is sent to the donor automatically`,
+HOW TO EARN TOTITOS:
+- Verified donations: Each verified donation earns totitos (amount doesn't matter, only that it's verified)
+- Sharing cases: Sharing cases on social media also earns totitos
+- Interactions: Engaging with agents and the platform improves user rating which multiplies totitos
+- User rating multiplier: 1 star = 1x, 2 stars = 2x, 3 stars = 3x, 4 stars = 4x, 5 stars = 5x
+- Total totitos = base value × user star rating
+
+VERIFICATION PROCESS FOR TOTITOS:
+- Donors upload receipt/comprobante after making transfer
+- Verification happens weekly with guardians
+- Guardians review and approve donations after cross-checking records
+- Once guardian approves, donor receives automatic notification
+- Donor then earns totitos for the verified donation
+
+IF DONOR DOESN'T VERIFY:
+- If guardian verifies independently (with user-specific data), donor is notified to claim totitos
+- This ensures donors don't miss totitos even if they forget to upload receipt
+- Unverified donations still help the pet, but no totitos earned
+
+WHERE TO SEE TOTITOS:
+- Users can access their profile from the bottom navbar
+- Profile shows: donation history, totitos earned, user rating/stars
+- All donation and contribution information is accessible in the profile
+
+USER RATING AND TOTITOS:
+- User rating (1-5 stars) affects totitos multiplier
+- Rating factors: active rate, number of donations, interactions with agents, guardian/user reviews
+- Higher rating = more totitos per action
+- Example: Base value 10 totitos × 3 star rating = 30 totitos earned
+
+COMMUNICATION:
+- When explaining totitos, mention: "Totitos son un sistema de recompensas por donaciones verificadas"
+- Explain that sharing cases also earns totitos
+- Mention that user rating multiplies totitos earnings
+- Encourage verification to maximize totitos earnings`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
@@ -583,7 +623,14 @@ INTERNATIONAL SUPPORT
       {
         id: 'kb-donations-007',
         title: 'Toto Rescue Fund (TRF)',
-        content: `PURPOSE
+        content: `CRITICAL: TRF ACRONYM DEFINITION
+- TRF stands for "Toto Rescue Fund" (English name)
+- In Spanish: "Fondo de Rescate de Toto" or use the acronym "TRF"
+- NEVER translate TRF as "Transferencia Rápida de Fondos" - this is INCORRECT
+- NEVER invent Spanish translations for TRF - always use "Toto Rescue Fund" or "Fondo de Rescate de Toto"
+- When explaining TRF, always state: "TRF (Toto Rescue Fund)" or "TRF (Fondo de Rescate de Toto)"
+
+PURPOSE
 - The Toto Rescue Fund (TRF) is available for cases with urgent needs that arise on very short notice
 - Used for medical needs that must be paid in advance
 - Automatically disperses donations to the most urgent cases on a daily basis
@@ -594,8 +641,13 @@ DONATION OPTIONS
 - Donations to different guardians require separate transactions
 
 COMMUNICATION
-- Explain that TRF ensures urgent cases receive immediate funding
-- Emphasize that TRF automatically allocates to the most urgent cases daily`,
+- When explaining TRF, always clarify: "TRF es el Fondo de Rescate de Toto" or "TRF (Toto Rescue Fund)"
+- CRITICAL: TRF is a GENERAL fund that automatically distributes to urgent cases - it is NOT a direct transfer to a specific guardian
+- Explain: "TRF se asigna automáticamente a los casos más urgentes diariamente" or "TRF automatically allocates to the most urgent cases daily"
+- Clarify: "Las donaciones al TRF no van directamente a un guardián específico, sino que se distribuyen automáticamente a los casos más urgentes"
+- Emphasize that TRF ensures urgent cases receive immediate funding when specific case/guardian alias is unavailable
+- NEVER say TRF is a direct transfer to a guardian - it's a general fund that distributes automatically
+- NEVER create alternative translations or explanations for TRF`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
@@ -607,7 +659,7 @@ COMMUNICATION
         title: 'Donation Flow and Conversation Guidance',
         content: `CONVERSATION FLOW
 - When users show donation intent, express gratitude and emphasize the importance of their contribution: "It's very important that we can count with your effort to help [case name]"
-- State the minimum donation amount: "You can donate from $10 to assist with the needs of this case under [guardian name]'s care"
+- CRITICAL: There is NO minimum donation amount - say "No hay un monto mínimo para donar, ¡cada ayuda cuenta!" or "You can donate any amount you wish - every donation helps!"
 - Actively ask: "How much would you like to donate?"
 - Once amount is confirmed, provide the banking alias and basic transfer instructions
 - Offer to help verify the donation: "If you would like to improve your user scoring, you can verify your donation by sending me the receipt"
@@ -650,22 +702,41 @@ COMMUNICATION
       },
       {
         id: 'kb-donations-010',
-        title: 'Donor Inbox and Case Communication',
-        content: `INBOX SYSTEM
+        title: 'Donor Inbox and Case Communication - Complete Post-Donation Experience',
+        content: `WHAT HAPPENS AFTER YOU DONATE:
+- The case conversation is automatically saved in your inbox
+- You'll receive automatic notifications when the case gets updates
+- All case updates appear in your inbox conversation thread
+- You can track your donation history and totitos in your profile
+
+INBOX SYSTEM
 - After a user donates to a case, that case's conversation is stored in their inbox
 - Users can access their inbox from the bottom navbar
 - Each case has its own conversation thread in the inbox
+- Inbox shows all cases you've donated to or interacted with
 
 CASE UPDATES AND NOTIFICATIONS
 - When a case receives an update, a message is automatically sent to the specific case conversation in the donor's inbox
 - Updates appear as unread messages in the inbox
 - Users receive notifications to check their inbox when new case updates arrive
+- Case updates include: medical progress, milestones, recovery status, treatment updates
 - This ensures donors stay informed about the cases they've supported
+
+WHAT HAPPENS IF CASE REACHES GOAL:
+- If a case exceeds its funding goal, excess donations are automatically reassigned to the next urgent case under that same guardian's care
+- Frame this positively: "En el afortunado caso de que el caso alcance su meta, tu donación se reasignará al siguiente caso urgente de ese guardián específico"
+- Your donation continues to help pets in need, just directed to the next urgent case
+- You'll still receive updates about the original case AND the new case if your donation is reallocated
 
 PROFILE ACCESS
 - Users can access their profile from the bottom navbar
 - Profile shows: donation history, totitos earned, user rating/stars
-- All donation and contribution information is accessible in the profile`,
+- All donation and contribution information is accessible in the profile
+
+COMMUNICATION
+- When explaining post-donation experience, mention: "Después de donar, la conversación se guardará en tu bandeja de entrada y recibirás actualizaciones automáticas del caso"
+- Explain that inbox notifications keep them informed
+- Mention that if goal is reached, donation reallocates to next urgent case of same guardian`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
@@ -742,7 +813,7 @@ IF ALIAS NOT FOUND
         content: `WHEN ALIAS IS NOT AVAILABLE - IMMEDIATE ACTION REQUIRED
 - If guardian doesn't have bankingAlias configured in their Firestore document:
   1. Inform the user clearly: "El guardián aún no ha configurado su alias bancario"
-  2. IMMEDIATELY offer Toto Rescue Fund (TRF) as alternative: "Mientras tanto, puedes donar al Fondo de Rescate Toto que se asignará automáticamente a los casos más urgentes"
+  2. IMMEDIATELY offer Toto Rescue Fund (TRF) as alternative: "Mientras tanto, puedes donar al Fondo de Rescate de Toto que se asignará automáticamente a los casos más urgentes"
   3. Do NOT wait for user to ask about alternatives - proactively offer TRF
   4. Explain that TRF funds are distributed daily to most urgent cases
   5. Mention that once the guardian sets up their alias, they can donate directly to specific cases
@@ -1085,9 +1156,6 @@ COMMUNICATION
         audience: ['donors']
       }
     ];
-
-    // Initialize RAG service with knowledge chunks
-    this.initializeRAGService();
   }
 
   /**
@@ -1095,7 +1163,8 @@ COMMUNICATION
    */
   private async initializeRAGService(): Promise<void> {
     try {
-      const knowledgeChunks: KnowledgeChunk[] = this.knowledgeBase.map(item => ({
+      const knowledgeBase = await this.knowledgeBaseService.getAll();
+      const knowledgeChunks: KnowledgeChunk[] = knowledgeBase.map(item => ({
         id: item.id,
         title: item.title,
         content: item.content,

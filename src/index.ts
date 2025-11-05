@@ -14,6 +14,7 @@ export { RAGService } from './services/RAGService';
 export { SocialMediaPostService } from './services/SocialMediaPostService';
 export { ImageService } from './services/ImageService';
 export { AgentFeedbackService } from './services/AgentFeedbackService';
+export { GuardianInsightsService } from './services/GuardianInsightsService';
 // export { OrchestratorService } from './services/OrchestratorService';
 // export { FirebaseService } from './services/FirebaseService';
 

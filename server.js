@@ -7,7 +7,7 @@ const { TotoAI } = require('./dist/index.js');
 const { SchedulerService } = require('./dist/services/SchedulerService');
 const admin = require('firebase-admin');
 
-// Updated to trigger new deployment - Instagram login re-enabled with correct credentials
+// Updated to trigger new deployment with fixed secret
 
 // Twitter web scraping (no API credentials needed)
 console.log('🔍 Twitter web scraping enabled (no API credentials needed)');
@@ -15,7 +15,6 @@ console.log('🔍 Twitter web scraping enabled (no API credentials needed)');
 // Initialize Firebase Admin SDK for toto-app-stg and toto-bo
 let totoAppStgApp = null;
 let totoBoApp = null;
-let totoBoFirestoreInstance = null; // Cache Firestore instance with settings
 const fs = require('fs');
 
 // Initialize toto-app-stg Firebase Admin
@@ -68,18 +67,10 @@ try {
     totoBoServiceAccount = JSON.parse(totoBoServiceAccountJson);
     console.log('✅ Using toto-bo service account from environment variable');
   } else {
-    // Try local file (for development)
-    const totoBoServiceAccountPath = path.join(__dirname, 'toto-bo-stg-firebase-adminsdk-fbsvc-369557e118.json');
-    
-    if (fs.existsSync(totoBoServiceAccountPath)) {
-      const totoBoServiceAccountFile = fs.readFileSync(totoBoServiceAccountPath, 'utf8');
-      totoBoServiceAccount = JSON.parse(totoBoServiceAccountFile);
-      console.log('✅ Using local toto-bo-stg service account file');
-    } else {
-      console.log('⚠️ TOTO_BO_SERVICE_ACCOUNT_KEY not found in environment variables');
-      console.log('⚠️ Local toto-bo service account file not found');
-      console.log('   Social media posts will use API calls to toto-bo instead');
-    }
+    // Try to find toto-bo service account file (might not exist locally)
+    // Note: This is expected for development - toto-bo credentials may not be available
+    console.log('⚠️ TOTO_BO_SERVICE_ACCOUNT_KEY not found in environment variables');
+    console.log('   Social media posts will use API calls to toto-bo instead');
   }
   
   if (totoBoServiceAccount) {
@@ -90,20 +81,8 @@ try {
     } catch {
       totoBoApp = admin.initializeApp({
         credential: admin.credential.cert(totoBoServiceAccount),
-        projectId: 'toto-bo-stg'
       }, 'toto-bo');
-      console.log('✅ Firebase Admin SDK initialized for toto-bo-stg');
-    }
-
-    // Initialize Firestore with settings (must be done once) and cache it
-    try {
-      totoBoFirestoreInstance = admin.firestore(totoBoApp);
-      totoBoFirestoreInstance.settings({ ignoreUndefinedProperties: true });
-      console.log('✅ Firestore configured to ignore undefined properties');
-    } catch (error) {
-      // Firestore already initialized with settings
-      console.log('⚠️ Firestore settings already configured');
-      totoBoFirestoreInstance = admin.firestore(totoBoApp);
+      console.log('✅ Firebase Admin SDK initialized for toto-bo');
     }
   }
 } catch (error) {
@@ -113,10 +92,15 @@ try {
 
 // Helper functions to get Firestore and Storage instances
 const getTotoBoFirestore = () => {
-  if (totoBoFirestoreInstance) {
-    return totoBoFirestoreInstance;
+  if (totoBoApp) {
+    return admin.firestore(totoBoApp);
   }
-  console.log('⚠️ toto-bo Firestore not available - social media posts will use API fallback');
+  // Fallback to default app (toto-app-stg) for local development
+  // Both toto-bo and toto-app-stg use the same database in dev
+  if (totoAppStgApp) {
+    console.log('⚠️ Using toto-app-stg Firestore as fallback for social media posts');
+    return admin.firestore(totoAppStgApp);
+  }
   return null;
 };
 
@@ -124,7 +108,11 @@ const getTotoBoStorage = () => {
   if (totoBoApp) {
     return admin.storage(totoBoApp);
   }
-  console.log('⚠️ toto-bo Storage not available - social media images will use API fallback');
+  // Fallback to default app (toto-app-stg) for local development
+  if (totoAppStgApp) {
+    console.log('⚠️ Using toto-app-stg Storage as fallback for social media images');
+    return admin.storage(totoAppStgApp);
+  }
   return null;
 };
 
@@ -148,6 +136,16 @@ const schedulerService = new SchedulerService(totoAI);
 // Initialize API Gateway
 const { TotoAPIGateway } = require('./dist/gateway/TotoAPIGateway');
 const apiGateway = new TotoAPIGateway();
+
+// Initialize knowledge base service after Firebase is ready
+(async () => {
+  try {
+    await apiGateway.initialize();
+    console.log('✅ API Gateway initialized with Knowledge Base Service');
+  } catch (error) {
+    console.error('❌ Error initializing API Gateway:', error);
+  }
+})();
 
 // Serve the main page
 app.get('/', (req, res) => {
@@ -326,10 +324,10 @@ app.get('/api/social-media/monitor', (req, res) => {
 
 app.post('/api/social-media/monitor', async (req, res) => {
   try {
-    const { guardianId, platform } = req.body || {};
-    console.log('📡 Received POST request to /api/social-media/monitor', guardianId ? `for guardian: ${guardianId}` : '(all guardians)', platform ? `(${platform} only)` : '');
+    const { guardianId } = req.body || {};
+    console.log('📡 Received POST request to /api/social-media/monitor', guardianId ? `for guardian: ${guardianId}` : '(all guardians)');
 
-    const results = await schedulerService.triggerSocialMediaMonitoring(guardianId, platform);
+    const results = await schedulerService.triggerSocialMediaMonitoring(guardianId);
     res.json({ success: true, results });
   } catch (error) {
     console.error('❌ Error in /api/social-media/monitor:', error);
@@ -1165,10 +1163,16 @@ app.get('/api/cases', async (req, res) => {
           const guardianDoc = await db.collection('users').doc(caseData.guardianId).get();
           if (guardianDoc.exists) {
             const guardianData = guardianDoc.data();
+            // Get primary alias (first in array or legacy field)
+            const primaryAlias = guardianData.bankingAccountAlias || 
+              (guardianData.bankingAccountAliases && guardianData.bankingAccountAliases.length > 0 
+                ? guardianData.bankingAccountAliases[0] 
+                : undefined);
             guardianInfo = {
-              guardianBankingAlias: guardianData.bankingAccountAlias,
+              guardianBankingAlias: primaryAlias,
               guardianTwitter: guardianData.contactInfo?.socialLinks?.twitter,
-              guardianInstagram: guardianData.contactInfo?.socialLinks?.instagram
+              guardianInstagram: guardianData.contactInfo?.socialLinks?.instagram,
+              guardianFacebook: guardianData.contactInfo?.socialLinks?.facebook
             };
           }
         } catch (guardianError) {
@@ -1199,6 +1203,44 @@ app.get('/api/cases', async (req, res) => {
   }
 });
 
+// General chat endpoint (for AI-powered features)
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message, context } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Message is required' 
+      });
+    }
+
+    // Use the case agent's processMessage method for general chat
+    const caseAgent = totoAI.getCaseAgent();
+    const userContext = context || {
+      userId: 'system',
+      userRole: 'admin',
+      language: context?.language || 'es',
+      platform: context?.platform || 'web'
+    };
+
+    const response = await caseAgent.processMessage(message, userContext);
+    
+    res.json({
+      success: response.success,
+      response: response.message,
+      message: response.message, // For backward compatibility
+      metadata: response.metadata
+    });
+  } catch (error) {
+    console.error('Error processing chat message:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 // Process case message
 app.post('/api/case', async (req, res) => {
   try {
@@ -1211,9 +1253,65 @@ app.post('/api/case', async (req, res) => {
       });
     }
 
+    // Fetch case from Firestore to get guardianId and ensure we have complete case data
+    let normalizedCaseData = { ...caseData };
+    
+    if (caseData.id) {
+      try {
+        const db = admin.firestore();
+        const caseDoc = await db.collection('cases').doc(caseData.id).get();
+        
+        if (caseDoc.exists) {
+          const firestoreCaseData = caseDoc.data();
+          // Enrich caseData with Firestore data
+          normalizedCaseData = {
+            ...normalizedCaseData,
+            guardianId: firestoreCaseData.guardianId || normalizedCaseData.guardianId,
+            guardianName: firestoreCaseData.guardianName || normalizedCaseData.guardianName,
+            location: firestoreCaseData.location || normalizedCaseData.location,
+            animalType: firestoreCaseData.animalType || normalizedCaseData.animalType,
+            status: firestoreCaseData.status || normalizedCaseData.status,
+            targetAmount: firestoreCaseData.targetAmount || normalizedCaseData.targetAmount,
+            currentAmount: firestoreCaseData.currentAmount || normalizedCaseData.currentAmount
+          };
+          
+          // If guardianId is available, fetch guardian info (including banking alias)
+          if (normalizedCaseData.guardianId && !normalizedCaseData.guardianBankingAlias) {
+            try {
+              const guardianDoc = await db.collection('users').doc(normalizedCaseData.guardianId).get();
+              if (guardianDoc.exists) {
+                const guardianData = guardianDoc.data();
+                // Get primary alias (first in array or legacy field)
+                normalizedCaseData.guardianBankingAlias = guardianData?.bankingAccountAlias || 
+                  (guardianData?.bankingAccountAliases && guardianData.bankingAccountAliases.length > 0 
+                    ? guardianData.bankingAccountAliases[0] 
+                    : undefined);
+                normalizedCaseData.guardianTwitter = guardianData?.contactInfo?.socialLinks?.twitter;
+                normalizedCaseData.guardianInstagram = guardianData?.contactInfo?.socialLinks?.instagram;
+                normalizedCaseData.guardianFacebook = guardianData?.contactInfo?.socialLinks?.facebook;
+              }
+            } catch (guardianError) {
+              console.warn(`Could not fetch guardian info for case ${caseData.id}:`, guardianError.message);
+            }
+          }
+        }
+      } catch (firestoreError) {
+        console.warn(`Could not fetch case ${caseData.id} from Firestore:`, firestoreError.message);
+        // Continue with provided caseData - CaseAgent will try to fetch guardian alias if guardianId is available
+      }
+    }
+
+    // Normalize field names: map bankingAlias to guardianBankingAlias if needed
+    normalizedCaseData.guardianBankingAlias = normalizedCaseData.guardianBankingAlias || normalizedCaseData.bankingAlias || undefined;
+    
+    // Ensure guardianId is present (required by CaseData interface)
+    if (!normalizedCaseData.guardianId) {
+      normalizedCaseData.guardianId = 'unknown';
+    }
+
     const response = await totoAI.processCaseMessage(
       message,
-      caseData,
+      normalizedCaseData,
       userContext,
       conversationContext
     );
@@ -1349,16 +1447,70 @@ app.get('/api/ai/knowledge', async (req, res) => {
 // Add knowledge item
 app.post('/api/ai/knowledge', async (req, res) => {
   try {
-    const { title, content, category, agentTypes, audience } = req.body;
+    const { title, content, category, agentTypes, audience, metadata } = req.body;
     
     if (!title || !content) {
       return res.status(400).json({ error: 'Title and content are required' });
     }
 
-    const newItem = await apiGateway.addKnowledgeItem(title, content, category, agentTypes || [], audience || []);
+    const newItem = await apiGateway.addKnowledgeItem(title, content, category, agentTypes || [], audience || [], metadata);
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating knowledge item:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update knowledge item
+app.put('/api/ai/knowledge/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, category, agentTypes, audience } = req.body;
+    
+    const knowledgeBaseService = apiGateway.getKnowledgeBaseService();
+    if (!knowledgeBaseService) {
+      return res.status(500).json({ error: 'Knowledge base service not initialized' });
+    }
+
+    const updatedItem = await knowledgeBaseService.update(id, {
+      title,
+      content,
+      category,
+      agentTypes,
+      audience
+    });
+
+    // Refresh RAG service
+    await apiGateway.resetKnowledgeBase();
+
+    res.json(updatedItem);
+  } catch (error) {
+    console.error('Error updating knowledge item:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete knowledge item
+app.delete('/api/ai/knowledge/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const knowledgeBaseService = apiGateway.getKnowledgeBaseService();
+    if (!knowledgeBaseService) {
+      return res.status(500).json({ error: 'Knowledge base service not initialized' });
+    }
+
+    await knowledgeBaseService.delete(id);
+
+    // Refresh RAG service
+    await apiGateway.resetKnowledgeBase();
+
+    res.json({
+      success: true,
+      message: 'Knowledge item deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting knowledge item:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1381,13 +1533,14 @@ app.post('/api/ai/knowledge/reset', async (req, res) => {
 // Retrieve knowledge using RAG
 app.post('/api/ai/knowledge/retrieve', async (req, res) => {
   try {
-    const { query, agentType, context } = req.body;
+    const { query, agentType, context, audience } = req.body;
     
     if (!query || !agentType) {
       return res.status(400).json({ error: 'Query and agentType are required' });
     }
 
-    const result = await apiGateway.retrieveKnowledge(query, agentType, context);
+    // All KB entries are accessible, relevance is determined by audience
+    const result = await apiGateway.retrieveKnowledge(query, agentType, context, audience);
     res.json(result);
   } catch (error) {
     console.error('Error retrieving knowledge:', error);

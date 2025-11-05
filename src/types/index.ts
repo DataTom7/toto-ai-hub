@@ -18,6 +18,7 @@ export interface CaseData {
   guardianBankingAlias?: string;
   guardianTwitter?: string;
   guardianInstagram?: string;
+  guardianFacebook?: string;
 }
 
 export interface UserContext {
