@@ -1,9 +1,9 @@
 import { BaseAgent } from './BaseAgent';
-import { 
-  AgentConfig, 
-  CaseData, 
-  CaseResponse, 
-  UserContext, 
+import {
+  AgentConfig,
+  CaseData,
+  CaseResponse,
+  UserContext,
   AgentAction,
   ConversationContext,
   EnhancedCaseData,
@@ -12,6 +12,8 @@ import {
   IntentAnalysis,
   AgentAnalytics
 } from "../types";
+import { caseAgentTools } from "../types/tools";
+import { FunctionDeclaration, FunctionCall } from "@google/generative-ai";
 import { RAGService } from '../services/RAGService';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
@@ -58,7 +60,8 @@ export class CaseAgent extends BaseAgent {
         'performance_analytics',
         'context_persistence',
         'smart_actions',
-        'multi_language_support'
+        'multi_language_support',
+        'function_calling' // NEW: Function calling capability
       ],
       isEnabled: true,
       maxRetries: 3,
@@ -66,6 +69,13 @@ export class CaseAgent extends BaseAgent {
     };
 
     super(config);
+  }
+
+  /**
+   * Override to provide function declarations for this agent
+   */
+  protected getFunctionDeclarations(): FunctionDeclaration[] {
+    return caseAgentTools as FunctionDeclaration[];
   }
 
   /**
@@ -123,21 +133,25 @@ export class CaseAgent extends BaseAgent {
   }
 
   /**
-   * Process message with knowledge context
+   * Process message with knowledge context and function calling
    */
   private async processMessageWithKnowledge(
     message: string,
     context: UserContext,
     conversationContext?: ConversationContext,
     knowledgeContext?: string
-  ): Promise<any> {
+  ): Promise<{ success: boolean; message: string; error?: string; metadata: any; functionCalls?: FunctionCall[] }> {
     const startTime = Date.now();
 
     try {
       const systemPrompt = this.getSystemPrompt(knowledgeContext);
       const fullPrompt = `${systemPrompt}\n\nUser Context: ${JSON.stringify(context)}\n\nUser Message: ${message}`;
 
-      const result = await this.model.generateContent({
+      // Use function calling
+      const functionDeclarations = this.getFunctionDeclarations();
+      const modelWithFunctions = this.createModel("gemini-2.0-flash-001", functionDeclarations);
+
+      const result = await modelWithFunctions.generateContent({
         contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
         generationConfig: {
           temperature: 0.7,
@@ -146,23 +160,46 @@ export class CaseAgent extends BaseAgent {
       });
 
       const response = result.response;
-      const text = response.text();
+
+      // Extract function calls
+      const functionCalls: FunctionCall[] = [];
+      const candidates = response.candidates || [];
+
+      for (const candidate of candidates) {
+        if (candidate.content && candidate.content.parts) {
+          for (const part of candidate.content.parts) {
+            if ('functionCall' in part && part.functionCall) {
+              functionCalls.push(part.functionCall);
+            }
+          }
+        }
+      }
+
+      // Get text response (if any)
+      let text = '';
+      try {
+        text = response.text();
+      } catch (e) {
+        // No text response, only function calls - that's OK
+        text = '';
+      }
 
       const processingTime = Date.now() - startTime;
 
       return {
         success: true,
         message: text || 'I understand your request.',
+        functionCalls: functionCalls.length > 0 ? functionCalls : undefined,
         metadata: {
           agentType: this.config.name,
-          confidence: 0.8,
+          confidence: 0.9, // Higher confidence with function calling
           processingTime,
         },
       };
 
     } catch (error) {
       console.error(`Error in ${this.config.name}:`, error);
-      
+
       return {
         success: false,
         message: this.getErrorMessage(),
@@ -329,7 +366,7 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
         conversationContext
       );
 
-      // Process with enhanced context and knowledge
+      // Process with enhanced context and knowledge (now with function calling)
       const result = await this.processMessageWithKnowledge(enhancedMessage, context, conversationContext, knowledgeContext);
 
       const processingTime = Date.now() - startTime;
@@ -340,8 +377,17 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       // Update user profile
       this.updateUserProfile(userProfile, caseData.id, intentAnalysis);
 
-      // Extract intelligent actions
-      const actions = this.extractIntelligentActions(result.message || '', intentAnalysis, enhancedCaseData);
+      // Extract intelligent actions from function calls (NEW: Type-safe approach)
+      let actions: AgentAction[] = [];
+      if (result.functionCalls && result.functionCalls.length > 0) {
+        // Use function calling (preferred method)
+        actions = this.convertFunctionCallsToActions(result.functionCalls, enhancedCaseData);
+        console.log(`✅ Extracted ${actions.length} actions from function calls`);
+      } else {
+        // Fallback to legacy pattern matching if no function calls
+        console.log('⚠️ No function calls detected, falling back to pattern matching');
+        actions = this.extractIntelligentActions(result.message || '', intentAnalysis, enhancedCaseData);
+      }
 
       // Generate contextual suggestions
       const suggestions = this.generateContextualSuggestions(enhancedCaseData, context, userProfile, intentAnalysis);
@@ -606,6 +652,118 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
 
   // ===== INTELLIGENT ACTION EXTRACTION =====
 
+  /**
+   * Convert function calls from Gemini to AgentActions
+   * This is the new, type-safe way to extract actions
+   */
+  private convertFunctionCallsToActions(
+    functionCalls: FunctionCall[] | undefined,
+    enhancedCaseData: EnhancedCaseData
+  ): AgentAction[] {
+    if (!functionCalls || functionCalls.length === 0) {
+      return [];
+    }
+
+    const actions: AgentAction[] = [];
+
+    for (const call of functionCalls) {
+      const { name, args } = call;
+
+      switch (name) {
+        case 'donate':
+          actions.push({
+            type: 'donate',
+            payload: {
+              action: 'donate',
+              caseId: args.caseId || enhancedCaseData.id,
+              urgency: args.urgency || enhancedCaseData.urgencyLevel,
+              amount: args.amount,
+              userMessage: args.userMessage,
+            },
+            label: args.urgency === 'critical' ? 'Urgent Donation' : 'Donate',
+            description: args.userMessage || 'Make a donation to help this case',
+            priority: args.urgency === 'critical' || args.urgency === 'high' ? 'high' : 'medium',
+          });
+          break;
+
+        case 'adoptPet':
+          actions.push({
+            type: 'adopt',
+            payload: {
+              action: 'adopt',
+              caseId: args.caseId || enhancedCaseData.id,
+              petId: args.petId,
+              requirements: enhancedCaseData.adoptionRequirements,
+              userContext: args.userContext,
+            },
+            label: 'Adopt This Pet',
+            description: 'Learn about the adoption process for this pet',
+            priority: 'high',
+          });
+          break;
+
+        case 'shareStory':
+          actions.push({
+            type: 'share',
+            payload: {
+              action: 'share',
+              caseId: args.caseId || enhancedCaseData.id,
+              platforms: args.platforms || ['twitter', 'instagram', 'facebook'],
+              socialMedia: {
+                twitter: enhancedCaseData.guardianTwitter,
+                instagram: enhancedCaseData.guardianInstagram,
+                facebook: enhancedCaseData.guardianFacebook,
+              },
+            },
+            label: 'Share This Story',
+            description: 'Help spread awareness by sharing this case',
+            priority: 'medium',
+          });
+          break;
+
+        case 'requestHelp':
+          actions.push({
+            type: 'contact',
+            payload: {
+              action: 'contact',
+              caseId: args.caseId || enhancedCaseData.id,
+              guardianId: args.guardianId || enhancedCaseData.guardianId,
+              contactReason: args.contactReason,
+              preferredMethod: args.preferredMethod,
+            },
+            label: 'Contact Guardian',
+            description: args.contactReason || 'Get in touch with the guardian',
+            priority: 'medium',
+          });
+          break;
+
+        case 'learnMore':
+          actions.push({
+            type: 'learn',
+            payload: {
+              action: 'learn',
+              caseId: args.caseId || enhancedCaseData.id,
+              topics: args.topics || ['medical', 'behavioral', 'adoption', 'funding'],
+            },
+            label: 'Learn More',
+            description: `Get detailed information about: ${args.topics?.join(', ') || 'this case'}`,
+            priority: 'low',
+          });
+          break;
+
+        default:
+          console.warn(`Unknown function call: ${name}`);
+      }
+    }
+
+    return actions;
+  }
+
+  /**
+   * LEGACY: Extract actions from text response (fallback)
+   * This method is kept for backward compatibility but should be replaced by function calling
+   * @deprecated Use convertFunctionCallsToActions instead
+   */
   private extractIntelligentActions(response: string, intentAnalysis: any, enhancedCaseData: EnhancedCaseData): AgentAction[] {
     const actions: AgentAction[] = [];
     const lowerResponse = response.toLowerCase();
