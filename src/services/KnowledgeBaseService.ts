@@ -39,9 +39,12 @@ export class KnowledgeBaseService {
   async initialize(): Promise<void> {
     try {
       console.log('📚 Initializing Knowledge Base Service...');
+      console.log(`🔍 Firestore instance: ${this.db ? 'available' : 'null'}`);
+      console.log(`🔍 Collection: ${this.COLLECTION}`);
       
       // Load existing entries from Firestore
       const snapshot = await this.db.collection(this.COLLECTION).get();
+      console.log(`📊 Firestore query result: ${snapshot.size} documents found`);
       
       if (snapshot.empty) {
         console.log('📝 Knowledge base is empty, initializing with default entries...');
@@ -58,9 +61,16 @@ export class KnowledgeBaseService {
       }
       
       this.cacheInitialized = true;
-      console.log('✅ Knowledge Base Service initialized');
+      console.log(`✅ Knowledge Base Service initialized with ${this.cache.size} entries in cache`);
     } catch (error) {
+      const err = error as Error & { code?: string };
       console.error('❌ Error initializing Knowledge Base Service:', error);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        code: err.code,
+        projectId: (this.db as any)?.projectId || 'unknown'
+      });
       throw error;
     }
   }

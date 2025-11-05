@@ -140,10 +140,17 @@ const apiGateway = new TotoAPIGateway();
 // Initialize knowledge base service after Firebase is ready
 (async () => {
   try {
+    console.log('🔄 Initializing API Gateway...');
     await apiGateway.initialize();
     console.log('✅ API Gateway initialized with Knowledge Base Service');
   } catch (error) {
     console.error('❌ Error initializing API Gateway:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack
+    });
+    // Don't throw - let server start even if KB init fails
+    // The service will retry on first use
   }
 })();
 
@@ -1436,11 +1443,18 @@ app.get('/api/ai/agents', async (req, res) => {
 // Get knowledge base
 app.get('/api/ai/knowledge', async (req, res) => {
   try {
+    console.log('📚 Fetching knowledge base from API Gateway...');
     const knowledge = await apiGateway.getKnowledgeBase();
-    res.json(knowledge);
+    console.log(`✅ Retrieved ${knowledge?.length || 0} knowledge base entries`);
+    res.json(knowledge || []);
   } catch (error) {
-    console.error('Error fetching knowledge base:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('❌ Error fetching knowledge base:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
