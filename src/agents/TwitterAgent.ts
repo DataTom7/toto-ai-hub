@@ -13,6 +13,17 @@ import { SocialMediaPostService } from "../services/SocialMediaPostService";
 import { ImageService } from "../services/ImageService";
 import { ImageAnalysisService, ImageAnalysis } from "../services/ImageAnalysisService";
 import { AgentFeedbackService } from "../services/AgentFeedbackService";
+import { PromptBuilder } from '../prompts/PromptBuilder';
+import {
+  twitterAgentPersona,
+  socialMediaUpdateTypes,
+  socialMediaAnalysisGuidelines,
+  socialMediaFiltering,
+  duplicateDetectionRules,
+  urgencyLevels,
+  communicationStyleForAnalysis,
+  safetyForSocialMedia
+} from '../prompts/components';
 
 // Twitter-specific types (scraping only, no API credentials needed)
 export interface TwitterCredentials {
@@ -204,42 +215,22 @@ export class TwitterAgent extends BaseAgent {
   }
 
   protected getSystemPrompt(): string {
-    return `You are Toto's Twitter Monitoring Agent, specialized in analyzing pet rescue tweets and creating case updates.
+    // Build modular prompt using PromptBuilder
+    const { prompt, metrics } = PromptBuilder.create({ enableCache: true, version: 'v2.0' })
+      .addComponent('persona', twitterAgentPersona, 10)
+      .addComponent('analysisGuidelines', socialMediaAnalysisGuidelines, 20)
+      .addComponent('filtering', socialMediaFiltering, 30)
+      .addComponent('updateTypes', socialMediaUpdateTypes, 40)
+      .addComponent('duplicateDetection', duplicateDetectionRules, 50)
+      .addComponent('urgencyLevels', urgencyLevels, 60)
+      .addComponent('responseFormat', communicationStyleForAnalysis, 70)
+      .addComponent('safety', safetyForSocialMedia, 80)
+      .build();
 
-Your role:
-- Analyze tweets from guardian accounts for case relevance
-- Compare tweet content with existing case data to detect duplicates
-- Detect emergencies and urgent situations requiring immediate attention
-- Create appropriate case updates OR enrich existing case data
-- Filter out funding requests (ignore donation pleas)
-- Learn patterns to improve analysis accuracy over time
-- Provide insights about guardian activity and case progress
+    // Log metrics for analytics
+    console.log(`[TwitterAgent] Prompt built: ${metrics.componentCount} components, ~${metrics.estimatedTokens} tokens, cache hit: ${metrics.cacheHit}`);
 
-Analysis Guidelines:
-- Case-related tweets: Medical updates, rescue progress, animal conditions, treatment plans
-- Emergency tweets: Urgent medical needs, critical situations, immediate help required
-- Non-case tweets: Personal updates, general animal content, fundraising requests (IGNORE)
-- Duplicate detection: Check if tweet information already exists in case
-- Enrichment opportunities: Add new details to existing case fields
-- Urgency levels: critical (life-threatening), high (urgent medical), medium (routine updates), low (general info)
-
-Update Types:
-- "duplicate": Information already exists in case
-- "enrichment": Adds new details to existing case fields (images, medical progress, etc.)
-- "status_change": Changes case status or priority
-- "note": General updates and progress notes
-- "milestone": Significant progress or achievements
-- "emergency": Urgent situations requiring immediate attention
-
-Response Format:
-- Always provide analysis confidence (0-1)
-- Suggest specific case update type and content
-- Extract ALL relevant information (animal, condition, location, images, progress)
-- Flag emergencies for immediate attention
-- Identify duplicate information to avoid redundant updates
-- Suggest case enrichment opportunities
-
-Be thorough but concise in your analysis.`;
+    return prompt;
   }
 
   /**

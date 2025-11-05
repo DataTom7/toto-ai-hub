@@ -13,6 +13,18 @@ import { SocialMediaPostService } from "../services/SocialMediaPostService";
 import { ImageService } from "../services/ImageService";
 import { ImageAnalysisService, ImageAnalysis } from "../services/ImageAnalysisService";
 import { AgentFeedbackService } from "../services/AgentFeedbackService";
+import { PromptBuilder } from '../prompts/PromptBuilder';
+import {
+  instagramAgentPersona,
+  instagramVisualFocus,
+  socialMediaUpdateTypes,
+  socialMediaAnalysisGuidelines,
+  socialMediaFiltering,
+  duplicateDetectionRules,
+  urgencyLevels,
+  communicationStyleForAnalysis,
+  safetyForSocialMedia
+} from '../prompts/components';
 
 // Instagram-specific types
 export interface InstagramCredentials {
@@ -238,45 +250,23 @@ export class InstagramAgent extends BaseAgent {
   }
 
   protected getSystemPrompt(): string {
-    return `You are Toto's Instagram Monitoring Agent, specialized in analyzing pet rescue Instagram posts, stories, and visual content to create case updates.
+    // Build modular prompt using PromptBuilder
+    const { prompt, metrics } = PromptBuilder.create({ enableCache: true, version: 'v2.0' })
+      .addComponent('persona', instagramAgentPersona, 10)
+      .addComponent('visualFocus', instagramVisualFocus, 15)
+      .addComponent('analysisGuidelines', socialMediaAnalysisGuidelines, 20)
+      .addComponent('filtering', socialMediaFiltering, 30)
+      .addComponent('updateTypes', socialMediaUpdateTypes, 40)
+      .addComponent('duplicateDetection', duplicateDetectionRules, 50)
+      .addComponent('urgencyLevels', urgencyLevels, 60)
+      .addComponent('responseFormat', communicationStyleForAnalysis, 70)
+      .addComponent('safety', safetyForSocialMedia, 80)
+      .build();
 
-Your role:
-- Analyze Instagram posts and stories from guardian accounts for case relevance
-- Extract information from both visual content (images/videos) and captions
-- Compare post content with existing case data to detect duplicates
-- Detect emergencies and urgent situations requiring immediate attention
-- Create appropriate case updates OR enrich existing case data
-- Filter out funding requests (ignore donation pleas)
-- Learn patterns to improve analysis accuracy over time
-- Provide insights about guardian activity and case progress
+    // Log metrics for analytics
+    console.log(`[InstagramAgent] Prompt built: ${metrics.componentCount} components, ~${metrics.estimatedTokens} tokens, cache hit: ${metrics.cacheHit}`);
 
-Analysis Guidelines:
-- Case-related posts: Medical updates, rescue progress, animal conditions, treatment plans, visual progress updates
-- Emergency posts: Urgent medical needs, critical situations, immediate help required
-- Visual content: Analyze images for animal presence, medical conditions, progress indicators
-- Non-case posts: Personal updates, general animal content, fundraising requests (IGNORE)
-- Duplicate detection: Check if post information already exists in case
-- Enrichment opportunities: Add new details to existing case fields, especially visual content
-- Urgency levels: critical (life-threatening), high (urgent medical), medium (routine updates), low (general info)
-
-Update Types:
-- "duplicate": Information already exists in case
-- "enrichment": Adds new details to existing case fields (images, medical progress, etc.)
-- "status_change": Changes case status or priority
-- "note": General updates and progress notes
-- "milestone": Significant progress or achievements
-- "emergency": Urgent situations requiring immediate attention
-
-Response Format:
-- Always provide analysis confidence (0-1)
-- Suggest specific case update type and content
-- Extract ALL relevant information (animal, condition, location, images, progress)
-- Analyze visual content when available (images, videos)
-- Flag emergencies for immediate attention
-- Identify duplicate information to avoid redundant updates
-- Suggest case enrichment opportunities
-
-Be thorough but concise in your analysis, paying special attention to visual content which often contains critical information.`;
+    return prompt;
   }
 
   /**
