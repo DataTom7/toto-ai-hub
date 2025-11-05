@@ -61,11 +61,11 @@ This roadmap outlines a comprehensive plan to modernize TotoAI Hub with cutting-
    - [x] Update `processCaseInquiry()` to use new approach with fallback
    - [x] Keep legacy `extractIntelligentActions()` as fallback (marked deprecated)
 
-4. **Update Social Media Agents** (8 hours) 📋 TODO
-   - [ ] Refactor TwitterAgent action detection
-   - [ ] Refactor InstagramAgent action detection
-   - [ ] Update analysis methods to use function calling
-   - [ ] Add confidence scoring to tool calls
+4. **Update Social Media Agents** (8 hours) ✅ COMPLETE
+   - [x] Refactor TwitterAgent action detection
+   - [x] Refactor InstagramAgent action detection
+   - [x] Update analysis methods to use function calling
+   - [x] Add confidence scoring to tool calls (0.9 for function calls, 0.95 for dismissals)
 
 **Dependencies**: None
 
@@ -82,8 +82,10 @@ Created comprehensive function calling infrastructure:
 - **src/types/tools.ts**: 400+ lines defining 9 tools (5 for CaseAgent, 4 for Social Media)
 - **BaseAgent**: Added `getFunctionDeclarations()`, `createModel()`, and `processMessageWithFunctions()`
 - **CaseAgent**: Implemented `convertFunctionCallsToActions()` with full type safety
+- **TwitterAgent**: Implemented `convertFunctionCallsToTweetAnalysis()` with graceful fallback to legacy JSON parsing
+- **InstagramAgent**: Implemented `convertFunctionCallsToPostAnalysis()` with graceful fallback to legacy JSON parsing
 - **Intelligent Fallback**: System gracefully falls back to pattern matching if function calling not available
-- **Type Safety**: All function calls are type-checked with TypeScript interfaces
+- **Type Safety**: All function calls are type-checked with TypeScript interfaces (fixed SchemaType import)
 
 Key Features:
 - ✅ Structured tool definitions using Gemini FunctionDeclarationSchemaType

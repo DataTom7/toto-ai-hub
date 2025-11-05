@@ -1,11 +1,13 @@
 import { BaseAgent } from './BaseAgent';
-import { 
-  AgentConfig, 
-  AgentResponse, 
-  UserContext, 
+import {
+  AgentConfig,
+  AgentResponse,
+  UserContext,
   AgentAction,
-  ConversationContext 
+  ConversationContext
 } from "../types";
+import { socialMediaAgentTools } from "../types/tools";
+import { FunctionDeclaration, FunctionCall } from "@google/generative-ai";
 import { InstagramService } from "../services/InstagramService";
 import { SocialMediaPostService } from "../services/SocialMediaPostService";
 import { ImageService } from "../services/ImageService";
@@ -192,6 +194,7 @@ export class InstagramAgent extends BaseAgent {
         'fundraising_filtering',
         'pattern_learning',
         'case_creation',
+        'function_calling', // NEW: Function calling capability
       ],
       isEnabled: true,
       maxRetries: 3,
@@ -222,6 +225,13 @@ export class InstagramAgent extends BaseAgent {
       },
       ...config
     };
+  }
+
+  /**
+   * Override to provide function declarations for this agent
+   */
+  protected getFunctionDeclarations(): FunctionDeclaration[] {
+    return socialMediaAgentTools as FunctionDeclaration[];
   }
 
   protected getSystemPrompt(): string {
@@ -884,6 +894,114 @@ Respond with JSON:
   }
 
   /**
+   * Convert function calls from Gemini to PostAnalysis
+   * Uses structured function calling for reliable action detection
+   */
+  private convertFunctionCallsToPostAnalysis(
+    functionCalls: FunctionCall[] | undefined,
+    post: InstagramPost,
+    caseAnalysis?: any
+  ): PostAnalysis | null {
+    if (!functionCalls || functionCalls.length === 0) {
+      return null;
+    }
+
+    // Process the first function call (primary action)
+    const call = functionCalls[0];
+    const { name, args } = call;
+    // Type assertion for args since it's typed as object
+    const typedArgs = args as any;
+
+    switch (name) {
+      case 'flagUrgentCase':
+        return {
+          isCaseRelated: true,
+          urgency: typedArgs.urgencyLevel as 'high' | 'critical',
+          caseUpdateType: 'emergency',
+          suggestedAction: typedArgs.suggestedAction,
+          confidence: 0.9, // Function calling has high confidence
+          extractedInfo: {
+            emergency: true,
+            fundraisingRequest: false,
+          },
+        };
+
+      case 'updatePetStatus':
+        return {
+          isCaseRelated: true,
+          urgency: typedArgs.statusType === 'emergency' ? 'critical' : 'medium',
+          caseUpdateType: this.mapStatusTypeToCaseUpdateType(typedArgs.statusType),
+          suggestedAction: `Update case with: ${typedArgs.details}`,
+          confidence: typedArgs.confidence,
+          extractedInfo: {
+            statusUpdate: typedArgs.details,
+            fundraisingRequest: false,
+            emergency: typedArgs.statusType === 'emergency',
+          },
+          caseEnrichment: caseAnalysis?.existingCase ? {
+            fieldsToUpdate: ['status', 'medicalProgress'],
+            newValues: {
+              status: typedArgs.statusType,
+              medicalProgress: typedArgs.details,
+            },
+            reason: `Status update from Instagram: ${typedArgs.details}`,
+          } : undefined,
+        };
+
+      case 'dismissPost':
+        return {
+          isCaseRelated: false,
+          urgency: 'low',
+          caseUpdateType: 'duplicate',
+          suggestedAction: 'No action needed',
+          confidence: 0.95,
+          extractedInfo: {
+            fundraisingRequest: typedArgs.reason === 'promotional',
+            emergency: false,
+          },
+          isDuplicate: typedArgs.reason === 'duplicate',
+          duplicateReason: typedArgs.reason,
+        };
+
+      case 'createCaseFromPost':
+        return {
+          isCaseRelated: true,
+          urgency: typedArgs.urgency as 'low' | 'medium' | 'high' | 'critical',
+          caseUpdateType: 'note',
+          suggestedAction: 'create_case',
+          confidence: typedArgs.confidence,
+          extractedInfo: {
+            animalMentioned: typedArgs.petName || typedArgs.animalType,
+            fundraisingRequest: false,
+            emergency: typedArgs.urgency === 'critical',
+          },
+        };
+
+      default:
+        console.warn(`Unknown function call: ${name}`);
+        return null;
+    }
+  }
+
+  /**
+   * Map status type to case update type
+   */
+  private mapStatusTypeToCaseUpdateType(statusType: string): PostAnalysis['caseUpdateType'] {
+    switch (statusType) {
+      case 'medical_update':
+        return 'note';
+      case 'emergency':
+        return 'emergency';
+      case 'milestone':
+        return 'milestone';
+      case 'adoption_update':
+        return 'status_change';
+      default:
+        return 'note';
+    }
+  }
+
+  /**
    * Analyze a single post for case relevance
    */
   private async analyzePost(post: InstagramPost, caseAnalysis?: any): Promise<PostAnalysis> {
@@ -969,6 +1087,38 @@ Respond in JSON format:
 }`;
 
     try {
+      // Try function calling first (preferred method)
+      console.log('🔧 Attempting function calling for Instagram post analysis...');
+      const functionResult = await this.processMessageWithFunctions(analysisPrompt, {
+        userId: 'instagram-agent',
+        userRole: 'admin',
+        language: 'en',
+      });
+
+      // Check if we got function calls
+      if (functionResult.functionCalls && functionResult.functionCalls.length > 0) {
+        console.log(`✅ Function calling successful! Got ${functionResult.functionCalls.length} function calls`);
+        const analysis = this.convertFunctionCallsToPostAnalysis(functionResult.functionCalls, post, caseAnalysis);
+        if (analysis) {
+          // Add media URLs to extractedInfo
+          const allMedia = [
+            ...post.media.images,
+            ...post.media.videos,
+            ...post.media.carousel
+          ];
+          if (allMedia.length > 0 && !analysis.extractedInfo.newImages) {
+            analysis.extractedInfo.newImages = allMedia;
+          }
+          console.log(`✅ Converted function call to PostAnalysis: ${JSON.stringify(analysis, null, 2)}`);
+          return analysis;
+        }
+        console.log('⚠️ Function call conversion returned null, falling back to legacy parsing');
+      } else {
+        console.log('ℹ️ No function calls returned, falling back to legacy text parsing');
+      }
+
+      // Fallback to legacy text parsing (DEPRECATED)
+      console.log('⚠️ Using legacy text parsing method...');
       const result = await this.processMessage(analysisPrompt, {
         userId: 'instagram-agent',
         userRole: 'admin',
@@ -977,16 +1127,16 @@ Respond in JSON format:
 
       // Parse the JSON response
       let jsonString = result.message;
-      
+
       if (jsonString.includes('```json')) {
         jsonString = jsonString.replace(/```json\s*/, '').replace(/```\s*$/, '');
       } else if (jsonString.includes('```')) {
         jsonString = jsonString.replace(/```\s*/, '').replace(/```\s*$/, '');
       }
-      
+
       jsonString = jsonString.trim();
       const analysis = JSON.parse(jsonString);
-      
+
       // Add media URLs to extractedInfo
       const allMedia = [
         ...post.media.images,
@@ -996,7 +1146,7 @@ Respond in JSON format:
       if (allMedia.length > 0 && !analysis.extractedInfo.newImages) {
         analysis.extractedInfo.newImages = allMedia;
       }
-      
+
       return analysis as PostAnalysis;
     } catch (error) {
       console.error('Error analyzing post:', error);

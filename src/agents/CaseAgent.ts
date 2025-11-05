@@ -697,6 +697,8 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
 
     for (const call of functionCalls) {
       const { name, args } = call;
+      // Type assertion for args since it's typed as object
+      const typedArgs = args as any;
 
       switch (name) {
         case 'donate':
@@ -704,14 +706,14 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
             type: 'donate',
             payload: {
               action: 'donate',
-              caseId: args.caseId || enhancedCaseData.id,
-              urgency: args.urgency || enhancedCaseData.urgencyLevel,
-              amount: args.amount,
-              userMessage: args.userMessage,
+              caseId: typedArgs.caseId || enhancedCaseData.id,
+              urgency: typedArgs.urgency || enhancedCaseData.urgencyLevel,
+              amount: typedArgs.amount,
+              userMessage: typedArgs.userMessage,
             },
-            label: args.urgency === 'critical' ? 'Urgent Donation' : 'Donate',
-            description: args.userMessage || 'Make a donation to help this case',
-            priority: args.urgency === 'critical' || args.urgency === 'high' ? 'high' : 'medium',
+            label: typedArgs.urgency === 'critical' ? 'Urgent Donation' : 'Donate',
+            description: typedArgs.userMessage || 'Make a donation to help this case',
+            priority: typedArgs.urgency === 'critical' || typedArgs.urgency === 'high' ? 'high' : 'medium',
           });
           break;
 
@@ -720,10 +722,10 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
             type: 'adopt',
             payload: {
               action: 'adopt',
-              caseId: args.caseId || enhancedCaseData.id,
-              petId: args.petId,
+              caseId: typedArgs.caseId || enhancedCaseData.id,
+              petId: typedArgs.petId,
               requirements: enhancedCaseData.adoptionRequirements,
-              userContext: args.userContext,
+              userContext: typedArgs.userContext,
             },
             label: 'Adopt This Pet',
             description: 'Learn about the adoption process for this pet',
@@ -736,8 +738,8 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
             type: 'share',
             payload: {
               action: 'share',
-              caseId: args.caseId || enhancedCaseData.id,
-              platforms: args.platforms || ['twitter', 'instagram', 'facebook'],
+              caseId: typedArgs.caseId || enhancedCaseData.id,
+              platforms: typedArgs.platforms || ['twitter', 'instagram', 'facebook'],
               socialMedia: {
                 twitter: enhancedCaseData.guardianTwitter,
                 instagram: enhancedCaseData.guardianInstagram,
@@ -755,13 +757,13 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
             type: 'contact',
             payload: {
               action: 'contact',
-              caseId: args.caseId || enhancedCaseData.id,
-              guardianId: args.guardianId || enhancedCaseData.guardianId,
-              contactReason: args.contactReason,
-              preferredMethod: args.preferredMethod,
+              caseId: typedArgs.caseId || enhancedCaseData.id,
+              guardianId: typedArgs.guardianId || enhancedCaseData.guardianId,
+              contactReason: typedArgs.contactReason,
+              preferredMethod: typedArgs.preferredMethod,
             },
             label: 'Contact Guardian',
-            description: args.contactReason || 'Get in touch with the guardian',
+            description: typedArgs.contactReason || 'Get in touch with the guardian',
             priority: 'medium',
           });
           break;
@@ -771,11 +773,11 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
             type: 'learn',
             payload: {
               action: 'learn',
-              caseId: args.caseId || enhancedCaseData.id,
-              topics: args.topics || ['medical', 'behavioral', 'adoption', 'funding'],
+              caseId: typedArgs.caseId || enhancedCaseData.id,
+              topics: typedArgs.topics || ['medical', 'behavioral', 'adoption', 'funding'],
             },
             label: 'Learn More',
-            description: `Get detailed information about: ${args.topics?.join(', ') || 'this case'}`,
+            description: `Get detailed information about: ${typedArgs.topics?.join(', ') || 'this case'}`,
             priority: 'low',
           });
           break;

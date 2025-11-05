@@ -1,11 +1,13 @@
 import { BaseAgent } from './BaseAgent';
-import { 
-  AgentConfig, 
-  AgentResponse, 
-  UserContext, 
+import {
+  AgentConfig,
+  AgentResponse,
+  UserContext,
   AgentAction,
-  ConversationContext 
+  ConversationContext
 } from "../types";
+import { socialMediaAgentTools } from "../types/tools";
+import { FunctionDeclaration, FunctionCall } from "@google/generative-ai";
 import { TwitterService } from "../services/TwitterService";
 import { SocialMediaPostService } from "../services/SocialMediaPostService";
 import { ImageService } from "../services/ImageService";
@@ -158,6 +160,7 @@ export class TwitterAgent extends BaseAgent {
         'fundraising_filtering',
         'pattern_learning',
         'case_creation',
+        'function_calling', // NEW: Function calling capability
       ],
       isEnabled: true,
       maxRetries: 3,
@@ -188,6 +191,13 @@ export class TwitterAgent extends BaseAgent {
       },
       ...config
     };
+  }
+
+  /**
+   * Override to provide function declarations for this agent
+   */
+  protected getFunctionDeclarations(): FunctionDeclaration[] {
+    return socialMediaAgentTools as FunctionDeclaration[];
   }
 
   protected getSystemPrompt(): string {
@@ -761,6 +771,114 @@ Respond with JSON:
   }
 
   /**
+   * Convert function calls from Gemini to TweetAnalysis
+   * Uses structured function calling for reliable action detection
+   */
+  private convertFunctionCallsToTweetAnalysis(
+    functionCalls: FunctionCall[] | undefined,
+    tweet: TweetData,
+    caseAnalysis?: any
+  ): TweetAnalysis | null {
+    if (!functionCalls || functionCalls.length === 0) {
+      return null;
+    }
+
+    // Process the first function call (primary action)
+    const call = functionCalls[0];
+    const { name, args } = call;
+    // Type assertion for args since it's typed as object
+    const typedArgs = args as any;
+
+    switch (name) {
+      case 'flagUrgentCase':
+        return {
+          isCaseRelated: true,
+          urgency: typedArgs.urgencyLevel as 'high' | 'critical',
+          caseUpdateType: 'emergency',
+          suggestedAction: typedArgs.suggestedAction,
+          confidence: 0.9, // Function calling has high confidence
+          extractedInfo: {
+            emergency: true,
+            fundraisingRequest: false,
+          },
+        };
+
+      case 'updatePetStatus':
+        return {
+          isCaseRelated: true,
+          urgency: typedArgs.statusType === 'emergency' ? 'critical' : 'medium',
+          caseUpdateType: this.mapStatusTypeToCaseUpdateType(typedArgs.statusType),
+          suggestedAction: `Update case with: ${typedArgs.details}`,
+          confidence: typedArgs.confidence,
+          extractedInfo: {
+            statusUpdate: typedArgs.details,
+            fundraisingRequest: false,
+            emergency: typedArgs.statusType === 'emergency',
+          },
+          caseEnrichment: caseAnalysis?.existingCase ? {
+            fieldsToUpdate: ['status', 'medicalProgress'],
+            newValues: {
+              status: typedArgs.statusType,
+              medicalProgress: typedArgs.details,
+            },
+            reason: `Status update from tweet: ${typedArgs.details}`,
+          } : undefined,
+        };
+
+      case 'dismissPost':
+        return {
+          isCaseRelated: false,
+          urgency: 'low',
+          caseUpdateType: 'duplicate',
+          suggestedAction: 'No action needed',
+          confidence: 0.95,
+          extractedInfo: {
+            fundraisingRequest: typedArgs.reason === 'promotional',
+            emergency: false,
+          },
+          isDuplicate: typedArgs.reason === 'duplicate',
+          duplicateReason: typedArgs.reason,
+        };
+
+      case 'createCaseFromPost':
+        return {
+          isCaseRelated: true,
+          urgency: typedArgs.urgency as 'low' | 'medium' | 'high' | 'critical',
+          caseUpdateType: 'note',
+          suggestedAction: 'create_case',
+          confidence: typedArgs.confidence,
+          extractedInfo: {
+            animalMentioned: typedArgs.petName || typedArgs.animalType,
+            fundraisingRequest: false,
+            emergency: typedArgs.urgency === 'critical',
+          },
+        };
+
+      default:
+        console.warn(`Unknown function call: ${name}`);
+        return null;
+    }
+  }
+
+  /**
+   * Map status type to case update type
+   */
+  private mapStatusTypeToCaseUpdateType(statusType: string): TweetAnalysis['caseUpdateType'] {
+    switch (statusType) {
+      case 'medical_update':
+        return 'note';
+      case 'emergency':
+        return 'emergency';
+      case 'milestone':
+        return 'milestone';
+      case 'adoption_update':
+        return 'status_change';
+      default:
+        return 'note';
+    }
+  }
+
+  /**
    * Analyze a single tweet for case relevance
    */
   private async analyzeTweet(tweet: TweetData, caseAnalysis?: any): Promise<TweetAnalysis> {
@@ -836,6 +954,29 @@ Respond in JSON format:
 }`;
 
     try {
+      // Try function calling first (preferred method)
+      console.log('🔧 Attempting function calling for tweet analysis...');
+      const functionResult = await this.processMessageWithFunctions(analysisPrompt, {
+        userId: 'twitter-agent',
+        userRole: 'admin',
+        language: 'en',
+      });
+
+      // Check if we got function calls
+      if (functionResult.functionCalls && functionResult.functionCalls.length > 0) {
+        console.log(`✅ Function calling successful! Got ${functionResult.functionCalls.length} function calls`);
+        const analysis = this.convertFunctionCallsToTweetAnalysis(functionResult.functionCalls, tweet, caseAnalysis);
+        if (analysis) {
+          console.log(`✅ Converted function call to TweetAnalysis: ${JSON.stringify(analysis, null, 2)}`);
+          return analysis;
+        }
+        console.log('⚠️ Function call conversion returned null, falling back to legacy parsing');
+      } else {
+        console.log('ℹ️ No function calls returned, falling back to legacy text parsing');
+      }
+
+      // Fallback to legacy text parsing (DEPRECATED)
+      console.log('⚠️ Using legacy text parsing method...');
       const result = await this.processMessage(analysisPrompt, {
         userId: 'twitter-agent',
         userRole: 'admin',
@@ -844,17 +985,17 @@ Respond in JSON format:
 
       // Parse the JSON response (handle markdown formatting)
       let jsonString = result.message;
-      
+
       // Remove markdown code blocks if present
       if (jsonString.includes('```json')) {
         jsonString = jsonString.replace(/```json\s*/, '').replace(/```\s*$/, '');
       } else if (jsonString.includes('```')) {
         jsonString = jsonString.replace(/```\s*/, '').replace(/```\s*$/, '');
       }
-      
+
       // Clean up any extra whitespace
       jsonString = jsonString.trim();
-      
+
       const analysis = JSON.parse(jsonString);
       return analysis as TweetAnalysis;
     } catch (error) {
