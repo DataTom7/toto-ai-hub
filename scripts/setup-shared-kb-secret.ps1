@@ -40,8 +40,17 @@ if ($LASTEXITCODE -ne 0) {
 # Check if secret already exists
 Write-Host ""
 Write-Host "🔍 Checking if secret '$SecretName' already exists..." -ForegroundColor Cyan
-$null = gcloud secrets describe $SecretName --project=$ProjectId 2>$null
-if ($LASTEXITCODE -eq 0) {
+$secretExists = $false
+try {
+    $null = gcloud secrets describe $SecretName --project=$ProjectId 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        $secretExists = $true
+    }
+} catch {
+    $secretExists = $false
+}
+
+if ($secretExists) {
     Write-Host "⚠️  Secret '$SecretName' already exists" -ForegroundColor Yellow
     $update = Read-Host "Do you want to update it? (y/n)"
     if ($update -eq "y" -or $update -eq "Y") {
