@@ -151,3 +151,4 @@ The server will automatically:
 - KB entries are now accessible to ALL agents (not just CaseAgent)
 - The system automatically syncs RAG service when KB changes
 
+

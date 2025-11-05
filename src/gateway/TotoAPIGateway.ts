@@ -1,3 +1,4 @@
+import * as admin from 'firebase-admin';
 import { TotoAI } from '../index';
 import { CaseAgent } from '../agents/CaseAgent';
 import { TwitterAgent } from '../agents/TwitterAgent';
@@ -84,10 +85,15 @@ export class TotoAPIGateway {
   private lastAnalyticsUpdate: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  constructor() {
+  /**
+   * @param sharedKbFirestore - Optional Firestore instance for shared KB
+   *                            If provided, KB will be stored in this Firestore (typically toto-bo)
+   *                            ensuring cross-environment access without duplication
+   */
+  constructor(sharedKbFirestore?: admin.firestore.Firestore) {
     this.totoAI = new TotoAI();
     this.ragService = new RAGService();
-    this.knowledgeBaseService = new KnowledgeBaseService();
+    this.knowledgeBaseService = new KnowledgeBaseService(sharedKbFirestore);
     // Note: initializeKnowledgeBase() is no longer called here
     // KnowledgeBaseService will initialize from Firestore on first use
   }

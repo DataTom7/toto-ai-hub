@@ -317,3 +317,4 @@ foreach ($result in $results) {
     Write-Host "Final response preview: $($result.finalResponse.Substring(0, [Math]::Min(100, $result.finalResponse.Length)))..." -ForegroundColor Gray
 }
 
+

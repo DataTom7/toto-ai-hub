@@ -21,6 +21,9 @@ export interface KnowledgeItem {
 /**
  * KnowledgeBaseService - Centralized service for managing knowledge base entries
  * Stores entries in Firestore and provides access to all agents
+ * 
+ * Uses a shared Firestore instance (typically toto-bo) to ensure KB is accessible
+ * across all environments (staging and production) without duplication
  */
 export class KnowledgeBaseService {
   private db: admin.firestore.Firestore;
@@ -28,8 +31,16 @@ export class KnowledgeBaseService {
   private cache: Map<string, KnowledgeItem> = new Map();
   private cacheInitialized: boolean = false;
 
-  constructor() {
-    this.db = admin.firestore();
+  /**
+   * @param sharedKbFirestore - Optional Firestore instance for shared KB
+   *                            If not provided, uses default admin.firestore()
+   *                            Should be set to toto-bo Firestore for cross-environment access
+   */
+  constructor(sharedKbFirestore?: admin.firestore.Firestore) {
+    this.db = sharedKbFirestore || admin.firestore();
+    if (sharedKbFirestore) {
+      console.log('📚 KnowledgeBaseService using shared Firestore instance for cross-environment KB access');
+    }
   }
 
   /**

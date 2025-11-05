@@ -57,20 +57,41 @@ try {
   console.error('❌ Failed to initialize toto-app-stg Firebase Admin SDK:', error.message);
 }
 
-// Initialize toto-bo Firebase Admin
+// Initialize toto-bo Firebase Admin (for shared KB access)
+// Uses Secret Manager (TOTO_BO_SERVICE_ACCOUNT_KEY) for production/staging
+// Falls back to local file only for local development
 try {
   let totoBoServiceAccount = null;
   
-  // Try environment variable first
+  // PRIMARY: Use Secret Manager (environment variable) for production/staging
   const totoBoServiceAccountJson = process.env.TOTO_BO_SERVICE_ACCOUNT_KEY;
   if (totoBoServiceAccountJson) {
-    totoBoServiceAccount = JSON.parse(totoBoServiceAccountJson);
-    console.log('✅ Using toto-bo service account from environment variable');
+    try {
+      totoBoServiceAccount = JSON.parse(totoBoServiceAccountJson);
+      console.log('✅ Using toto-bo service account from Secret Manager (TOTO_BO_SERVICE_ACCOUNT_KEY)');
+    } catch (parseError) {
+      console.error('❌ Failed to parse TOTO_BO_SERVICE_ACCOUNT_KEY:', parseError.message);
+      console.log('   Please ensure the secret contains valid JSON');
+    }
   } else {
-    // Try to find toto-bo service account file (might not exist locally)
-    // Note: This is expected for development - toto-bo credentials may not be available
-    console.log('⚠️ TOTO_BO_SERVICE_ACCOUNT_KEY not found in environment variables');
-    console.log('   Social media posts will use API calls to toto-bo instead');
+    // FALLBACK: Local file only for local development
+    // In production/staging, this should not be used - use Secret Manager instead
+    const totoBoServiceAccountPath = path.join(__dirname, 'toto-bo-firebase-adminsdk-fbsvc-138f229598.json');
+    if (fs.existsSync(totoBoServiceAccountPath)) {
+      const totoBoServiceAccountFile = fs.readFileSync(totoBoServiceAccountPath, 'utf8');
+      totoBoServiceAccount = JSON.parse(totoBoServiceAccountFile);
+      console.log('⚠️ Using local toto-bo service account file (development mode)');
+      console.log('   For production/staging, use Secret Manager: TOTO_BO_SERVICE_ACCOUNT_KEY');
+    } else {
+      console.log('⚠️ TOTO_BO_SERVICE_ACCOUNT_KEY not found in Secret Manager');
+      console.log('   Local service account file also not found');
+      console.log('   Shared KB will not be available - using default Firestore');
+      console.log('   Social media posts will use API calls to toto-bo instead');
+      console.log('');
+      console.log('   To fix: Set TOTO_BO_SERVICE_ACCOUNT_KEY secret in Google Secret Manager');
+      console.log('   Secret name: toto-bo-service-account');
+      console.log('   Value: Entire service account JSON as string');
+    }
   }
   
   if (totoBoServiceAccount) {
@@ -79,14 +100,19 @@ try {
       totoBoApp = admin.app('toto-bo');
       console.log('✅ toto-bo Firebase Admin already initialized');
     } catch {
+      // Initialize toto-bo app for shared KB access
+      // This allows both staging and production toto-ai-hub to access the same KB
       totoBoApp = admin.initializeApp({
         credential: admin.credential.cert(totoBoServiceAccount),
       }, 'toto-bo');
-      console.log('✅ Firebase Admin SDK initialized for toto-bo');
+      console.log('✅ Firebase Admin SDK initialized for toto-bo (shared KB access)');
+      console.log(`   Project ID: ${totoBoServiceAccount.project_id || 'unknown'}`);
     }
   }
 } catch (error) {
   console.error('❌ Failed to initialize toto-bo Firebase Admin SDK:', error.message);
+  console.error('   Error details:', error.stack);
+  console.log('   Shared KB will not be available - using default Firestore');
   console.log('   Social media posts will use API calls to toto-bo instead');
 }
 
@@ -133,14 +159,21 @@ const totoAI = new TotoAI();
 // Initialize Scheduler Service
 const schedulerService = new SchedulerService(totoAI);
 
-// Initialize API Gateway
+// Initialize API Gateway with shared KB Firestore
+// Use toto-bo Firestore for shared KB to ensure cross-environment access
 const { TotoAPIGateway } = require('./dist/gateway/TotoAPIGateway');
-const apiGateway = new TotoAPIGateway();
+const sharedKbFirestore = getTotoBoFirestore(); // Get toto-bo Firestore for shared KB
+const apiGateway = new TotoAPIGateway(sharedKbFirestore);
 
 // Initialize knowledge base service after Firebase is ready
 (async () => {
   try {
     console.log('🔄 Initializing API Gateway...');
+    if (sharedKbFirestore) {
+      console.log('📚 Using shared KB Firestore (toto-bo) for cross-environment access');
+    } else {
+      console.log('⚠️ No shared KB Firestore available, using default Firestore');
+    }
     await apiGateway.initialize();
     console.log('✅ API Gateway initialized with Knowledge Base Service');
   } catch (error) {

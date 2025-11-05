@@ -41,6 +41,15 @@ env:
       - BUILD
       - RUNTIME
 
+  # Toto BO Service Account (entire JSON as secret) - for shared KB access
+  # This allows toto-ai-hub to access the shared KB in toto-bo Firestore
+  # Both staging and production instances will use this to access the same KB
+  - variable: TOTO_BO_SERVICE_ACCOUNT_KEY
+    secret: toto-bo-service-account
+    availability:
+      - BUILD
+      - RUNTIME
+
 outputFiles:
   serverApp:
     include: [dist, package.json, package-lock.json, server.js, public, node_modules]
