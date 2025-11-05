@@ -2243,6 +2243,114 @@ app.post('/api/test-save', async (req, res) => {
   }
 });
 
+// ===== MODEL SELECTION ANALYTICS API ENDPOINTS =====
+
+// Get model usage statistics
+app.get('/api/models/usage', (req, res) => {
+  try {
+    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
+    const modelService = getModelSelectionService();
+    const stats = modelService.getUsageStats();
+
+    res.json({
+      success: true,
+      data: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get cost breakdown by model
+app.get('/api/models/costs', (req, res) => {
+  try {
+    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
+    const modelService = getModelSelectionService();
+    const breakdown = modelService.getCostBreakdown();
+    const totalCost = modelService.getTotalCost();
+
+    res.json({
+      success: true,
+      data: {
+        totalCost,
+        breakdown
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get analytics summary
+app.get('/api/models/analytics', (req, res) => {
+  try {
+    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
+    const modelService = getModelSelectionService();
+    const summary = modelService.getAnalyticsSummary();
+
+    res.json({
+      success: true,
+      data: summary,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get stats for a specific model
+app.get('/api/models/:modelName/stats', (req, res) => {
+  try {
+    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
+    const modelService = getModelSelectionService();
+    const { modelName } = req.params;
+    const stats = modelService.getModelStats(modelName);
+
+    if (!stats) {
+      return res.status(404).json({
+        success: false,
+        error: `Model '${modelName}' not found`
+      });
+    }
+
+    res.json({
+      success: true,
+      data: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get model recommendation for a scenario
+app.post('/api/models/recommend', (req, res) => {
+  try {
+    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
+    const modelService = getModelSelectionService();
+    const { scenario } = req.body;
+
+    if (!scenario) {
+      return res.status(400).json({
+        success: false,
+        error: 'Scenario is required'
+      });
+    }
+
+    const recommendation = modelService.getRecommendationForScenario(scenario);
+
+    res.json({
+      success: true,
+      data: recommendation,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Initialize job worker
 const { JobWorkerService } = require('./dist/services/JobWorkerService');
 const jobWorker = new JobWorkerService(schedulerService);

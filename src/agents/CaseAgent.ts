@@ -147,9 +147,22 @@ export class CaseAgent extends BaseAgent {
       const systemPrompt = this.getSystemPrompt(knowledgeContext);
       const fullPrompt = `${systemPrompt}\n\nUser Context: ${JSON.stringify(context)}\n\nUser Message: ${message}`;
 
-      // Use function calling
+      // Adaptive model selection based on conversation complexity
+      const conversationTurns = conversationContext?.history?.length || 0;
+      const contentLength = message.length + (knowledgeContext?.length || 0);
+
+      const selectedModel = this.selectModelForTask('case_conversation', {
+        factors: {
+          conversationTurns,
+          contentLength,
+          requiresReasoning: conversationTurns > 3 || contentLength > 1000,
+          requiresCreativity: false,
+        },
+      });
+
+      // Use function calling with selected model
       const functionDeclarations = this.getFunctionDeclarations();
-      const modelWithFunctions = this.createModel("gemini-2.0-flash-001", functionDeclarations);
+      const modelWithFunctions = this.createModel(selectedModel, functionDeclarations);
 
       const result = await modelWithFunctions.generateContent({
         contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
@@ -160,6 +173,18 @@ export class CaseAgent extends BaseAgent {
       });
 
       const response = result.response;
+
+      // Record model usage for analytics
+      const usage = response.usageMetadata;
+      if (usage) {
+        this.recordModelUsage(
+          selectedModel,
+          usage.promptTokenCount || 0,
+          usage.candidatesTokenCount || 0,
+          Date.now() - startTime,
+          true
+        );
+      }
 
       // Extract function calls
       const functionCalls: FunctionCall[] = [];
@@ -199,6 +224,10 @@ export class CaseAgent extends BaseAgent {
 
     } catch (error) {
       console.error(`Error in ${this.config.name}:`, error);
+
+      // Record failure for analytics
+      const selectedModel = 'gemini-2.0-flash-001'; // Default model
+      this.recordModelUsage(selectedModel, 0, 0, Date.now() - startTime, false);
 
       return {
         success: false,

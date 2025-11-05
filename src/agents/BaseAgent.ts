@@ -1,15 +1,18 @@
 import { GoogleGenerativeAI, GenerativeModel, FunctionDeclaration, FunctionCall, Part } from "@google/generative-ai";
 import { AgentConfig, AgentResponse, UserContext } from "../types";
+import { ModelSelectionService, getModelSelectionService, TaskType } from "../services/ModelSelectionService";
 
 export abstract class BaseAgent {
   protected model: GenerativeModel;
   protected config: AgentConfig;
   protected genAI: GoogleGenerativeAI;
+  protected modelSelectionService: ModelSelectionService;
 
   constructor(config: AgentConfig) {
     this.config = config;
     this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
     this.model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
+    this.modelSelectionService = getModelSelectionService();
   }
 
   /**
@@ -31,6 +34,30 @@ export abstract class BaseAgent {
       });
     }
     return this.genAI.getGenerativeModel({ model: modelName });
+  }
+
+  /**
+   * Select the appropriate model for a task
+   */
+  protected selectModelForTask(taskType: TaskType, complexityOverrides?: any): string {
+    const recommendation = this.modelSelectionService.selectModelForTask(taskType, complexityOverrides);
+    console.log(`🤖 Model Selection: ${recommendation.modelName} (confidence: ${(recommendation.confidence * 100).toFixed(1)}%)`);
+    console.log(`   Reasoning: ${recommendation.reasoning}`);
+    console.log(`   Estimated cost: $${recommendation.estimatedCost.toFixed(6)}, latency: ${recommendation.estimatedLatency}ms`);
+    return recommendation.modelName;
+  }
+
+  /**
+   * Record model usage after generation
+   */
+  protected recordModelUsage(
+    modelName: string,
+    inputTokens: number,
+    outputTokens: number,
+    latencyMs: number,
+    success: boolean
+  ): void {
+    this.modelSelectionService.recordUsage(modelName, inputTokens, outputTokens, latencyMs, success);
   }
 
   /**
