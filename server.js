@@ -18,26 +18,26 @@ let totoBoApp = null;
 const fs = require('fs');
 
 // Initialize toto-app-stg Firebase Admin
-try {
-  let serviceAccount = null;
-  
-  // Try environment variable first (for production)
-  const serviceAccountJson = process.env.TOTO_APP_STG_SERVICE_ACCOUNT_KEY;
-  if (serviceAccountJson) {
-    serviceAccount = JSON.parse(serviceAccountJson);
-    console.log('✅ Using toto-app-stg service account from environment variable');
-  } else {
-    // Try local file (for development)
-    const serviceAccountPath = path.join(__dirname, 'toto-f9d2f-stg-firebase-adminsdk-fbsvc-d4bdd9b852.json');
+  try {
+    let serviceAccount = null;
     
-    if (fs.existsSync(serviceAccountPath)) {
-      const serviceAccountFile = fs.readFileSync(serviceAccountPath, 'utf8');
-      serviceAccount = JSON.parse(serviceAccountFile);
+    // Try environment variable first (for production)
+    const serviceAccountJson = process.env.TOTO_APP_STG_SERVICE_ACCOUNT_KEY;
+    if (serviceAccountJson) {
+      serviceAccount = JSON.parse(serviceAccountJson);
+    console.log('✅ Using toto-app-stg service account from environment variable');
+    } else {
+      // Try local file (for development)
+      const serviceAccountPath = path.join(__dirname, 'toto-f9d2f-stg-firebase-adminsdk-fbsvc-d4bdd9b852.json');
+      
+      if (fs.existsSync(serviceAccountPath)) {
+        const serviceAccountFile = fs.readFileSync(serviceAccountPath, 'utf8');
+        serviceAccount = JSON.parse(serviceAccountFile);
       console.log('✅ Using local toto-app-stg service account file');
+      }
     }
-  }
-  
-  if (serviceAccount) {
+    
+    if (serviceAccount) {
     // Check if app already exists
     try {
       totoAppStgApp = admin.app(); // Get default app
@@ -50,10 +50,10 @@ try {
       });
       console.log('✅ Firebase Admin SDK initialized for toto-app-stg as DEFAULT app');
     }
-  } else {
+    } else {
     console.log('⚠️ No toto-app-stg service account credentials found, skipping connection');
-  }
-} catch (error) {
+    }
+  } catch (error) {
   console.error('❌ Failed to initialize toto-app-stg Firebase Admin SDK:', error.message);
 }
 
@@ -1477,15 +1477,53 @@ app.get('/api/ai/agents', async (req, res) => {
 app.get('/api/ai/knowledge', async (req, res) => {
   try {
     console.log('📚 Fetching knowledge base from API Gateway...');
+    console.log('🔍 Shared KB Firestore status:', sharedKbFirestore ? 'available' : 'null');
+    console.log('🔍 API Gateway initialized:', !!apiGateway);
+    
+    const knowledgeBaseService = apiGateway.getKnowledgeBaseService();
+    if (!knowledgeBaseService) {
+      console.error('❌ KnowledgeBaseService not available');
+      return res.status(500).json({ 
+        error: 'Knowledge base service not initialized',
+        message: 'KnowledgeBaseService is not available. Check server logs for initialization errors.'
+      });
+    }
+    
+    // Try to get knowledge base status (will initialize if needed)
+    try {
+      const allKnowledge = await knowledgeBaseService.getAll();
+      console.log('🔍 KnowledgeBaseService status:', {
+        cacheSize: allKnowledge.length,
+        entriesLoaded: true
+      });
+    } catch (initError) {
+      console.error('⚠️ KnowledgeBaseService initialization error:', initError.message);
+      throw initError; // Re-throw to trigger error handling
+    }
+    
     const knowledge = await apiGateway.getKnowledgeBase();
     console.log(`✅ Retrieved ${knowledge?.length || 0} knowledge base entries`);
     res.json(knowledge || []);
   } catch (error) {
     console.error('❌ Error fetching knowledge base:', error);
-    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name
+    });
+    
+    // Provide more helpful error message
+    let errorMessage = error.message || 'Internal server error';
+    if (error.message?.includes('Firestore')) {
+      errorMessage = 'Firestore connection error. Check TOTO_BO_SERVICE_ACCOUNT_KEY secret configuration.';
+    } else if (error.message?.includes('permission') || error.code === 'permission-denied') {
+      errorMessage = 'Permission denied accessing knowledge base. Check service account permissions.';
+    }
+    
     res.status(500).json({ 
       error: 'Internal server error',
-      message: error.message,
+      message: errorMessage,
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
@@ -2285,7 +2323,7 @@ app.listen(port, () => {
   console.log(`TotoAI server running on port ${port}`);
   console.log(`Health check: http://localhost:${port}/health`);
   console.log(`Available agents: http://localhost:${port}/api/agents`);
-
+  
   // Start the scheduler
   schedulerService.startAll();
 

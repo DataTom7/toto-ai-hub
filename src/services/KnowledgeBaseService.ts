@@ -51,7 +51,15 @@ export class KnowledgeBaseService {
     try {
       console.log('📚 Initializing Knowledge Base Service...');
       console.log(`🔍 Firestore instance: ${this.db ? 'available' : 'null'}`);
+      
+      if (!this.db) {
+        const error = new Error('Firestore instance is not available. Check TOTO_BO_SERVICE_ACCOUNT_KEY configuration.');
+        console.error('❌', error.message);
+        throw error;
+      }
+      
       console.log(`🔍 Collection: ${this.COLLECTION}`);
+      console.log(`🔍 Project ID: ${(this.db as any)?.projectId || 'unknown'}`);
       
       // Load existing entries from Firestore
       const snapshot = await this.db.collection(this.COLLECTION).get();
@@ -80,8 +88,14 @@ export class KnowledgeBaseService {
         message: err.message,
         stack: err.stack,
         code: err.code,
-        projectId: (this.db as any)?.projectId || 'unknown'
+        name: err.name,
+        projectId: this.db ? ((this.db as any)?.projectId || 'unknown') : 'null'
       });
+      
+      // Re-throw with more context
+      if (!this.db) {
+        throw new Error('Firestore instance not available. Ensure TOTO_BO_SERVICE_ACCOUNT_KEY secret is configured in Secret Manager.');
+      }
       throw error;
     }
   }
