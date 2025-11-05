@@ -5,8 +5,7 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 // Add stealth plugin to avoid bot detection
 puppeteer.use(StealthPlugin());
 
-// Import fetch for API calls
-import fetch from 'node-fetch';
+// Using built-in fetch (available in Node.js 18+)
 
 export class InstagramService {
   private userCache: Map<string, string> = new Map(); // Cache username -> userID

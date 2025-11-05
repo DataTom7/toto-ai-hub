@@ -23,7 +23,7 @@ export interface CaseData {
 
 export interface UserContext {
   userId: string;
-  userRole: 'user' | 'guardian' | 'admin';
+  userRole: 'user' | 'guardian' | 'admin' | 'investor' | 'lead_investor' | 'partner';
   language: 'es' | 'en';
   location?: string;
   preferences?: {
