@@ -159,6 +159,7 @@ export interface ReviewItem {
 
 export interface InstagramAgentResponse extends AgentResponse {
   postsAnalyzed?: number;
+  postsCreated?: number;
   storiesAnalyzed?: number;
   caseUpdatesCreated?: number;
   analysisResults?: PostAnalysis[];
@@ -270,6 +271,11 @@ Be thorough but concise in your analysis, paying special attention to visual con
    * Initialize Instagram credentials and guardian data
    */
   async initialize(credentials: InstagramCredentials, guardians: Guardian[]): Promise<void> {
+    // CRITICAL: Ensure review queue is enabled (required for saving posts to Firestore)
+    if (!this.config.reviewPolicy.reviewQueueEnabled) {
+      console.warn('⚠️ reviewQueueEnabled was false - enabling it to ensure posts are saved');
+      this.config.reviewPolicy.reviewQueueEnabled = true;
+    }
     this.config.instagramCredentials = credentials;
     this.config.guardians = guardians;
     
@@ -284,11 +290,16 @@ Be thorough but concise in your analysis, paying special attention to visual con
   /**
    * Load guardians from database and initialize Instagram service
    */
-  async initializeWithDatabase(credentials: InstagramCredentials): Promise<void> {
+  async initializeWithDatabase(credentials: InstagramCredentials, guardianId?: string): Promise<void> {
+    // CRITICAL: Ensure review queue is enabled (required for saving posts to Firestore)
+    if (!this.config.reviewPolicy.reviewQueueEnabled) {
+      console.warn('⚠️ reviewQueueEnabled was false - enabling it to ensure posts are saved');
+      this.config.reviewPolicy.reviewQueueEnabled = true;
+    }
     this.config.instagramCredentials = credentials;
     
     // Load guardians from database
-    await this.loadGuardiansFromDatabase();
+      await this.loadGuardiansFromDatabase(guardianId);
     
     // Initialize Instagram service
     this.instagramService = new InstagramService(credentials);
@@ -301,12 +312,41 @@ Be thorough but concise in your analysis, paying special attention to visual con
   /**
    * Load guardians from database
    */
-  private async loadGuardiansFromDatabase(): Promise<void> {
+  private async loadGuardiansFromDatabase(guardianId?: string): Promise<void> {
     try {
       const admin = require('firebase-admin');
       const db = admin.firestore();
       
-      // Load guardians from users collection where role = 'guardian'
+      // If guardianId is provided, load only that guardian
+      if (guardianId) {
+        const guardianDoc = await db.collection('users').doc(guardianId).get();
+        if (guardianDoc.exists) {
+          const userData = guardianDoc.data();
+          const socialLinks = userData?.contactInfo?.socialLinks || {};
+          
+          if (socialLinks.instagram) {
+            this.config.guardians = [{
+              id: guardianDoc.id,
+              name: userData?.name || 'Unknown Guardian',
+              instagramHandle: socialLinks.instagram.replace('@', '').replace('https://instagram.com/', '').replace('https://www.instagram.com/', ''),
+              instagramUserId: userData?.instagramUserId,
+              accessToken: userData?.instagramAccessToken,
+              isActive: true,
+              lastPostFetch: new Date(),
+              createdAt: userData?.createdAt || new Date(),
+              updatedAt: userData?.updatedAt || new Date()
+            }];
+            console.log(`Loaded 1 guardian from database (filtered)`);
+            return;
+          }
+        }
+        // If guardian not found or doesn't have Instagram, set empty
+        this.config.guardians = [];
+        console.log(`Guardian ${guardianId} not found or has no Instagram handle`);
+        return;
+      }
+      
+      // Load all guardians from users collection where role = 'guardian'
       const guardiansSnapshot = await db.collection('users')
         .where('role', '==', 'guardian')
         .get();
@@ -349,37 +389,18 @@ Be thorough but concise in your analysis, paying special attention to visual con
       throw new Error('Instagram service not initialized');
     }
 
-    console.log(`\n🔍 [fetchGuardianPosts] Called with guardianId: ${guardianId || 'undefined'}`);
-    console.log(`   Total guardians in config: ${this.config.guardians.length}`);
-    
     const allPosts: InstagramPost[] = [];
     let activeGuardians = this.config.guardians.filter((g: Guardian) => g.isActive);
     
-    console.log(`   Active guardians before filter: ${activeGuardians.length}`);
-    console.log(`   Active guardian IDs: ${activeGuardians.map(g => g.id).join(', ')}`);
-    
     if (guardianId) {
-      console.log(`🔍 FILTERING by guardianId: "${guardianId}"`);
-      const beforeFilter = activeGuardians.length;
-      activeGuardians = activeGuardians.filter((g: Guardian) => {
-        const matches = g.id === guardianId;
-        if (!matches) {
-          console.log(`   ⚠️ Guardian "${g.id}" doesn't match filter "${guardianId}"`);
-        }
-        return matches;
-      });
-      console.log(`   Filtered from ${beforeFilter} to ${activeGuardians.length} guardian(s)`);
+      activeGuardians = activeGuardians.filter((g: Guardian) => g.id === guardianId);
     }
-
-    console.log(`✅ Fetching posts from ${activeGuardians.length} active guardian(s)`);
 
     for (const guardian of activeGuardians) {
       try {
-        console.log(`\n📱 Processing guardian: ${guardian.name} (@${guardian.instagramHandle})`);
         let posts: InstagramPost[] = [];
         
         if (guardian.accessToken && guardian.instagramUserId) {
-          console.log(`   Using Instagram API for @${guardian.instagramHandle}`);
           // Use API if access token available
           posts = await this.instagramService.getUserPosts(
             guardian.instagramUserId, 
@@ -387,15 +408,12 @@ Be thorough but concise in your analysis, paying special attention to visual con
             guardian.accessToken
           );
         } else {
-          console.log(`   Using web scraping for @${guardian.instagramHandle}`);
           // Fallback to web scraping
           posts = await this.instagramService.scrapeUserPosts(
             guardian.instagramHandle,
             this.config.maxPostsPerFetch
           );
         }
-        
-        console.log(`   Scraping returned ${posts.length} posts for @${guardian.instagramHandle}`);
         
         // Add author information to posts
         posts = posts.map(post => ({
@@ -408,17 +426,10 @@ Be thorough but concise in your analysis, paying special attention to visual con
         }));
         
         allPosts.push(...posts);
-        console.log(`✅ Successfully fetched ${posts.length} posts from @${guardian.instagramHandle}`);
       } catch (error) {
-        console.error(`❌ Error fetching posts for @${guardian.instagramHandle}:`, error);
-        if (error instanceof Error) {
-          console.error(`   Error message: ${error.message}`);
-          console.error(`   Error stack: ${error.stack}`);
-        }
+        console.error(`Error fetching posts for @${guardian.instagramHandle}:`, error);
       }
     }
-    
-    console.log(`\n📊 Total posts fetched: ${allPosts.length} from ${activeGuardians.length} guardians`);
 
     return allPosts;
   }
@@ -472,8 +483,9 @@ Be thorough but concise in your analysis, paying special attention to visual con
     const startTime = Date.now();
     const analysisResults: PostAnalysis[] = [];
     let caseUpdatesCreated = 0;
+    let postsSavedCount = 0; // Track actual posts saved to Firestore
 
-    console.log(`Analyzing ${posts.length} posts for case relevance`);
+    console.log(`1. Extraction requested: ${posts.length} posts`);
 
     for (const post of posts) {
       try {
@@ -500,7 +512,6 @@ Be thorough but concise in your analysis, paying special attention to visual con
         
         if (caseAnalysis.shouldCreateNewCase && caseAnalysis.newCaseData) {
           reviewType = 'case_creation';
-          console.log(`📋 Case creation detected: ${caseAnalysis.newCaseData.name}`);
         } else if (caseAnalysis.existingCase && 
                    analysis.isCaseRelated && 
                    !analysis.extractedInfo.fundraisingRequest && 
@@ -508,24 +519,19 @@ Be thorough but concise in your analysis, paying special attention to visual con
                    analysis.caseUpdateType !== 'duplicate') {
           // Only set to 'case_update' if an existing case was found
           reviewType = 'case_update';
-          console.log(`📋 Case update detected: ${analysis.caseUpdateType} for case ${caseAnalysis.existingCase.id}`);
         } else if (analysis.isCaseRelated && !caseAnalysis.existingCase) {
           // Case-related but no existing case found - should create new case
           reviewType = 'case_creation';
-          console.log(`📋 Case-related post but no existing case found - will create new case`);
-        } else if (analysis.isDuplicate) {
-          console.log(`📋 Duplicate post detected: ${analysis.duplicateReason}`);
-        } else {
-          console.log(`📋 Non-case-related post - will be added for review/dismissal`);
         }
 
         // Create and save review item for ALL posts (users can review and dismiss if needed)
         const reviewItem = await this.createReviewItem(reviewType, post, analysis, caseAnalysis);
         if (reviewItem) {
-          await this.addToReviewQueue(reviewItem);
-          console.log(`✅ Instagram post ${post.id} added to review queue`);
-        } else {
-          console.warn(`⚠️ Failed to create review item for post ${post.id}`);
+          // Track if save was successful
+          const saved = await this.addToReviewQueue(reviewItem);
+          if (saved) {
+            postsSavedCount++;
+          }
         }
       } catch (error) {
         console.error(`Error analyzing post ${post.id}:`, error);
@@ -536,9 +542,10 @@ Be thorough but concise in your analysis, paying special attention to visual con
 
     return {
       success: true,
-      message: `Analyzed ${posts.length} posts, created ${caseUpdatesCreated} case updates`,
+      message: `Analyzed ${posts.length} posts, created ${caseUpdatesCreated} case updates, saved ${postsSavedCount} posts`,
       postsAnalyzed: posts.length,
       caseUpdatesCreated,
+      postsCreated: postsSavedCount, // Actual posts saved to Firestore
       analysisResults,
       metadata: {
         agentType: this.config.name,
@@ -554,14 +561,10 @@ Be thorough but concise in your analysis, paying special attention to visual con
    */
   async runMonitoringCycle(guardianId?: string): Promise<InstagramAgentResponse> {
     try {
-      console.log(`\n🚀 Starting Instagram monitoring cycle...`);
-      if (guardianId) {
-        console.log(`   🔍 FILTERING ENABLED for guardian ID: "${guardianId}"`);
-      } else {
-        console.log(`   ⚠️ NO FILTER - processing ALL guardians`);
-      }
+      console.log(`1. Extraction requested: Instagram monitoring`);
 
       // Step 1: Fetch posts from guardians (filtered by guardianId if provided)
+      console.log(`2. Instagram scraping...`);
       const posts = await this.fetchGuardianPosts(guardianId);
       
       // Step 2: Fetch stories from all guardians (optional, as they expire quickly)
@@ -587,7 +590,6 @@ Be thorough but concise in your analysis, paying special attention to visual con
       
       // TODO: Analyze stories separately (they have different handling)
 
-      console.log(`Instagram monitoring cycle completed: ${result.message}`);
       this.lastRun = new Date();
       return result;
 
@@ -668,8 +670,6 @@ Be thorough but concise in your analysis, paying special attention to visual con
    */
   private async findCasesForGuardian(guardianId: string): Promise<any[]> {
     try {
-      console.log(`🔍 [Instagram] Finding cases for guardian: ${guardianId}`);
-      
       // Query toto-app-stg Firestore for cases belonging to this guardian
       const admin = (await import('firebase-admin')).default;
       const db = admin.firestore(); // Uses default app (toto-app-stg)
@@ -682,7 +682,6 @@ Be thorough but concise in your analysis, paying special attention to visual con
         .get();
       
       if (casesSnapshot.empty) {
-        console.log(`ℹ️ [Instagram] No active cases found for guardian: ${guardianId}`);
         return [];
       }
       
@@ -690,8 +689,6 @@ Be thorough but concise in your analysis, paying special attention to visual con
         id: doc.id,
         ...doc.data()
       }));
-      
-      console.log(`✅ [Instagram] Found ${cases.length} case(s) for guardian ${guardianId}`);
       return cases;
     } catch (error) {
       console.error('[Instagram] Error finding cases for guardian:', error);
@@ -1072,49 +1069,56 @@ Respond in JSON format:
 
   /**
    * Add item to review queue
+   * @returns true if post was successfully saved to Firestore, false otherwise
    */
-  private async addToReviewQueue(reviewItem: ReviewItem): Promise<void> {
+  private async addToReviewQueue(reviewItem: ReviewItem): Promise<boolean> {
     try {
-      console.log(`🔵 [Instagram addToReviewQueue] Called for post ${reviewItem.id}`);
-      console.log(`🔵 [Instagram addToReviewQueue] reviewQueueEnabled = ${this.config.reviewPolicy.reviewQueueEnabled}`);
-      
       if (!this.config.reviewPolicy.reviewQueueEnabled) {
-        console.log('❌ Review queue is DISABLED, skipping review item');
-        return;
+        return false;
       }
-      
-      console.log('✅ Review queue is ENABLED, proceeding...');
 
       // Get guardian info
       const guardian = this.config.guardians.find((g: Guardian) => g.id === reviewItem.guardianId);
       if (!guardian) {
-        console.error(`Guardian not found for review item: ${reviewItem.guardianId}`);
-        return;
+        console.error(`❌ Guardian not found for review item: ${reviewItem.guardianId}`);
+        return false;
       }
 
       // Process images if any
       const imageUrls = reviewItem.metadata?.images || [];
       const processedImages: string[] = [];
       const imageFileNames: string[] = [];
-
+      
       if (imageUrls.length > 0) {
         try {
           // Process each image individually to track file names
           for (let i = 0; i < imageUrls.length; i++) {
-            const result = await this.imageService.processAndUploadImage(
-              imageUrls[i],
-              'instagram',
-              reviewItem.postId,
-              i
-            );
-            if (result) {
-              processedImages.push(result.url);
-              imageFileNames.push(result.fileName);
+            try {
+              const result = await this.imageService.processAndUploadImage(
+                imageUrls[i],
+                'instagram',
+                reviewItem.postId,
+                i
+              );
+              if (result) {
+                processedImages.push(result.url);
+                imageFileNames.push(result.fileName);
+              } else {
+                // Fallback: keep original URL if processing fails
+                processedImages.push(imageUrls[i]);
+              }
+            } catch (imgError) {
+              console.error(`Error processing image ${imageUrls[i]}:`, imgError);
+              // Fallback: keep original URL if processing fails
+              processedImages.push(imageUrls[i]);
             }
           }
         } catch (error) {
           console.error('Error processing images:', error);
-          // Continue without images if processing fails
+          // Fallback: use original URLs if all processing fails
+          if (processedImages.length === 0 && imageUrls.length > 0) {
+            processedImages.push(...imageUrls);
+          }
         }
       }
 
@@ -1156,26 +1160,28 @@ Respond in JSON format:
 
       const savedPostId = await this.socialMediaPostService.savePost(postData);
       if (savedPostId) {
-        console.log(`✅ Saved review item to Firestore: ${savedPostId}`);
-      } else {
-        console.warn('⚠️ Failed to save review item to Firestore, but continuing...');
-      }
-
-      // Also keep in-memory queue for backward compatibility
-      this.reviewQueue.push(reviewItem);
-
-      // If auto-approved, execute the action immediately
-      if (reviewItem.status === 'auto_approved') {
-        await this.executeApprovedAction(reviewItem);
-      } else {
-        if (this.config.reviewPolicy.notifyOnReview) {
-          await this.notifyAdminsOfReviewItem(reviewItem);
+        // Also keep in-memory queue for backward compatibility (only if save succeeded)
+        this.reviewQueue.push(reviewItem);
+        
+        // If auto-approved, execute the action immediately
+        if (reviewItem.status === 'auto_approved') {
+          await this.executeApprovedAction(reviewItem);
+        } else {
+          // Notify admins if configured
+          if (this.config.reviewPolicy.notifyOnReview) {
+            await this.notifyAdminsOfReviewItem(reviewItem);
+          }
         }
+        
+        return true;
+      } else {
+        console.error(`Failed to save post to Firestore: ${postData.postId} (Guardian: ${guardian.name})`);
+        // Don't add to in-memory queue if save failed
+        return false;
       }
-
-      console.log(`📋 Review item added to queue: ${reviewItem.id} (${reviewItem.type})`);
     } catch (error) {
       console.error('Error adding to review queue:', error);
+      return false;
     }
   }
 
@@ -1241,14 +1247,6 @@ Respond in JSON format:
   private async notifyAdminsOfReviewItem(reviewItem: ReviewItem): Promise<void> {
     try {
       // TODO: Implement actual notification system
-      console.log(`🔔 NOTIFICATION: New review item requires attention:`, {
-        id: reviewItem.id,
-        type: reviewItem.type,
-        urgency: reviewItem.urgency,
-        confidence: reviewItem.confidence,
-        postAuthor: reviewItem.postAuthor,
-        postContent: reviewItem.postContent.substring(0, 100) + '...'
-      });
     } catch (error) {
       console.error('Error notifying admins:', error);
     }

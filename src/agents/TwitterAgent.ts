@@ -127,6 +127,7 @@ export interface ReviewItem {
 
 export interface TwitterAgentResponse extends AgentResponse {
   tweetsAnalyzed?: number;
+  postsCreated?: number;
   caseUpdatesCreated?: number;
   analysisResults?: TweetAnalysis[];
 }
@@ -236,22 +237,35 @@ Be thorough but concise in your analysis.`;
     this.config.twitterCredentials = credentials;
     this.config.guardians = guardians;
     
+    // CRITICAL: Ensure review queue is enabled (required for saving posts to Firestore)
+    if (!this.config.reviewPolicy.reviewQueueEnabled) {
+      console.warn('⚠️ reviewQueueEnabled was false - enabling it to ensure posts are saved');
+      this.config.reviewPolicy.reviewQueueEnabled = true;
+    }
+    
     // Initialize Twitter service for web scraping (no credentials needed)
     this.twitterService = new TwitterService(credentials);
     this.socialMediaPostService = new SocialMediaPostService();
     this.imageService = new ImageService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`TwitterAgent initialized with ${guardians.length} guardians and web scraping service`);
+    console.log(`   ✅ Review queue enabled: ${this.config.reviewPolicy.reviewQueueEnabled}`);
   }
 
   /**
    * Load guardians from database and initialize Twitter service
    */
-  async initializeWithDatabase(credentials: TwitterCredentials): Promise<void> {
+  async initializeWithDatabase(credentials: TwitterCredentials, guardianId?: string): Promise<void> {
     this.config.twitterCredentials = credentials;
     
     // Load guardians from database
-    await this.loadGuardiansFromDatabase();
+      await this.loadGuardiansFromDatabase(guardianId);
+    
+    // CRITICAL: Ensure review queue is enabled (required for saving posts to Firestore)
+    if (!this.config.reviewPolicy.reviewQueueEnabled) {
+      console.warn('⚠️ reviewQueueEnabled was false - enabling it to ensure posts are saved');
+      this.config.reviewPolicy.reviewQueueEnabled = true;
+    }
     
     // Initialize Twitter service
     this.twitterService = new TwitterService(credentials);
@@ -259,17 +273,46 @@ Be thorough but concise in your analysis.`;
     this.imageService = new ImageService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`TwitterAgent initialized with ${this.config.guardians.length} guardians from database`);
+    console.log(`   ✅ Review queue enabled: ${this.config.reviewPolicy.reviewQueueEnabled}`);
   }
 
   /**
    * Load guardians from database
    */
-  private async loadGuardiansFromDatabase(): Promise<void> {
+  private async loadGuardiansFromDatabase(guardianId?: string): Promise<void> {
     try {
       const admin = require('firebase-admin');
       const db = admin.firestore();
       
-      // Load guardians from users collection where role = 'guardian'
+      // If guardianId is provided, load only that guardian
+      if (guardianId) {
+        const guardianDoc = await db.collection('users').doc(guardianId).get();
+        if (guardianDoc.exists) {
+          const userData = guardianDoc.data();
+          const socialLinks = userData?.contactInfo?.socialLinks || {};
+          
+          if (socialLinks.twitter) {
+            this.config.guardians = [{
+              id: guardianDoc.id,
+              name: userData?.name || 'Unknown Guardian',
+              twitterHandle: socialLinks.twitter,
+              twitterUserId: `twitter_${socialLinks.twitter}`,
+              isActive: true,
+              lastTweetFetch: new Date(),
+              createdAt: userData?.createdAt || new Date(),
+              updatedAt: userData?.updatedAt || new Date()
+            }];
+            console.log(`Loaded 1 guardian from database (filtered)`);
+            return;
+          }
+        }
+        // If guardian not found or doesn't have Twitter, set empty
+        this.config.guardians = [];
+        console.log(`Guardian ${guardianId} not found or has no Twitter handle`);
+        return;
+      }
+      
+      // Load all guardians from users collection where role = 'guardian'
       const guardiansSnapshot = await db.collection('users')
         .where('role', '==', 'guardian')
         .get();
@@ -314,7 +357,7 @@ Be thorough but concise in your analysis.`;
     const allTweets: TweetData[] = [];
     const activeGuardians = this.config.guardians.filter((g: Guardian) => g.isActive);
 
-    console.log(`Fetching tweets from ${activeGuardians.length} active guardians`);
+      console.log(`2. Twitter scraping: ${activeGuardians.length} guardian(s)`);
 
     for (const guardian of activeGuardians) {
       try {
@@ -336,46 +379,26 @@ Be thorough but concise in your analysis.`;
     const startTime = Date.now();
     const analysisResults: TweetAnalysis[] = [];
     let caseUpdatesCreated = 0;
+    let postsSavedCount = 0; // Track actual posts saved to Firestore
 
-    console.log(`\n========== analyzeTweetsAndCreateUpdates CALLED ==========`);
-    console.log(`Tweets to analyze: ${tweets.length}`);
-    console.log(`Guardian ID provided: ${guardianId || 'NONE'}`);
-    console.log(`Total guardians loaded: ${this.config.guardians.length}`);
-    console.log(`Guardians: ${this.config.guardians.map(g => g.name).join(', ')}`);
-    console.log(`reviewQueueEnabled: ${this.config.reviewPolicy.reviewQueueEnabled}`);
-    console.log(`========================================================\n`);
+    console.log(`1. Extraction requested: ${tweets.length} tweets, guardian: ${guardianId || 'all'}`);
 
     for (const tweet of tweets) {
       try {
-        console.log(`\n🔍 Processing tweet ${tweet.id} from @${tweet.author.handle}`);
-        
         // Find the guardian - use provided guardianId if available (much more reliable!)
         let guardian: Guardian | undefined;
         
         if (guardianId) {
-          console.log(`   Using provided guardianId: ${guardianId}`);
           guardian = this.config.guardians.find((g: Guardian) => g.id === guardianId);
-          if (guardian) {
-            console.log(`✅ Guardian FOUND by ID: ${guardian.name}`);
-          } else {
-            console.error(`❌ Guardian NOT FOUND for provided ID: ${guardianId}`);
-          }
         } else {
           // Fallback to handle matching (legacy behavior, less reliable)
-          console.log(`   No guardianId provided, trying to match by handle...`);
-          console.log(`   Available guardians: ${this.config.guardians.map(g => `@${g.twitterHandle}`).join(', ')}`);
           guardian = this.config.guardians.find((g: Guardian) => 
             g.twitterHandle === tweet.author.handle || g.twitterUserId === tweet.author.handle
           );
-          if (guardian) {
-            console.log(`✅ Guardian MATCHED by handle: ${guardian.name} (@${guardian.twitterHandle})`);
-          }
         }
         
         if (!guardian) {
-          console.error(`❌ Guardian NOT FOUND for tweet ${tweet.id}`);
-          console.error(`   Tweet author: @${tweet.author.handle}`);
-          console.error(`   SKIPPING THIS TWEET!`);
+          console.error(`⚠️ Guardian not found for tweet ${tweet.id}`);
           continue;
         }
 
@@ -393,7 +416,6 @@ Be thorough but concise in your analysis.`;
         
         if (caseAnalysis.shouldCreateNewCase && caseAnalysis.newCaseData) {
           reviewType = 'case_creation';
-          console.log(`📋 Case creation detected: ${caseAnalysis.newCaseData.name}`);
         } else if (caseAnalysis.existingCase && 
                    analysis.isCaseRelated && 
                    !analysis.extractedInfo.fundraisingRequest && 
@@ -401,24 +423,19 @@ Be thorough but concise in your analysis.`;
                    analysis.caseUpdateType !== 'duplicate') {
           // Only set to 'case_update' if an existing case was found
           reviewType = 'case_update';
-          console.log(`📋 Case update detected: ${analysis.caseUpdateType} for case ${caseAnalysis.existingCase.id}`);
         } else if (analysis.isCaseRelated && !caseAnalysis.existingCase) {
           // Case-related but no existing case found - should create new case
           reviewType = 'case_creation';
-          console.log(`📋 Case-related tweet but no existing case found - will create new case`);
-        } else if (analysis.isDuplicate) {
-          console.log(`📋 Duplicate tweet detected: ${analysis.duplicateReason}`);
-        } else {
-          console.log(`📋 Non-case-related tweet - will be added for review/dismissal`);
         }
 
         // Create and save review item for ALL posts (users can review and dismiss if needed)
         const reviewItem = await this.createReviewItem(reviewType, tweet, analysis, caseAnalysis, guardian);
         if (reviewItem) {
-          await this.addToReviewQueue(reviewItem);
-          console.log(`✅ Tweet ${tweet.id} added to review queue`);
-        } else {
-          console.warn(`⚠️ Failed to create review item for tweet ${tweet.id}`);
+          // Track if save was successful
+          const saved = await this.addToReviewQueue(reviewItem);
+          if (saved) {
+            postsSavedCount++;
+          }
         }
       } catch (error) {
         console.error(`Error analyzing tweet ${tweet.id}:`, error);
@@ -429,9 +446,10 @@ Be thorough but concise in your analysis.`;
 
     return {
       success: true,
-      message: `Analyzed ${tweets.length} tweets, created ${caseUpdatesCreated} case updates`,
+      message: `Analyzed ${tweets.length} tweets, created ${caseUpdatesCreated} case updates, saved ${postsSavedCount} posts`,
       tweetsAnalyzed: tweets.length,
       caseUpdatesCreated,
+      postsCreated: postsSavedCount, // Actual posts saved to Firestore
       analysisResults,
       metadata: {
         agentType: this.config.name,
@@ -549,8 +567,6 @@ Be thorough but concise in your analysis.`;
    */
   private async findCasesForGuardian(guardianId: string): Promise<any[]> {
     try {
-      console.log(`🔍 Finding cases for guardian: ${guardianId}`);
-      
       // Query toto-app-stg Firestore for cases belonging to this guardian
       const admin = (await import('firebase-admin')).default;
       const db = admin.firestore(); // Uses default app (toto-app-stg)
@@ -563,7 +579,6 @@ Be thorough but concise in your analysis.`;
         .get();
       
       if (casesSnapshot.empty) {
-        console.log(`ℹ️ No active cases found for guardian: ${guardianId}`);
         return [];
       }
       
@@ -571,8 +586,6 @@ Be thorough but concise in your analysis.`;
         id: doc.id,
         ...doc.data()
       }));
-      
-      console.log(`✅ Found ${cases.length} case(s) for guardian ${guardianId}`);
       return cases;
     } catch (error) {
       console.error('Error finding cases for guardian:', error);
@@ -1292,36 +1305,33 @@ Respond in JSON format:
     }
 
     try {
-      console.log(`[DEBUG] Fetching tweets for ${guardian.name} using web scraping...`);
-      console.log(`[DEBUG] Guardian Twitter handle: ${guardian.twitterHandle}`);
-      console.log(`[DEBUG] Max tweets to fetch: ${this.config.maxTweetsPerFetch}`);
-      
       // Use web scraping directly since API is rate-limited
       const rawTweets = await this.twitterService.scrapeUserTweets(
         guardian.twitterHandle,
         this.config.maxTweetsPerFetch
       );
-      
-      console.log(`[DEBUG] Scraped ${rawTweets.length} raw tweets from ${guardian.name}`);
-      console.log(`[DEBUG] Raw tweets data:`, JSON.stringify(rawTweets, null, 2));
 
       // Convert scraped tweets to our TweetData format
       const tweets: TweetData[] = [];
       
       if (rawTweets && Array.isArray(rawTweets)) {
-        console.log(`[DEBUG] Processing ${rawTweets.length} raw tweets...`);
         for (const tweet of rawTweets) {
-          console.log(`[DEBUG] Processing tweet:`, JSON.stringify(tweet, null, 2));
-          
           // Extract media URLs from the tweet
           const imageUrls: string[] = [];
           const videoUrls: string[] = [];
+          
+          // Check for direct imageUrls field (scraper output)
+          if (tweet.imageUrls && Array.isArray(tweet.imageUrls)) {
+            imageUrls.push(...tweet.imageUrls);
+          }
           
           // Check for media in various possible locations
           if (tweet.media && Array.isArray(tweet.media)) {
             for (const media of tweet.media) {
               if (media.type === 'photo' && media.url) {
                 imageUrls.push(media.url);
+              } else if (media.type === 'photo' && media.media_url_https) {
+                imageUrls.push(media.media_url_https);
               } else if ((media.type === 'video' || media.type === 'animated_gif') && media.url) {
                 videoUrls.push(media.url);
               }
@@ -1353,7 +1363,14 @@ Respond in JSON format:
             }
           }
           
-          console.log(`[DEBUG] Extracted ${imageUrls.length} images and ${videoUrls.length} videos from tweet`);
+          // Check for images in scraped data (common scraper formats)
+          if (tweet.images && Array.isArray(tweet.images)) {
+            imageUrls.push(...tweet.images.filter((img: any) => typeof img === 'string' || img.url));
+          }
+          
+          // Remove duplicates
+          const uniqueImageUrls = [...new Set(imageUrls)];
+          const uniqueVideoUrls = [...new Set(videoUrls)];
           
           const tweetData: TweetData = {
             id: tweet.id,
@@ -1369,24 +1386,23 @@ Respond in JSON format:
               replies: tweet.public_metrics?.reply_count || 0
             },
             media: {
-              images: imageUrls,
-              videos: videoUrls
+              images: uniqueImageUrls,
+              videos: uniqueVideoUrls
             },
+            // Also store directly for easier access
+            imageUrls: uniqueImageUrls,
+            videoUrls: uniqueVideoUrls,
             createdAt: new Date(tweet.created_at!),
             fetchedAt: new Date()
           };
 
           tweets.push(tweetData);
-          console.log(`[DEBUG] Converted tweet to TweetData:`, JSON.stringify(tweetData, null, 2));
         }
-      } else {
-        console.log(`[DEBUG] No raw tweets to process. rawTweets:`, rawTweets);
       }
 
-      console.log(`[DEBUG] Final tweets array length: ${tweets.length}`);
       return tweets;
     } catch (error) {
-      console.error(`[DEBUG] Error fetching tweets for guardian ${guardian.name}:`, error);
+      console.error(`Error fetching tweets for guardian ${guardian.name}:`, error);
       return [];
     }
   }
@@ -1418,9 +1434,6 @@ Respond in JSON format:
           console.error(`❌ Guardian not found for tweet author: ${tweet.author.handle} - createReviewItem will return null!`);
           return null;
         }
-        console.log(`⚠️ Guardian matched by handle (fallback): ${guardian.name}`);
-      } else {
-        console.log(`✅ Guardian provided directly: ${guardian.name}`);
       }
 
       // Check if auto-approval is possible
@@ -1457,49 +1470,56 @@ Respond in JSON format:
 
   /**
    * Add item to review queue
+   * @returns true if post was successfully saved to Firestore, false otherwise
    */
-  private async addToReviewQueue(reviewItem: ReviewItem): Promise<void> {
+  private async addToReviewQueue(reviewItem: ReviewItem): Promise<boolean> {
     try {
-      console.log(`🔵 [addToReviewQueue] Called for tweet ${reviewItem.tweetId}`);
-      console.log(`🔵 [addToReviewQueue] reviewQueueEnabled = ${this.config.reviewPolicy.reviewQueueEnabled}`);
-      
       if (!this.config.reviewPolicy.reviewQueueEnabled) {
-        console.log('❌ Review queue is DISABLED, skipping review item');
-        return;
+        return false;
       }
-      
-      console.log('✅ Review queue is ENABLED, proceeding...');
 
       // Get guardian info
       const guardian = this.config.guardians.find((g: Guardian) => g.id === reviewItem.guardianId);
       if (!guardian) {
-        console.error(`Guardian not found for review item: ${reviewItem.guardianId}`);
-        return;
+        console.error(`❌ Guardian not found for review item: ${reviewItem.guardianId}`);
+        return false;
       }
 
       // Process images if any
       const imageUrls = reviewItem.metadata?.images || [];
       const processedImages: string[] = [];
       const imageFileNames: string[] = [];
-
+      
       if (imageUrls.length > 0) {
         try {
           // Process each image individually to track file names
           for (let i = 0; i < imageUrls.length; i++) {
-            const result = await this.imageService.processAndUploadImage(
-              imageUrls[i],
-              'twitter',
-              reviewItem.tweetId,
-              i
-            );
-            if (result) {
-              processedImages.push(result.url);
-              imageFileNames.push(result.fileName);
+            try {
+              const result = await this.imageService.processAndUploadImage(
+                imageUrls[i],
+                'twitter',
+                reviewItem.tweetId,
+                i
+              );
+              if (result) {
+                processedImages.push(result.url);
+                imageFileNames.push(result.fileName);
+              } else {
+                // Fallback: keep original URL if processing fails
+                processedImages.push(imageUrls[i]);
+              }
+            } catch (imgError) {
+              console.error(`Error processing image ${imageUrls[i]}:`, imgError);
+              // Fallback: keep original URL if processing fails
+              processedImages.push(imageUrls[i]);
             }
           }
         } catch (error) {
           console.error('Error processing images:', error);
-          // Continue without images if processing fails
+          // Fallback: use original URLs if all processing fails
+          if (processedImages.length === 0 && imageUrls.length > 0) {
+            processedImages.push(...imageUrls);
+          }
         }
       }
 
@@ -1539,27 +1559,28 @@ Respond in JSON format:
 
       const savedPostId = await this.socialMediaPostService.savePost(postData);
       if (savedPostId) {
-        console.log(`✅ Saved review item to Firestore: ${savedPostId}`);
-      } else {
-        console.warn('⚠️ Failed to save review item to Firestore, but continuing...');
-      }
-
-      // Also keep in-memory queue for backward compatibility
-      this.reviewQueue.push(reviewItem);
-
-      // If auto-approved, execute the action immediately
-      if (reviewItem.status === 'auto_approved') {
-        await this.executeApprovedAction(reviewItem);
-      } else {
-        // Notify admins if configured
-        if (this.config.reviewPolicy.notifyOnReview) {
-          await this.notifyAdminsOfReviewItem(reviewItem);
+        // Also keep in-memory queue for backward compatibility (only if save succeeded)
+        this.reviewQueue.push(reviewItem);
+        
+        // If auto-approved, execute the action immediately
+        if (reviewItem.status === 'auto_approved') {
+          await this.executeApprovedAction(reviewItem);
+        } else {
+          // Notify admins if configured
+          if (this.config.reviewPolicy.notifyOnReview) {
+            await this.notifyAdminsOfReviewItem(reviewItem);
+          }
         }
+        
+        return true;
+      } else {
+        console.error(`Failed to save post to Firestore: ${postData.postId} (Guardian: ${guardian.name})`);
+        // Don't add to in-memory queue if save failed
+        return false;
       }
-
-      console.log(`📋 Review item added to queue: ${reviewItem.id} (${reviewItem.type})`);
     } catch (error) {
       console.error('Error adding to review queue:', error);
+      return false;
     }
   }
 
@@ -1667,14 +1688,6 @@ Respond in JSON format:
   private async notifyAdminsOfReviewItem(reviewItem: ReviewItem): Promise<void> {
     try {
       // TODO: Implement actual notification system (email, Slack, etc.)
-      console.log(`🔔 NOTIFICATION: New review item requires attention:`, {
-        id: reviewItem.id,
-        type: reviewItem.type,
-        urgency: reviewItem.urgency,
-        confidence: reviewItem.confidence,
-        tweetAuthor: reviewItem.tweetAuthor,
-        tweetContent: reviewItem.tweetContent.substring(0, 100) + '...'
-      });
     } catch (error) {
       console.error('Error notifying admins:', error);
     }
@@ -2018,7 +2031,8 @@ Respond in JSON format:
               caseAnalysis.shouldCreateNewCase ? 'case_creation' : 'case_update',
               tweet,
               analysis,
-              caseAnalysis
+              caseAnalysis,
+              guardian
             );
             if (reviewItem) {
               proposedActions.push(reviewItem);
