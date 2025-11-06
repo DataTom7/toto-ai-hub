@@ -110,7 +110,6 @@ export class SocialMediaPostService {
 
     // Detect circular references
     if (seen.has(obj)) {
-      console.warn('⚠️ Circular reference detected, skipping...');
       return null;
     }
     seen.add(obj);
@@ -138,15 +137,11 @@ export class SocialMediaPostService {
    */
   async savePost(post: Omit<SocialMediaPost, 'id' | 'createdAt'>): Promise<string | null> {
     try {
-      console.log(`🔄 Attempting to save post: ${post.postId} (${post.platform})`);
-      
+      console.log(`6. Saving post: ${post.postId} (${post.platform})`);
       const db = this.getFirestore();
       if (!db) {
-        console.warn('⚠️ toto-bo Firestore not available - falling back to API');
         return await this.savePostViaAPI(post);
       }
-
-      console.log(`✅ Firestore connection obtained, saving to collection: ${this.COLLECTION_NAME}`);
 
       const postData: Omit<SocialMediaPost, 'id'> = {
         ...post,
@@ -164,7 +159,6 @@ export class SocialMediaPostService {
         await docRef.set(cleanedPostData);
       });
 
-      console.log(`✅ Successfully saved social media post to Firestore: ${post.postId}`);
       return docRef.id;
     } catch (error) {
       console.error(`❌ Error saving social media post ${post.postId}:`, error);

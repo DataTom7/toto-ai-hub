@@ -32,25 +32,35 @@ export class ImageService {
     index: number
   ): Promise<ImageUploadResult | null> {
     try {
-      // Get toto-bo Storage instance
-      const getTotoBoStorage = (global as any).getTotoBoStorage as (() => admin.storage.Storage | null) | undefined;
+      // Skip video files - they can't be processed with sharp
+      const lowerUrl = imageUrl.toLowerCase();
+      if (lowerUrl.includes('.mp4') || 
+          lowerUrl.includes('video') || 
+          lowerUrl.includes('/o1/v/t2/f2/')) {
+        // Return null to indicate this should use original URL (videos are handled separately)
+        return null;
+      }
+
+      // Get toto-bo Storage bucket instance
+      // getTotoBoStorage() returns a bucket instance (admin.storage().bucket())
+      const getTotoBoStorage = (global as any).getTotoBoStorage as (() => ReturnType<ReturnType<typeof admin.storage>['bucket']> | null) | undefined;
       
       if (!getTotoBoStorage) {
         console.error('getTotoBoStorage not available - Firebase Admin not initialized for toto-bo');
         return null;
       }
 
-      const storage = getTotoBoStorage();
-      if (!storage) {
-        console.error('toto-bo Storage not available');
+      const bucket = getTotoBoStorage();
+      if (!bucket) {
+        console.error('toto-bo Storage bucket not available');
         return null;
       }
 
       // Download image
-      console.log(`Downloading image from ${imageUrl}...`);
+      console.log(`3. Image processing: downloading...`);
       const imageResponse = await fetch(imageUrl);
       if (!imageResponse.ok) {
-        console.error(`Failed to download image: ${imageResponse.status} ${imageResponse.statusText}`);
+        console.error(`⚠️ Image download failed: ${imageResponse.status}`);
         return null;
       }
 
@@ -58,11 +68,9 @@ export class ImageService {
       const originalSize = imageBuffer.length;
 
       // Optimize image
-      console.log(`Optimizing image... (${originalSize} bytes)`);
+      console.log(`4. Image processing: optimizing...`);
       const optimizedBuffer = await this.optimizeImage(imageBuffer);
       const optimizedSize = optimizedBuffer.length;
-
-      console.log(`✅ Image optimized: ${originalSize} → ${optimizedSize} bytes (${((1 - optimizedSize / originalSize) * 100).toFixed(1)}% reduction)`);
 
       // Generate unique filename
       const timestamp = Date.now();
@@ -70,7 +78,7 @@ export class ImageService {
       const fileName = `social-media-posts/${platform}/${postId}/${timestamp}_${index}.${fileExtension}`;
 
       // Upload to Firebase Storage
-      const bucket = storage.bucket();
+      // getTotoBoStorage() returns a bucket instance directly
       const fileUpload = bucket.file(fileName);
       
       const downloadToken = randomUUID();
@@ -95,7 +103,7 @@ export class ImageService {
       const encodedFileName = encodeURIComponent(fileName);
       const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedFileName}?alt=media&token=${downloadToken}`;
 
-      console.log(`✅ Image uploaded to toto-bo Storage: ${publicUrl}`);
+      console.log(`5. Image processing: uploaded`);
 
       return {
         url: publicUrl,
@@ -103,8 +111,21 @@ export class ImageService {
         originalSize,
         optimizedSize
       };
-    } catch (error) {
-      console.error(`Error processing image ${imageUrl}:`, error);
+    } catch (error: any) {
+      // If bucket doesn't exist or upload fails, log but return null
+      // The calling code will fall back to original URL
+      if (error?.error?.code === 404 && error?.error?.message?.includes('bucket')) {
+        // GaxiosError format
+        console.error(`Storage bucket not found. Check bucket configuration. Image will use original URL.`);
+      } else if (error?.response?.data?.error?.code === 404 && error?.response?.data?.error?.message?.includes('bucket')) {
+        // Alternative error format
+        console.error(`Storage bucket not found. Check bucket configuration. Image will use original URL.`);
+      } else if (error?.message?.includes('unsupported image format')) {
+        // Video file detected during optimization
+        console.error(`Video file detected, skipping optimization. Will use original URL.`);
+      } else {
+        console.error(`Error processing image ${imageUrl}:`, error.message || error);
+      }
       return null;
     }
   }
@@ -158,20 +179,21 @@ export class ImageService {
    */
   async deleteImage(fileName: string): Promise<boolean> {
     try {
-      const getTotoBoStorage = (global as any).getTotoBoStorage as (() => admin.storage.Storage | null) | undefined;
+      // getTotoBoStorage() returns a bucket instance (admin.storage().bucket())
+      const getTotoBoStorage = (global as any).getTotoBoStorage as (() => ReturnType<ReturnType<typeof admin.storage>['bucket']> | null) | undefined;
       
       if (!getTotoBoStorage) {
         console.error('getTotoBoStorage not available');
         return false;
       }
 
-      const storage = getTotoBoStorage();
-      if (!storage) {
-        console.error('toto-bo Storage not available');
+      const bucket = getTotoBoStorage();
+      if (!bucket) {
+        console.error('toto-bo Storage bucket not available');
         return false;
       }
 
-      const bucket = storage.bucket();
+      // getTotoBoStorage() returns a bucket instance directly
       const file = bucket.file(fileName);
       
       await file.delete();

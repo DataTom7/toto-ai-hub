@@ -223,53 +223,49 @@ export class SchedulerService {
     if (filterPlatform !== 'instagram') {
     try {
       const twitterAgent = this.totoAI.getTwitterAgent();
-      if (!twitterAgent.getGuardians() || twitterAgent.getGuardians().length === 0) {
-        console.log('🔄 Initializing Twitter Agent with guardians from database...');
+      // If filtering by guardianId, always re-initialize to ensure only that guardian is loaded
+      if (filterGuardianId) {
+        const dummyCredentials = {};
+        await twitterAgent.initializeWithDatabase(dummyCredentials, filterGuardianId);
+      } else if (!twitterAgent.getGuardians() || twitterAgent.getGuardians().length === 0) {
         const dummyCredentials = {};
         await twitterAgent.initializeWithDatabase(dummyCredentials);
       }
 
       let twitterGuardians = twitterAgent.getGuardians();
       
-      // Filter by guardian ID if specified
+      // Additional filter check (should already be filtered if guardianId was provided)
       if (filterGuardianId) {
         twitterGuardians = twitterGuardians.filter(g => g.id === filterGuardianId);
-        console.log(`🔍 Filtered to ${twitterGuardians.length} Twitter guardian(s) matching ID: ${filterGuardianId}`);
       }
       
       results.twitter.totalGuardians = twitterGuardians.length;
 
       if (twitterGuardians.length > 0) {
-        console.log(`🔍 Processing ${twitterGuardians.length} Twitter guardians in batches...`);
         await this.processGuardiansInBatches(
           twitterGuardians,
           async (guardian) => {
             try {
-              console.log(`📱 Fetching tweets for ${guardian.name} (@${guardian.twitterHandle})...`);
               const response = await twitterAgent.fetchRealTweets(guardian.id, 10);
               
               if (response.success && response.tweets.length > 0) {
                 results.twitter.successfulFetches++;
-                results.twitter.totalPosts += response.tweets.length;
-                console.log(`✅ ${guardian.name}: ${response.tweets.length} tweets fetched`);
+                const tweetsFetched = response.tweets.length;
                 
                 // Analyze the tweets to add them to review queue
-                // Pass guardian.id so we don't need to match by handle (which can fail!)
-                console.log(`🔍 Analyzing ${response.tweets.length} tweets for ${guardian.name} (ID: ${guardian.id})...`);
                 const analysisResult = await twitterAgent.analyzeTweetsAndCreateUpdates(response.tweets, guardian.id);
                 if (analysisResult.success) {
-                  results.twitter.proposedActions += analysisResult.tweetsAnalyzed || 0;
-                  console.log(`✅ ${guardian.name}: ${analysisResult.tweetsAnalyzed || 0} tweets analyzed and added to review queue`);
-                } else {
-                  console.warn(`⚠️ ${guardian.name}: Analysis failed - ${analysisResult.error || 'Unknown error'}`);
+                  const tweetsAnalyzed = analysisResult.tweetsAnalyzed || 0;
+                  const postsCreated = analysisResult.postsCreated || 0;
+                  results.twitter.totalPosts += tweetsAnalyzed;
+                  results.twitter.proposedActions += postsCreated;
                 }
               } else {
                 results.twitter.errors++;
-                console.log(`⚠️ ${guardian.name}: No tweets fetched`);
               }
             } catch (error) {
               results.twitter.errors++;
-              console.error(`❌ Error monitoring ${guardian.name}:`, error);
+              console.error(`Error monitoring ${guardian.name}:`, error);
             }
           },
           'Twitter'
@@ -285,45 +281,41 @@ export class SchedulerService {
     if (filterPlatform !== 'twitter') {
     try {
       const instagramAgent = this.totoAI.getInstagramAgent();
-      if (!instagramAgent.getGuardians() || instagramAgent.getGuardians().length === 0) {
-        console.log('🔄 Initializing Instagram Agent with guardians from database...');
+      // If filtering by guardianId, always re-initialize to ensure only that guardian is loaded
+      if (filterGuardianId) {
+        const dummyCredentials = {};
+        await instagramAgent.initializeWithDatabase(dummyCredentials, filterGuardianId);
+      } else if (!instagramAgent.getGuardians() || instagramAgent.getGuardians().length === 0) {
         const dummyCredentials = {};
         await instagramAgent.initializeWithDatabase(dummyCredentials);
       }
 
       let instagramGuardians = instagramAgent.getGuardians();
       
-      // Filter by guardian ID if specified
+      // Additional filter check (should already be filtered if guardianId was provided)
       if (filterGuardianId) {
         instagramGuardians = instagramGuardians.filter(g => g.id === filterGuardianId);
-        console.log(`🔍 Filtered to ${instagramGuardians.length} Instagram guardian(s) matching ID: ${filterGuardianId}`);
       }
       
       results.instagram.totalGuardians = instagramGuardians.length;
 
       if (instagramGuardians.length > 0) {
-        console.log(`🔍 Processing ${instagramGuardians.length} Instagram guardians...`);
-        if (filterGuardianId) {
-          console.log(`   📌 Passing guardianId filter to Instagram agent: "${filterGuardianId}"`);
-        } else {
-          console.log(`   ⚠️ NO guardianId filter - will process ALL guardians`);
-        }
         try {
           // Pass guardianId filter to Instagram agent if filtering by specific guardian
           const response = await instagramAgent.runMonitoringCycle(filterGuardianId);
           
           if (response.success) {
             results.instagram.successfulFetches = instagramGuardians.length;
-            results.instagram.totalPosts = response.postsAnalyzed || 0;
-            results.instagram.proposedActions = response.caseUpdatesCreated || 0;
-            console.log(`✅ Instagram: ${response.postsAnalyzed || 0} posts analyzed, ${response.caseUpdatesCreated || 0} actions created`);
+            const postsAnalyzed = response.postsAnalyzed || 0;
+            const postsCreated = response.postsCreated || 0;
+            results.instagram.totalPosts = postsAnalyzed;
+            results.instagram.proposedActions = postsCreated;
           } else {
             results.instagram.errors++;
-            console.log(`⚠️ Instagram monitoring failed: ${response.error || 'Unknown error'}`);
           }
         } catch (error) {
           results.instagram.errors++;
-          console.error(`❌ Error in Instagram monitoring:`, error);
+          console.error(`Error in Instagram monitoring:`, error);
         }
       }
     } catch (error) {
@@ -335,20 +327,25 @@ export class SchedulerService {
     results.endTime = new Date();
     const duration = results.endTime.getTime() - results.startTime.getTime();
 
-    console.log('📊 Social Media Monitoring Summary:');
-    console.log(`   Twitter: ${results.twitter.totalGuardians} guardians, ${results.twitter.successfulFetches} successful, ${results.twitter.totalPosts} posts, ${results.twitter.proposedActions} actions`);
-    console.log(`   Instagram: ${results.instagram.totalGuardians} guardians, ${results.instagram.successfulFetches} successful, ${results.instagram.totalPosts} posts, ${results.instagram.proposedActions} actions`);
-    console.log(`   Total Duration: ${Math.round(duration / 1000)}s`);
+    // Calculate total posts analyzed vs created
+    const totalPostsAnalyzed = results.twitter.totalPosts + results.instagram.totalPosts;
+    const totalPostsCreated = results.twitter.proposedActions + results.instagram.proposedActions;
+    
+    console.log(`✅ Monitoring completed: ${totalPostsAnalyzed} analyzed, ${totalPostsCreated} saved`);
 
     // Extract guardian insights from posts (async, don't block)
     if (results.twitter.totalPosts > 0 || results.instagram.totalPosts > 0) {
-      console.log('🔍 Extracting guardian insights from posts...');
       this.extractGuardianInsights(filterGuardianId).catch(error => {
-        console.error('❌ Error extracting guardian insights:', error);
+        console.error('Error extracting guardian insights:', error);
       });
     }
 
-    return results;
+    // Return results with postsAnalyzed and postsCreated for API response
+    return {
+      ...results,
+      postsAnalyzed: totalPostsAnalyzed,
+      postsCreated: totalPostsCreated, // This is the number of posts saved to review queue/Firestore
+    };
   }
 
   /**

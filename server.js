@@ -98,15 +98,34 @@ try {
     // Check if app already exists
     try {
       totoBoApp = admin.app('toto-bo');
-      console.log('✅ toto-bo Firebase Admin already initialized');
+      const existingBucket = totoBoApp.options?.storageBucket;
+      console.log(`✅ toto-bo Firebase Admin already initialized`);
+      if (existingBucket) {
+        console.log(`   Using existing Storage Bucket: ${existingBucket}`);
+      }
     } catch {
+      // Determine bucket name based on project and environment
+      const projectId = totoBoServiceAccount.project_id || 'toto-bo-stg';
+      
+      // Check for explicit environment variable or infer from project_id
+      // If project_id contains 'stg' or ENVIRONMENT is 'staging', use staging bucket
+      const isStaging = process.env.ENVIRONMENT === 'staging' || 
+                        process.env.NODE_ENV === 'staging' ||
+                        projectId.includes('stg') ||
+                        projectId === 'toto-bo-stg';
+      
+      const storageBucket = isStaging ? 'toto-bo-stg.appspot.com' : 'toto-bo.appspot.com';
+      
       // Initialize toto-bo app for shared KB access
       // This allows both staging and production toto-ai-hub to access the same KB
       totoBoApp = admin.initializeApp({
         credential: admin.credential.cert(totoBoServiceAccount),
+        projectId: projectId,
+        storageBucket: storageBucket
       }, 'toto-bo');
       console.log('✅ Firebase Admin SDK initialized for toto-bo (shared KB access)');
-      console.log(`   Project ID: ${totoBoServiceAccount.project_id || 'unknown'}`);
+      console.log(`   Project ID: ${projectId}`);
+      console.log(`   Storage Bucket: ${storageBucket} (${isStaging ? 'staging' : 'production'})`);
     }
   }
 } catch (error) {
@@ -132,12 +151,21 @@ const getTotoBoFirestore = () => {
 
 const getTotoBoStorage = () => {
   if (totoBoApp) {
-    return admin.storage(totoBoApp);
+    const storage = admin.storage(totoBoApp);
+    // Get the bucket name from the app options
+    const bucketName = totoBoApp.options?.storageBucket;
+    if (bucketName) {
+      return storage.bucket(bucketName);
+    }
+    // Fallback: try to get default bucket
+    return storage;
   }
   // Fallback to default app (toto-app-stg) for local development
   if (totoAppStgApp) {
     console.log('⚠️ Using toto-app-stg Storage as fallback for social media images');
-    return admin.storage(totoAppStgApp);
+    const storage = admin.storage(totoAppStgApp);
+    const bucketName = totoAppStgApp.options?.storageBucket || 'toto-f9d2f-stg.appspot.com';
+    return storage.bucket(bucketName);
   }
   return null;
 };
@@ -561,7 +589,6 @@ app.get('/api/twitter/guardians', async (req, res) => {
       
       const dbGuardians = guardiansSnapshot.docs.map(doc => {
         const userData = doc.data();
-        console.log(`Debug: Guardian ${userData.name} - contactInfo:`, JSON.stringify(userData.contactInfo, null, 2));
         const twitterHandle = userData.contactInfo?.socialLinks?.twitter || 'unknown';
         const twitterUserId = twitterHandle !== 'unknown' ? `twitter_${twitterHandle}` : ''; // Generate a placeholder Twitter user ID
         
@@ -775,12 +802,9 @@ app.post('/api/twitter/fetch-real-tweets', async (req, res) => {
     
     // Get the actual guardian data from the Twitter Agent
     let existingGuardians = twitterAgent.getGuardians();
-    console.log('Debug: Available guardians:', existingGuardians.map(g => ({ id: g.id, name: g.name })));
-    console.log('Debug: Looking for guardian ID:', guardianId);
     
     // If no guardians loaded, load them from database
     if (existingGuardians.length === 0) {
-      console.log('Debug: No guardians loaded, fetching from database...');
       try {
         const db = admin.firestore();
         const guardiansSnapshot = await db.collection('users')
@@ -809,7 +833,6 @@ app.post('/api/twitter/fetch-real-tweets', async (req, res) => {
           const mockCredentials = {};
           await twitterAgent.initialize(mockCredentials, dbGuardians);
           existingGuardians = twitterAgent.getGuardians();
-          console.log('Debug: Loaded guardians from database:', existingGuardians.map(g => ({ id: g.id, name: g.name })));
         }
       } catch (dbError) {
         console.warn('Could not fetch guardians from database:', dbError.message);
@@ -819,11 +842,8 @@ app.post('/api/twitter/fetch-real-tweets', async (req, res) => {
     const guardian = existingGuardians.find(g => g.id === guardianId);
     
     if (!guardian) {
-      console.log('Debug: Guardian not found in list');
       return res.status(400).json({ success: false, error: 'Guardian not found' });
     }
-    
-    console.log('Debug: Found guardian:', { id: guardian.id, name: guardian.name });
     
     // Re-initialize with all existing guardians and new credentials
     await twitterAgent.initialize(finalCredentials, existingGuardians);
@@ -1432,14 +1452,6 @@ app.post('/api/ai/analytics/feedback', async (req, res) => {
     }
     
     // Store feedback (in a real implementation, this would be stored in a database)
-    console.log('📊 Analytics feedback received:', {
-      sessionId,
-      userId,
-      action,
-      satisfaction,
-      feedback,
-      timestamp: new Date().toISOString()
-    });
     
     res.json({
       success: true,
@@ -1762,11 +1774,6 @@ app.put('/api/ai/session/:sessionId', async (req, res) => {
     }
     
     // Update session data (in a real implementation, this would update the database)
-    console.log('📝 Session update received:', {
-      sessionId,
-      updateData,
-      timestamp: new Date().toISOString()
-    });
     
     res.json({
       success: true,
@@ -1917,15 +1924,6 @@ app.post('/api/ai/profile/:userId/interaction', async (req, res) => {
     }
     
     // Add interaction to user profile (in a real implementation, this would update the database)
-    console.log('📊 Profile interaction received:', {
-      userId,
-      caseId,
-      actions,
-      satisfaction,
-      feedback,
-      sessionId,
-      timestamp: new Date().toISOString()
-    });
     
     res.json({
       success: true,
@@ -2121,14 +2119,11 @@ app.post('/api/direct-save-test', async (req, res) => {
       metadata: {}
     };
     
-    console.log('📝 Attempting to save post directly:', testPost.postId);
     const savedId = await service.savePost(testPost);
     
     if (savedId) {
-      console.log('✅ Post saved successfully:', savedId);
       res.json({ success: true, savedId, message: 'Post saved successfully' });
     } else {
-      console.error('❌ savePost returned null');
       res.json({ success: false, message: 'savePost returned null' });
     }
     
@@ -2199,10 +2194,7 @@ app.post('/api/test-twitter-analysis', async (req, res) => {
       fetchedAt: new Date()
     };
     
-    console.log('🔍 Calling analyzeTweetsAndCreateUpdates...');
     const result = await twitterAgent.analyzeTweetsAndCreateUpdates([testTweet]);
-    
-    console.log('📊 Analysis result:', JSON.stringify(result, null, 2));
     
     res.json({
       success: true,

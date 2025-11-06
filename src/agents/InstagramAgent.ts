@@ -1084,11 +1084,26 @@ Respond in JSON format:
         return false;
       }
 
-      // Process images if any
-      const imageUrls = reviewItem.metadata?.images || [];
+      // Process images if any (separate videos from images)
+      const allMedia = reviewItem.metadata?.images || [];
+      const imageUrls = allMedia.filter(url => {
+        // Filter out video URLs - they typically contain .mp4 or video-related paths
+        const lowerUrl = url.toLowerCase();
+        return !lowerUrl.includes('.mp4') && 
+               !lowerUrl.includes('video') && 
+               !lowerUrl.includes('/o1/v/t2/f2/'); // Instagram video CDN pattern
+      });
+      const videoUrls = allMedia.filter(url => {
+        const lowerUrl = url.toLowerCase();
+        return lowerUrl.includes('.mp4') || 
+               lowerUrl.includes('video') || 
+               lowerUrl.includes('/o1/v/t2/f2/');
+      });
+      
       const processedImages: string[] = [];
       const imageFileNames: string[] = [];
       
+      // Process images only (skip videos)
       if (imageUrls.length > 0) {
         try {
           // Process each image individually to track file names
@@ -1121,6 +1136,9 @@ Respond in JSON format:
           }
         }
       }
+      
+      // Add videos directly without processing (they can't be optimized with sharp)
+      processedImages.push(...videoUrls);
 
       // Determine recommended action
       let recommendedAction: 'create_case' | 'create_update' | 'dismiss' = 'dismiss';

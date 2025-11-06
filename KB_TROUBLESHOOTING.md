@@ -158,3 +158,4 @@ The enhanced logging will show:
 - [ ] toto-ai-hub redeployed after secret configuration
 - [ ] Production logs show successful KB initialization
 
+
