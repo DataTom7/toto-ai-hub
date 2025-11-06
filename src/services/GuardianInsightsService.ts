@@ -450,12 +450,25 @@ export class GuardianInsightsService {
         // Update behavioral patterns (use latest analysis)
         insight.behavioralPatterns = insight.behavioralPatterns || existingData.behavioralPatterns;
         
-        // Preserve knowledge base entries
-        insight.knowledgeBaseEntryIds = insight.knowledgeBaseEntryIds || existingData.knowledgeBaseEntryIds;
+        // Preserve knowledge base entries (ensure it's always an array, never undefined)
+        insight.knowledgeBaseEntryIds = insight.knowledgeBaseEntryIds || existingData.knowledgeBaseEntryIds || [];
+      } else {
+        // If no existing data, ensure knowledgeBaseEntryIds is at least an empty array
+        if (!insight.knowledgeBaseEntryIds) {
+          insight.knowledgeBaseEntryIds = [];
+        }
+      }
+
+      // Remove undefined values before saving (Firestore doesn't accept undefined)
+      const cleanedInsight: any = {};
+      for (const [key, value] of Object.entries(insight)) {
+        if (value !== undefined) {
+          cleanedInsight[key] = value;
+        }
       }
 
       await docRef.set({
-        ...insight,
+        ...cleanedInsight,
         extractedAt: admin.firestore.FieldValue.serverTimestamp(),
         lastAnalyzed: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
