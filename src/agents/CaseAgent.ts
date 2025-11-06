@@ -229,6 +229,12 @@ export class CaseAgent extends BaseAgent {
 🧠 INTELLIGENT CONVERSATION:
 - FIRST MESSAGE: Brief, warm case summary (2-3 sentences) with animal's name, main issue, and current status. NO thanks for asking (automatic welcome).
 - SUBSEQUENT MESSAGES: Context-aware responses based on conversation history and user intent.
+- AFFIRMATIVE RESPONSES: When user says "Si", "Yes", "Ok" after you've already introduced the case:
+  * If you've provided case info already: Progress to explaining HOW to help (donation steps, sharing options, adoption info)
+  * Ask specific follow-up questions: "¿Cómo te gustaría ayudar?" or "¿Qué te gustaría saber más?"
+  * Offer concrete next steps: Explain donation process, sharing options, or adoption requirements
+  * NEVER repeat the same case summary you already gave
+- CONVERSATION PROGRESSION: Each message should advance the conversation. If you've covered case basics, move to actionable steps.
 - MEMORY INTEGRATION: Reference previous interactions naturally when relevant.
 - EMOTIONAL MATCHING: Adapt tone to user's emotional state (concerned, excited, sad, etc.).
 - INTENT RECOGNITION: Understand what user really wants (donate, adopt, learn, help, etc.).
@@ -291,7 +297,11 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
     conversationContext?: ConversationContext
   ): Promise<CaseResponse> {
     const startTime = Date.now();
-    const sessionId = `${context.userId}_${caseData.id}_${Date.now()}`;
+    // Use conversationContext.conversationId if available, otherwise create stable sessionId
+    // This ensures conversation memory persists across multiple messages in the same conversation
+    const sessionId = conversationContext?.conversationId 
+      ? conversationContext.conversationId 
+      : `${context.userId}_${caseData.id}`;
 
     try {
       // Update analytics
@@ -524,7 +534,33 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
   // ===== INTENT ANALYSIS =====
 
   private async analyzeUserIntent(message: string, memory: ConversationMemory, userProfile: UserProfile): Promise<IntentAnalysis> {
-    const lowerMessage = message.toLowerCase();
+    const lowerMessage = message.toLowerCase().trim();
+    
+    // Check for affirmative responses that indicate user wants to continue/progress
+    const affirmativePatterns = ['si', 'sí', 'yes', 'ok', 'okay', 'vale', 'claro', 'por supuesto', 'of course', 'sure'];
+    const isAffirmative = affirmativePatterns.some(pattern => 
+      lowerMessage === pattern || lowerMessage === `${pattern}.` || lowerMessage === `${pattern}!`
+    );
+    
+    // If it's an affirmative response and we have conversation history, interpret as "continue/progress"
+    if (isAffirmative && memory.conversationHistory.length > 0) {
+      // Check what was last discussed to determine next step
+      const lastAssistantMessage = memory.conversationHistory
+        .filter(msg => msg.role === 'assistant')
+        .slice(-1)[0]?.message?.toLowerCase() || '';
+      
+      // If we've already introduced the case, user likely wants to know how to help
+      if (lastAssistantMessage.includes('nina') || lastAssistantMessage.includes('perrita') || 
+          lastAssistantMessage.includes('caso') || lastAssistantMessage.includes('ayuda')) {
+        return {
+          intent: 'help',
+          confidence: 0.9,
+          suggestedActions: ['donate', 'share', 'learn'],
+          emotionalTone: 'neutral',
+          urgency: 'medium'
+        };
+      }
+    }
     
     // Intent patterns
     const intents = {
@@ -539,7 +575,7 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
 
     const detectedIntent = Object.keys(intents).find(intent => 
       intents[intent as keyof typeof intents].some(pattern => lowerMessage.includes(pattern))
-    ) || 'general';
+    ) || (isAffirmative ? 'help' : 'general');
 
     const confidence = this.calculateIntentConfidence(message, detectedIntent);
     const suggestedActions = this.getSuggestedActionsForIntent(detectedIntent);
@@ -588,6 +624,34 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
     const userContext = this.buildUserContext(userProfile, context);
     const caseContext = this.buildCaseContext(enhancedCaseData);
     const intentContext = this.buildIntentContext(intentAnalysis, emotionalState);
+    
+    // Detect if case information has already been provided
+    const hasProvidedCaseInfo = memory.conversationHistory.some(msg => 
+      msg.role === 'assistant' && (
+        msg.message.toLowerCase().includes(enhancedCaseData.name?.toLowerCase() || '') ||
+        msg.message.toLowerCase().includes('perrita') ||
+        msg.message.toLowerCase().includes('perro') ||
+        msg.message.toLowerCase().includes('gato') ||
+        msg.message.toLowerCase().includes('caso')
+      )
+    );
+    
+    // Check if user is giving affirmative response after case info was provided
+    const isAffirmativeAfterIntro = intentAnalysis.intent === 'help' && 
+      memory.conversationHistory.length >= 2 &&
+      hasProvidedCaseInfo &&
+      ['si', 'sí', 'yes', 'ok', 'okay', 'vale', 'claro'].some(affirm => 
+        message.toLowerCase().trim().startsWith(affirm)
+      );
+
+    const progressionContext = isAffirmativeAfterIntro 
+      ? `\n⚠️ IMPORTANT: User has already been introduced to the case and is now saying "Si/Yes" to proceed. 
+DO NOT repeat the case introduction. Instead:
+- Explain HOW they can help (donation process, sharing steps, adoption info)
+- Ask what specific aspect they want to know more about
+- Provide actionable next steps
+- Progress the conversation forward`
+      : '';
 
     return `${this.getSystemPrompt()}
 
@@ -599,9 +663,11 @@ ${conversationHistory}
 
 ${intentContext}
 
+${progressionContext}
+
 Current user message: ${message}
 
-Remember: Be conversational, empathetic, and contextually aware. Use the conversation history and user profile to provide personalized responses.`;
+Remember: Be conversational, empathetic, and contextually aware. Use the conversation history and user profile to provide personalized responses. ${isAffirmativeAfterIntro ? 'PROGRESS THE CONVERSATION - do not repeat what you already said.' : ''}`;
   }
 
   // ===== INTELLIGENT ACTION EXTRACTION =====
