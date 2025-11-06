@@ -224,3 +224,6 @@ export interface TrainingResult {
   accuracy: number;
   timestamp: string;
 }
+
+// Re-export ImageAnalysis from ImageAnalysisService
+export { ImageAnalysis } from '../services/ImageAnalysisService';

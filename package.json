@@ -25,6 +25,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@google-cloud/aiplatform": "^3.28.0",
     "@google/generative-ai": "^0.24.1",
     "@types/cheerio": "^1.0.0",
     "@types/node-cron": "^3.0.11",
@@ -34,6 +35,7 @@
     "express": "^4.18.2",
     "firebase": "^10.0.0",
     "firebase-admin": "^12.0.0",
+    "google-auth-library": "^9.0.0",
     "node-cron": "^4.2.1",
     "puppeteer": "^24.23.0",
     "puppeteer-extra": "^3.3.6",

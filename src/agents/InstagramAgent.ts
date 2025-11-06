@@ -1,15 +1,30 @@
 import { BaseAgent } from './BaseAgent';
-import { 
-  AgentConfig, 
-  AgentResponse, 
-  UserContext, 
+import {
+  AgentConfig,
+  AgentResponse,
+  UserContext,
   AgentAction,
-  ConversationContext 
+  ConversationContext
 } from "../types";
+import { socialMediaAgentTools } from "../types/tools";
+import { FunctionDeclaration, FunctionCall } from "@google/generative-ai";
 import { InstagramService } from "../services/InstagramService";
 import { SocialMediaPostService } from "../services/SocialMediaPostService";
 import { ImageService } from "../services/ImageService";
+import { ImageAnalysisService, ImageAnalysis } from "../services/ImageAnalysisService";
 import { AgentFeedbackService } from "../services/AgentFeedbackService";
+import { PromptBuilder } from '../prompts/PromptBuilder';
+import {
+  instagramAgentPersona,
+  instagramVisualFocus,
+  socialMediaUpdateTypes,
+  socialMediaAnalysisGuidelines,
+  socialMediaFiltering,
+  duplicateDetectionRules,
+  urgencyLevels,
+  communicationStyleForAnalysis,
+  safetyForSocialMedia
+} from '../prompts/components';
 
 // Instagram-specific types
 export interface InstagramCredentials {
@@ -131,6 +146,7 @@ export interface PostAnalysis {
   };
   isDuplicate?: boolean;
   duplicateReason?: string;
+  imageAnalysis?: ImageAnalysis; // NEW: Multi-modal image analysis from Gemini vision
 }
 
 export interface ReviewItem {
@@ -176,6 +192,7 @@ export class InstagramAgent extends BaseAgent {
   private instagramService: InstagramService | null = null;
   private socialMediaPostService!: SocialMediaPostService;
   private imageService!: ImageService;
+  private imageAnalysisService!: ImageAnalysisService;
   private feedbackService!: AgentFeedbackService;
 
   constructor(config?: Partial<InstagramAgentConfig>) {
@@ -193,6 +210,7 @@ export class InstagramAgent extends BaseAgent {
         'fundraising_filtering',
         'pattern_learning',
         'case_creation',
+        'function_calling', // NEW: Function calling capability
       ],
       isEnabled: true,
       maxRetries: 3,
@@ -225,46 +243,31 @@ export class InstagramAgent extends BaseAgent {
     };
   }
 
+  /**
+   * Override to provide function declarations for this agent
+   */
+  protected getFunctionDeclarations(): FunctionDeclaration[] {
+    return socialMediaAgentTools as FunctionDeclaration[];
+  }
+
   protected getSystemPrompt(): string {
-    return `You are Toto's Instagram Monitoring Agent, specialized in analyzing pet rescue Instagram posts, stories, and visual content to create case updates.
+    // Build modular prompt using PromptBuilder
+    const { prompt, metrics } = PromptBuilder.create({ enableCache: true, version: 'v2.0' })
+      .addComponent('persona', instagramAgentPersona, 10)
+      .addComponent('visualFocus', instagramVisualFocus, 15)
+      .addComponent('analysisGuidelines', socialMediaAnalysisGuidelines, 20)
+      .addComponent('filtering', socialMediaFiltering, 30)
+      .addComponent('updateTypes', socialMediaUpdateTypes, 40)
+      .addComponent('duplicateDetection', duplicateDetectionRules, 50)
+      .addComponent('urgencyLevels', urgencyLevels, 60)
+      .addComponent('responseFormat', communicationStyleForAnalysis, 70)
+      .addComponent('safety', safetyForSocialMedia, 80)
+      .build();
 
-Your role:
-- Analyze Instagram posts and stories from guardian accounts for case relevance
-- Extract information from both visual content (images/videos) and captions
-- Compare post content with existing case data to detect duplicates
-- Detect emergencies and urgent situations requiring immediate attention
-- Create appropriate case updates OR enrich existing case data
-- Filter out funding requests (ignore donation pleas)
-- Learn patterns to improve analysis accuracy over time
-- Provide insights about guardian activity and case progress
+    // Log metrics for analytics
+    console.log(`[InstagramAgent] Prompt built: ${metrics.componentCount} components, ~${metrics.estimatedTokens} tokens, cache hit: ${metrics.cacheHit}`);
 
-Analysis Guidelines:
-- Case-related posts: Medical updates, rescue progress, animal conditions, treatment plans, visual progress updates
-- Emergency posts: Urgent medical needs, critical situations, immediate help required
-- Visual content: Analyze images for animal presence, medical conditions, progress indicators
-- Non-case posts: Personal updates, general animal content, fundraising requests (IGNORE)
-- Duplicate detection: Check if post information already exists in case
-- Enrichment opportunities: Add new details to existing case fields, especially visual content
-- Urgency levels: critical (life-threatening), high (urgent medical), medium (routine updates), low (general info)
-
-Update Types:
-- "duplicate": Information already exists in case
-- "enrichment": Adds new details to existing case fields (images, medical progress, etc.)
-- "status_change": Changes case status or priority
-- "note": General updates and progress notes
-- "milestone": Significant progress or achievements
-- "emergency": Urgent situations requiring immediate attention
-
-Response Format:
-- Always provide analysis confidence (0-1)
-- Suggest specific case update type and content
-- Extract ALL relevant information (animal, condition, location, images, progress)
-- Analyze visual content when available (images, videos)
-- Flag emergencies for immediate attention
-- Identify duplicate information to avoid redundant updates
-- Suggest case enrichment opportunities
-
-Be thorough but concise in your analysis, paying special attention to visual content which often contains critical information.`;
+    return prompt;
   }
 
   /**
@@ -283,6 +286,7 @@ Be thorough but concise in your analysis, paying special attention to visual con
     this.instagramService = new InstagramService(credentials);
     this.socialMediaPostService = new SocialMediaPostService();
     this.imageService = new ImageService();
+    this.imageAnalysisService = new ImageAnalysisService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`InstagramAgent initialized with ${guardians.length} guardians`);
   }
@@ -305,6 +309,7 @@ Be thorough but concise in your analysis, paying special attention to visual con
     this.instagramService = new InstagramService(credentials);
     this.socialMediaPostService = new SocialMediaPostService();
     this.imageService = new ImageService();
+    this.imageAnalysisService = new ImageAnalysisService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`InstagramAgent initialized with ${this.config.guardians.length} guardians from database`);
   }
@@ -881,9 +886,144 @@ Respond with JSON:
   }
 
   /**
+   * Convert function calls from Gemini to PostAnalysis
+   * Uses structured function calling for reliable action detection
+   */
+  private convertFunctionCallsToPostAnalysis(
+    functionCalls: FunctionCall[] | undefined,
+    post: InstagramPost,
+    caseAnalysis?: any
+  ): PostAnalysis | null {
+    if (!functionCalls || functionCalls.length === 0) {
+      return null;
+    }
+
+    // Process the first function call (primary action)
+    const call = functionCalls[0];
+    const { name, args } = call;
+    // Type assertion for args since it's typed as object
+    const typedArgs = args as any;
+
+    switch (name) {
+      case 'flagUrgentCase':
+        return {
+          isCaseRelated: true,
+          urgency: typedArgs.urgencyLevel as 'high' | 'critical',
+          caseUpdateType: 'emergency',
+          suggestedAction: typedArgs.suggestedAction,
+          confidence: 0.9, // Function calling has high confidence
+          extractedInfo: {
+            emergency: true,
+            fundraisingRequest: false,
+          },
+        };
+
+      case 'updatePetStatus':
+        return {
+          isCaseRelated: true,
+          urgency: typedArgs.statusType === 'emergency' ? 'critical' : 'medium',
+          caseUpdateType: this.mapStatusTypeToCaseUpdateType(typedArgs.statusType),
+          suggestedAction: `Update case with: ${typedArgs.details}`,
+          confidence: typedArgs.confidence,
+          extractedInfo: {
+            statusUpdate: typedArgs.details,
+            fundraisingRequest: false,
+            emergency: typedArgs.statusType === 'emergency',
+          },
+          caseEnrichment: caseAnalysis?.existingCase ? {
+            fieldsToUpdate: ['status', 'medicalProgress'],
+            newValues: {
+              status: typedArgs.statusType,
+              medicalProgress: typedArgs.details,
+            },
+            reason: `Status update from Instagram: ${typedArgs.details}`,
+          } : undefined,
+        };
+
+      case 'dismissPost':
+        return {
+          isCaseRelated: false,
+          urgency: 'low',
+          caseUpdateType: 'duplicate',
+          suggestedAction: 'No action needed',
+          confidence: 0.95,
+          extractedInfo: {
+            fundraisingRequest: typedArgs.reason === 'promotional',
+            emergency: false,
+          },
+          isDuplicate: typedArgs.reason === 'duplicate',
+          duplicateReason: typedArgs.reason,
+        };
+
+      case 'createCaseFromPost':
+        return {
+          isCaseRelated: true,
+          urgency: typedArgs.urgency as 'low' | 'medium' | 'high' | 'critical',
+          caseUpdateType: 'note',
+          suggestedAction: 'create_case',
+          confidence: typedArgs.confidence,
+          extractedInfo: {
+            animalMentioned: typedArgs.petName || typedArgs.animalType,
+            fundraisingRequest: false,
+            emergency: typedArgs.urgency === 'critical',
+          },
+        };
+
+      default:
+        console.warn(`Unknown function call: ${name}`);
+        return null;
+    }
+  }
+
+  /**
+   * Map status type to case update type
+   */
+  private mapStatusTypeToCaseUpdateType(statusType: string): PostAnalysis['caseUpdateType'] {
+    switch (statusType) {
+      case 'medical_update':
+        return 'note';
+      case 'emergency':
+        return 'emergency';
+      case 'milestone':
+        return 'milestone';
+      case 'adoption_update':
+        return 'status_change';
+      default:
+        return 'note';
+    }
+  }
+
+  /**
    * Analyze a single post for case relevance
    */
   private async analyzePost(post: InstagramPost, caseAnalysis?: any): Promise<PostAnalysis> {
+    // NEW: Analyze images with Gemini vision if present
+    let imageAnalysis: ImageAnalysis | undefined;
+    const postImages = [...post.media.images, ...post.media.carousel];
+
+    if (postImages.length > 0) {
+      try {
+        console.log(`🖼️  Post has ${postImages.length} image(s), analyzing with Gemini vision...`);
+        imageAnalysis = await this.imageAnalysisService.analyzeMultipleImages(
+          postImages,
+          {
+            postText: post.caption,
+            platform: 'instagram',
+            guardianName: post.author.name,
+          }
+        );
+        console.log(`✅ Image analysis complete - Urgency: ${imageAnalysis.urgencyLevel}, Confidence: ${(imageAnalysis.confidence * 100).toFixed(1)}%`);
+
+        // If image shows critical condition, log it
+        if (imageAnalysis.urgencyLevel === 'critical' || imageAnalysis.urgencyLevel === 'high') {
+          console.log(`⚠️  HIGH URGENCY detected in image: ${imageAnalysis.healthIndicators.visibleInjuries.join(', ')}`);
+        }
+      } catch (error) {
+        console.error('Error analyzing Instagram images:', error);
+        // Continue without image analysis
+      }
+    }
+
     const caseContext = caseAnalysis ? `
 Existing Case Information:
 - Name: ${caseAnalysis.existingCase?.name || 'Unknown'}
@@ -966,6 +1106,47 @@ Respond in JSON format:
 }`;
 
     try {
+      // Try function calling first (preferred method)
+      console.log('🔧 Attempting function calling for Instagram post analysis...');
+      const functionResult = await this.processMessageWithFunctions(analysisPrompt, {
+        userId: 'instagram-agent',
+        userRole: 'admin',
+        language: 'en',
+      });
+
+      // Check if we got function calls
+      if (functionResult.functionCalls && functionResult.functionCalls.length > 0) {
+        console.log(`✅ Function calling successful! Got ${functionResult.functionCalls.length} function calls`);
+        const analysis = this.convertFunctionCallsToPostAnalysis(functionResult.functionCalls, post, caseAnalysis);
+        if (analysis) {
+          // Add media URLs to extractedInfo
+          const allMedia = [
+            ...post.media.images,
+            ...post.media.videos,
+            ...post.media.carousel
+          ];
+          if (allMedia.length > 0 && !analysis.extractedInfo.newImages) {
+            analysis.extractedInfo.newImages = allMedia;
+          }
+          // Add image analysis if available
+          if (imageAnalysis) {
+            analysis.imageAnalysis = imageAnalysis;
+            // Boost urgency if image analysis shows higher urgency
+            if (imageAnalysis.urgencyLevel === 'critical' && analysis.urgency !== 'critical') {
+              console.log(`⚠️  Boosting urgency to 'critical' based on image analysis`);
+              analysis.urgency = 'critical';
+            }
+          }
+          console.log(`✅ Converted function call to PostAnalysis: ${JSON.stringify(analysis, null, 2)}`);
+          return analysis;
+        }
+        console.log('⚠️ Function call conversion returned null, falling back to legacy parsing');
+      } else {
+        console.log('ℹ️ No function calls returned, falling back to legacy text parsing');
+      }
+
+      // Fallback to legacy text parsing (DEPRECATED)
+      console.log('⚠️ Using legacy text parsing method...');
       const result = await this.processMessage(analysisPrompt, {
         userId: 'instagram-agent',
         userRole: 'admin',
@@ -974,16 +1155,16 @@ Respond in JSON format:
 
       // Parse the JSON response
       let jsonString = result.message;
-      
+
       if (jsonString.includes('```json')) {
         jsonString = jsonString.replace(/```json\s*/, '').replace(/```\s*$/, '');
       } else if (jsonString.includes('```')) {
         jsonString = jsonString.replace(/```\s*/, '').replace(/```\s*$/, '');
       }
-      
+
       jsonString = jsonString.trim();
       const analysis = JSON.parse(jsonString);
-      
+
       // Add media URLs to extractedInfo
       const allMedia = [
         ...post.media.images,
@@ -993,8 +1174,22 @@ Respond in JSON format:
       if (allMedia.length > 0 && !analysis.extractedInfo.newImages) {
         analysis.extractedInfo.newImages = allMedia;
       }
-      
-      return analysis as PostAnalysis;
+
+      const typedAnalysis = analysis as PostAnalysis;
+      // Add image analysis if available
+      if (imageAnalysis) {
+        typedAnalysis.imageAnalysis = imageAnalysis;
+        // Boost urgency if image analysis shows higher urgency
+        if (imageAnalysis.urgencyLevel === 'critical' && typedAnalysis.urgency !== 'critical') {
+          console.log(`⚠️  Boosting urgency to 'critical' based on image analysis`);
+          typedAnalysis.urgency = 'critical';
+        } else if (imageAnalysis.urgencyLevel === 'high' && (typedAnalysis.urgency === 'low' || typedAnalysis.urgency === 'medium')) {
+          console.log(`⚠️  Boosting urgency to 'high' based on image analysis`);
+          typedAnalysis.urgency = 'high';
+        }
+      }
+
+      return typedAnalysis;
     } catch (error) {
       console.error('Error analyzing post:', error);
       // Return default analysis
@@ -1008,6 +1203,7 @@ Respond in JSON format:
           fundraisingRequest: false,
           emergency: false,
         },
+        imageAnalysis, // Include image analysis even on error
       };
     }
   }

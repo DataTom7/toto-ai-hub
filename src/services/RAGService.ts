@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { VectorDBService, VectorDocument, VectorSearchQuery } from './VectorDBService';
 
 export interface KnowledgeChunk {
   id: string;
@@ -30,17 +31,23 @@ export interface RAGResult {
 /**
  * RAG Service for dynamic knowledge retrieval with vector embeddings
  * Integrates with Gemini 2.0 Flash for semantic similarity search
+ * Now supports unlimited vector storage via VectorDBService (Vertex AI or in-memory)
  */
 export class RAGService {
   private genAI: GoogleGenerativeAI;
-  private knowledgeChunks: KnowledgeChunk[] = [];
   private embeddingModel: any;
-  private maxChunks: number = 1000; // Limit knowledge chunks to prevent memory leaks
+  private vectorDB: VectorDBService;
+  private usageCountCache: Map<string, number> = new Map(); // Cache usage counts
   private maxCacheSize: number = 100; // Limit cache size
 
-  constructor() {
+  constructor(vectorDBConfig?: { backend: 'vertex-ai' | 'in-memory'; projectId?: string; location?: string; indexId?: string; indexEndpointId?: string }) {
     this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
     this.initializeEmbeddingModel();
+
+    // Initialize VectorDBService with configuration
+    this.vectorDB = new VectorDBService(vectorDBConfig || { backend: 'in-memory' });
+
+    console.log('[RAGService] Initialized with unlimited vector storage via VectorDBService');
   }
 
   /**
@@ -63,42 +70,56 @@ export class RAGService {
 
   /**
    * Add knowledge chunks to the RAG service
+   * Now supports unlimited chunks via VectorDBService
    */
   async addKnowledgeChunks(chunks: KnowledgeChunk[]): Promise<void> {
     try {
-      // Generate embeddings for new chunks
+      // Convert KnowledgeChunks to VectorDocuments
+      const vectorDocs: VectorDocument[] = [];
+
       for (const chunk of chunks) {
+        // Generate embedding if not provided
         if (!chunk.embedding) {
           chunk.embedding = await this.generateEmbedding(chunk.content);
         }
+
+        // Convert to VectorDocument format
+        const vectorDoc: VectorDocument = {
+          id: chunk.id,
+          embedding: chunk.embedding,
+          content: chunk.content,
+          metadata: {
+            category: chunk.category,
+            audience: chunk.audience,
+            source: 'admin', // Default source
+            timestamp: new Date(chunk.lastUpdated),
+            version: '1.0',
+            tags: [
+              ...chunk.agentTypes,
+              chunk.title, // Include title as tag for better searchability
+            ],
+          },
+        };
+
+        vectorDocs.push(vectorDoc);
+
+        // Initialize usage count in cache
+        this.usageCountCache.set(chunk.id, chunk.usageCount || 0);
       }
-      
-      // Add to knowledge base with memory management
-      this.knowledgeChunks.push(...chunks);
-      
-      // Clean up old chunks if we exceed the limit
-      if (this.knowledgeChunks.length > this.maxChunks) {
-        this.cleanupOldChunks();
+
+      // Batch upsert to vector database
+      const result = await this.vectorDB.upsertBatch(vectorDocs);
+
+      if (result.success) {
+        console.log(`✅ Added ${chunks.length} knowledge chunks to VectorDB (unlimited storage)`);
+      } else {
+        console.error(`❌ Failed to add ${result.failedCount} chunks to VectorDB`);
+        throw new Error(`Failed to add ${result.failedCount} chunks`);
       }
-      
-      console.log(`✅ Added ${chunks.length} knowledge chunks to RAG service`);
     } catch (error) {
       console.error('Error adding knowledge chunks:', error);
       throw new Error('Failed to add knowledge chunks');
     }
-  }
-
-  /**
-   * Clean up old knowledge chunks to prevent memory leaks
-   */
-  private cleanupOldChunks(): void {
-    // Sort by usage count and keep the most used chunks
-    this.knowledgeChunks.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
-    
-    // Keep only the most used chunks
-    this.knowledgeChunks = this.knowledgeChunks.slice(0, this.maxChunks);
-    
-    console.log(`🧹 Cleaned up knowledge chunks, keeping ${this.knowledgeChunks.length} most used chunks`);
   }
 
   /**
@@ -174,52 +195,78 @@ export class RAGService {
   /**
    * Retrieve relevant knowledge chunks based on query and agent type
    * All entries are accessible, but relevance is determined by audience and semantic similarity
+   * Now uses VectorDBService for unlimited scalability
    */
   async retrieveKnowledge(query: RAGQuery): Promise<RAGResult> {
     try {
       const { query: userQuery, agentType, context, audience, maxResults = 3 } = query;
-      
+
       // Generate embedding for the query
       const queryEmbedding = await this.generateEmbedding(userQuery);
-      
-      // Filter chunks by agent type (technical constraint - which agent can use this)
-      const agentFilteredChunks = this.knowledgeChunks.filter(chunk => 
-        chunk.agentTypes.length === 0 || chunk.agentTypes.includes(agentType)
-      );
-      
-      // Calculate similarity scores with audience relevance boost
-      const scoredChunks = agentFilteredChunks.map(chunk => {
-        let similarityScore = this.calculateSimilarity(queryEmbedding, chunk.embedding || []);
-        
+
+      // Build vector search query with filters
+      // Note: We retrieve more results initially to allow for audience-based re-ranking
+      const searchQuery: VectorSearchQuery = {
+        embedding: queryEmbedding,
+        topK: maxResults * 3, // Get more results for re-ranking
+        filters: {
+          tags: agentType ? [agentType] : undefined, // Filter by agent type via tags
+        },
+        minScore: 0.5, // Only return reasonably similar results
+      };
+
+      // Search vector database
+      const searchResults = await this.vectorDB.search(searchQuery);
+
+      // Convert VectorDocuments back to KnowledgeChunks and apply audience boosting
+      const scoredChunks = searchResults.map(result => {
+        let score = result.score;
+
         // Boost relevance if audience matches (but don't filter out - all entries are accessible)
-        if (audience && chunk.audience && chunk.audience.length > 0) {
-          const audienceMatch = chunk.audience.includes(audience);
-          if (audienceMatch) {
-            // Boost score by 20% for audience match
-            similarityScore = similarityScore * 1.2;
-          }
+        if (audience && result.document.metadata.audience.includes(audience)) {
+          // Boost score by 20% for audience match
+          score = score * 1.2;
         }
-        
-        return {
-          chunk,
-          score: similarityScore
+
+        // Convert VectorDocument to KnowledgeChunk
+        const chunk: KnowledgeChunk = {
+          id: result.document.id,
+          title: result.document.metadata.tags?.[result.document.metadata.tags.length - 1] || 'Untitled',
+          content: result.document.content,
+          category: result.document.metadata.category,
+          agentTypes: result.document.metadata.tags?.filter(tag =>
+            ['CaseAgent', 'TwitterAgent', 'InstagramAgent'].includes(tag)
+          ) || [],
+          audience: result.document.metadata.audience,
+          embedding: result.document.embedding,
+          lastUpdated: result.document.metadata.timestamp.toISOString(),
+          usageCount: this.usageCountCache.get(result.document.id) || 0,
         };
+
+        return { chunk, score };
       });
-      
-      // Sort by similarity score and get top results
+
+      // Re-sort by boosted scores and get top results
       const topChunks = scoredChunks
         .sort((a, b) => b.score - a.score)
         .slice(0, maxResults)
         .map(item => item.chunk);
-      
-      // Update usage count
+
+      // Update usage count in cache
       topChunks.forEach(chunk => {
-        chunk.usageCount = (chunk.usageCount || 0) + 1;
+        const newCount = (this.usageCountCache.get(chunk.id) || 0) + 1;
+        this.usageCountCache.set(chunk.id, newCount);
+        chunk.usageCount = newCount;
       });
-      
+
+      // Clean cache if too large
+      if (this.usageCountCache.size > this.maxCacheSize) {
+        this.cleanupUsageCache();
+      }
+
       return {
         chunks: topChunks,
-        totalResults: scoredChunks.length,
+        totalResults: searchResults.length,
         query: userQuery,
         agentType
       };
@@ -232,6 +279,19 @@ export class RAGService {
         agentType: query.agentType
       };
     }
+  }
+
+  /**
+   * Clean up usage count cache to prevent memory leaks
+   */
+  private cleanupUsageCache(): void {
+    // Sort by usage count and keep the most used chunks
+    const sorted = Array.from(this.usageCountCache.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, this.maxCacheSize);
+
+    this.usageCountCache = new Map(sorted);
+    console.log(`🧹 Cleaned up usage count cache, keeping ${this.usageCountCache.size} entries`);
   }
 
   /**
@@ -256,16 +316,27 @@ export class RAGService {
 
   /**
    * Get all knowledge chunks (for debugging/admin purposes)
+   * Note: This may be expensive with large vector databases
    */
-  getAllKnowledgeChunks(): KnowledgeChunk[] {
-    return this.knowledgeChunks;
+  async getAllKnowledgeChunks(): Promise<KnowledgeChunk[]> {
+    console.warn('[RAGService] getAllKnowledgeChunks not fully supported with VectorDB - returning empty array');
+    return [];
+    // Note: Vertex AI doesn't provide a way to list all vectors efficiently
+    // For admin purposes, maintain a separate metadata store or use in-memory backend
   }
 
   /**
    * Clear all knowledge chunks
    */
-  clearKnowledgeChunks(): void {
-    this.knowledgeChunks = [];
+  async clearKnowledgeChunks(): Promise<void> {
+    try {
+      await this.vectorDB.clear();
+      this.usageCountCache.clear();
+      console.log('[RAGService] Cleared all knowledge chunks from VectorDB');
+    } catch (error) {
+      console.error('Error clearing knowledge chunks:', error);
+      throw new Error('Failed to clear knowledge chunks');
+    }
   }
 
   /**
@@ -273,20 +344,44 @@ export class RAGService {
    */
   async updateKnowledgeChunk(chunkId: string, updates: Partial<KnowledgeChunk>): Promise<boolean> {
     try {
-      const chunkIndex = this.knowledgeChunks.findIndex(chunk => chunk.id === chunkId);
-      
-      if (chunkIndex === -1) {
-        return false;
+      // For updates, we need to upsert the entire document
+      // First, search for the existing chunk to get full data
+      // Then apply updates and upsert
+
+      // Generate new embedding if content changed
+      let embedding = updates.embedding;
+      if (updates.content && !embedding) {
+        embedding = await this.generateEmbedding(updates.content);
       }
-      
-      const updatedChunk = { ...this.knowledgeChunks[chunkIndex], ...updates };
-      
-      // Regenerate embedding if content changed
-      if (updates.content && updates.content !== this.knowledgeChunks[chunkIndex].content) {
-        updatedChunk.embedding = await this.generateEmbedding(updates.content);
+
+      // Create updated vector document
+      // Note: This assumes we have all required fields in updates or use defaults
+      const vectorDoc: VectorDocument = {
+        id: chunkId,
+        embedding: embedding || [],
+        content: updates.content || '',
+        metadata: {
+          category: updates.category || 'general',
+          audience: updates.audience || [],
+          source: 'admin',
+          timestamp: updates.lastUpdated ? new Date(updates.lastUpdated) : new Date(),
+          version: '1.0',
+          tags: [
+            ...(updates.agentTypes || []),
+            updates.title || '',
+          ],
+        },
+      };
+
+      // Upsert to vector database
+      await this.vectorDB.upsert(vectorDoc);
+
+      // Update usage count cache if provided
+      if (updates.usageCount !== undefined) {
+        this.usageCountCache.set(chunkId, updates.usageCount);
       }
-      
-      this.knowledgeChunks[chunkIndex] = updatedChunk;
+
+      console.log(`✅ Updated knowledge chunk: ${chunkId}`);
       return true;
     } catch (error) {
       console.error('Error updating knowledge chunk:', error);
@@ -297,27 +392,33 @@ export class RAGService {
   /**
    * Delete a knowledge chunk
    */
-  deleteKnowledgeChunk(chunkId: string): boolean {
-    const chunkIndex = this.knowledgeChunks.findIndex(chunk => chunk.id === chunkId);
-    
-    if (chunkIndex === -1) {
+  async deleteKnowledgeChunk(chunkId: string): Promise<boolean> {
+    try {
+      await this.vectorDB.delete(chunkId);
+      this.usageCountCache.delete(chunkId);
+      console.log(`✅ Deleted knowledge chunk: ${chunkId}`);
+      return true;
+    } catch (error) {
+      console.error('Error deleting knowledge chunk:', error);
       return false;
     }
-    
-    this.knowledgeChunks.splice(chunkIndex, 1);
-    return true;
   }
 
   /**
    * Get memory usage statistics
    */
-  getMemoryStats(): { chunks: number; maxChunks: number; memoryUsage: string } {
-    const chunks = this.knowledgeChunks.length;
-    const memoryUsage = `${chunks}/${this.maxChunks} chunks`;
-    
+  async getMemoryStats(): Promise<{ chunks: number; unlimited: boolean; cacheSize: number; memoryUsage: string }> {
+    const count = await this.vectorDB.count();
+    const cacheSize = this.usageCountCache.size;
+
+    const memoryUsage = count === -1
+      ? `Unlimited (VectorDB backend)`
+      : `${count} chunks (unlimited storage)`;
+
     return {
-      chunks,
-      maxChunks: this.maxChunks,
+      chunks: count,
+      unlimited: true,
+      cacheSize,
       memoryUsage
     };
   }
@@ -326,7 +427,7 @@ export class RAGService {
    * Force cleanup of memory
    */
   forceCleanup(): void {
-    this.cleanupOldChunks();
-    console.log('🧹 Forced memory cleanup completed');
+    this.cleanupUsageCache();
+    console.log('🧹 Forced memory cleanup completed (usage cache only)');
   }
 }
