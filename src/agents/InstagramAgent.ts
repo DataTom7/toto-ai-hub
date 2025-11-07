@@ -400,14 +400,29 @@ Be thorough but concise in your analysis, paying special attention to visual con
       try {
         let posts: InstagramPost[] = [];
         
-        if (guardian.accessToken && guardian.instagramUserId) {
-          // Use API if access token available
+        // Try to get access token from guardian or environment
+        const accessToken = guardian.accessToken || process.env.INSTAGRAM_ACCESS_TOKEN;
+        const userId = guardian.instagramUserId || process.env.INSTAGRAM_USER_ID;
+        
+        if (accessToken && userId) {
+          // Use Basic Display API if access token available
+          console.log(`📡 Using Instagram Basic Display API for @${guardian.instagramHandle} (userId: ${userId})`);
           posts = await this.instagramService.getUserPosts(
-            guardian.instagramUserId, 
+            userId, 
             this.config.maxPostsPerFetch,
-            guardian.accessToken
+            accessToken
           );
         } else {
+          // Log why we're not using Basic API
+          if (!accessToken) {
+            console.log(`⚠️  No access token found for @${guardian.instagramHandle} - falling back to web scraping`);
+            console.log(`   💡 To use Basic Display API, set guardian.instagramAccessToken or INSTAGRAM_ACCESS_TOKEN env var`);
+          }
+          if (!userId) {
+            console.log(`⚠️  No Instagram user ID found for @${guardian.instagramHandle} - falling back to web scraping`);
+            console.log(`   💡 To use Basic Display API, set guardian.instagramUserId or INSTAGRAM_USER_ID env var`);
+          }
+          
           // Fallback to web scraping
           posts = await this.instagramService.scrapeUserPosts(
             guardian.instagramHandle,
@@ -449,10 +464,15 @@ Be thorough but concise in your analysis, paying special attention to visual con
 
     for (const guardian of activeGuardians) {
       try {
-        if (guardian.accessToken && guardian.instagramUserId) {
+        // Try to get access token from guardian or environment
+        const accessToken = guardian.accessToken || process.env.INSTAGRAM_ACCESS_TOKEN;
+        const userId = guardian.instagramUserId || process.env.INSTAGRAM_USER_ID;
+        
+        if (accessToken && userId) {
+          console.log(`📡 Using Instagram Basic Display API for stories from @${guardian.instagramHandle} (userId: ${userId})`);
           const stories = await this.instagramService.getUserStories(
-            guardian.instagramUserId,
-            guardian.accessToken
+            userId,
+            accessToken
           );
           
           // Add author information to stories
@@ -467,6 +487,8 @@ Be thorough but concise in your analysis, paying special attention to visual con
           
           allStories.push(...storiesWithAuthor);
           console.log(`Fetched ${stories.length} stories from @${guardian.instagramHandle}`);
+        } else {
+          console.log(`⚠️  Skipping stories for @${guardian.instagramHandle} - Basic Display API credentials not available`);
         }
       } catch (error) {
         console.error(`Error fetching stories for @${guardian.instagramHandle}:`, error);
@@ -1086,6 +1108,7 @@ Respond in JSON format:
 
       // Process images if any (separate videos from images)
       const allMedia = reviewItem.metadata?.images || [];
+      console.log(`📸 Processing media for post ${reviewItem.postId}: ${allMedia.length} total media items`);
       const imageUrls = allMedia.filter(url => {
         // Filter out video URLs - they typically contain .mp4 or video-related paths
         const lowerUrl = url.toLowerCase();
@@ -1102,6 +1125,8 @@ Respond in JSON format:
       
       const processedImages: string[] = [];
       const imageFileNames: string[] = [];
+      
+      console.log(`🖼️ Found ${imageUrls.length} images and ${videoUrls.length} videos to process`);
       
       // Process images
       if (imageUrls.length > 0) {
@@ -1179,6 +1204,7 @@ Respond in JSON format:
       }
 
       // Save to Firestore via SocialMediaPostService
+      console.log(`💾 Saving post ${reviewItem.postId} with ${processedImages.length} processed images`);
       const postData: any = {
         platform: 'instagram' as const,
         guardianId: reviewItem.guardianId,
