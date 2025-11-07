@@ -4,6 +4,7 @@ import { CaseAgent } from '../agents/CaseAgent';
 import { TwitterAgent } from '../agents/TwitterAgent';
 import { RAGService, KnowledgeChunk } from '../services/RAGService';
 import { KnowledgeBaseService, KnowledgeItem as KBKnowledgeItem } from '../services/KnowledgeBaseService';
+import { VertexAISearchService } from '../services/VertexAISearchService';
 
 // Types for API Gateway
 export interface AnalyticsData {
@@ -82,6 +83,7 @@ export class TotoAPIGateway {
   private analyticsCache: AnalyticsData | null = null;
   private knowledgeBaseService: KnowledgeBaseService;
   private ragService: RAGService;
+  private vertexAISearchService: VertexAISearchService;
   private lastAnalyticsUpdate: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -92,18 +94,20 @@ export class TotoAPIGateway {
    */
   constructor(sharedKbFirestore?: admin.firestore.Firestore) {
     this.totoAI = new TotoAI();
-    this.ragService = new RAGService();
+    this.vertexAISearchService = new VertexAISearchService();
+    this.ragService = new RAGService(this.vertexAISearchService);
     this.knowledgeBaseService = new KnowledgeBaseService(sharedKbFirestore);
     // Note: initializeKnowledgeBase() is no longer called here
     // KnowledgeBaseService will initialize from Firestore on first use
   }
 
   /**
-   * Initialize knowledge base service and RAG service
+   * Initialize knowledge base service, RAG service, and Vertex AI Search
    * Should be called after Firebase Admin is initialized
    */
   async initialize(): Promise<void> {
     await this.knowledgeBaseService.initialize();
+    await this.vertexAISearchService.initialize();
     await this.initializeRAGService();
   }
 
@@ -300,6 +304,13 @@ export class TotoAPIGateway {
    */
   getRAGService(): RAGService {
     return this.ragService;
+  }
+
+  /**
+   * Get Vertex AI Search service instance (for direct access)
+   */
+  getVertexAISearchService(): VertexAISearchService {
+    return this.vertexAISearchService;
   }
 
   /**

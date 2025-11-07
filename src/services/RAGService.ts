@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { VertexAISearchService, VertexAISearchResult } from './VertexAISearchService';
 
 export interface KnowledgeChunk {
   id: string;
@@ -25,6 +26,9 @@ export interface RAGResult {
   totalResults: number;
   query: string;
   agentType: string;
+  confidence?: number; // Average confidence score
+  fallbackUsed?: boolean; // Whether Vertex AI Search was used as fallback
+  vertexAISearchResults?: VertexAISearchResult[]; // Results from Vertex AI Search if used
 }
 
 /**
@@ -37,9 +41,12 @@ export class RAGService {
   private embeddingModel: any;
   private maxChunks: number = 1000; // Limit knowledge chunks to prevent memory leaks
   private maxCacheSize: number = 100; // Limit cache size
+  private vertexAISearchService?: VertexAISearchService;
+  private readonly VECTORDB_CONFIDENCE_THRESHOLD = 0.6; // Use Vertex AI Search if confidence below this
 
-  constructor() {
+  constructor(vertexAISearchService?: VertexAISearchService) {
     this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+    this.vertexAISearchService = vertexAISearchService;
     this.initializeEmbeddingModel();
   }
 
@@ -212,6 +219,34 @@ export class RAGService {
         .slice(0, maxResults)
         .map(item => item.chunk);
       
+      // Calculate average confidence
+      const avgConfidence = scoredChunks.length > 0
+        ? scoredChunks.slice(0, maxResults).reduce((sum, item) => sum + item.score, 0) / Math.min(maxResults, scoredChunks.length)
+        : 0;
+      
+      // Check if we need to use Vertex AI Search as fallback
+      let vertexAISearchResults: VertexAISearchResult[] | undefined;
+      let fallbackUsed = false;
+      
+      if (avgConfidence < this.VECTORDB_CONFIDENCE_THRESHOLD && this.vertexAISearchService) {
+        console.log(`[RAGService] VectorDB confidence (${avgConfidence.toFixed(2)}) below threshold, using Vertex AI Search fallback`);
+        try {
+          const searchResults = await this.vertexAISearchService.search({
+            query: userQuery,
+            maxResults: maxResults,
+            minScore: this.VECTORDB_CONFIDENCE_THRESHOLD,
+          });
+          
+          if (searchResults.length > 0) {
+            vertexAISearchResults = searchResults;
+            fallbackUsed = true;
+            console.log(`[RAGService] Found ${searchResults.length} results from Vertex AI Search`);
+          }
+        } catch (error) {
+          console.error('[RAGService] Error using Vertex AI Search fallback:', error);
+        }
+      }
+      
       // Update usage count
       topChunks.forEach(chunk => {
         chunk.usageCount = (chunk.usageCount || 0) + 1;
@@ -221,7 +256,10 @@ export class RAGService {
         chunks: topChunks,
         totalResults: scoredChunks.length,
         query: userQuery,
-        agentType
+        agentType,
+        confidence: avgConfidence,
+        fallbackUsed,
+        vertexAISearchResults,
       };
     } catch (error) {
       console.error('Error retrieving knowledge:', error);

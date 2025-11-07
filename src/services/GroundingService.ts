@@ -1,14 +1,17 @@
 /**
  * Grounding Service
  *
- * Provides Google Search grounding capabilities for Gemini models.
- * Allows agents to access real-time information from the web when:
- * - RAG confidence is low
- * - Query requires current/real-time information
- * - Query is about external entities or events
- *
+ * Provides controlled grounding capabilities for Gemini models.
+ * 
+ * IMPORTANT: By default, web search is DISABLED to prevent hallucinations.
+ * The service only uses your documentation and knowledge base.
+ * 
+ * To enable web search (not recommended for production):
+ * - Set ENABLE_GOOGLE_SEARCH_GROUNDING=true in environment variables
+ * 
  * Features:
- * - Google Search grounding integration with Gemini
+ * - Documentation/knowledge base only (default - safe)
+ * - Optional Google Search grounding (if explicitly enabled)
  * - Automatic grounding decision logic
  * - Confidence threshold-based routing
  * - Query classification (internal vs external knowledge)
@@ -90,37 +93,62 @@ export class GroundingService {
     'actual', 'último', 'reciente', 'actual', 'hoy',
   ];
 
-  constructor() {
-    this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+  private enableWebSearch: boolean;
 
-    // Initialize model for grounding queries
-    // Note: Google Search grounding will be configured when available in SDK
-    // For now, we'll use regular Gemini with instructions to search for current info
-    this.model = this.genAI.getGenerativeModel({
+  constructor(enableWebSearch: boolean = false) {
+    this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+    
+    // Check environment variable - default to false (no web search)
+    // Set ENABLE_GOOGLE_SEARCH_GROUNDING=true to enable web search
+    this.enableWebSearch = enableWebSearch || 
+                          process.env.ENABLE_GOOGLE_SEARCH_GROUNDING === 'true';
+
+    // Initialize model - only enable Google Search if explicitly enabled
+    // By default, NO web search - only use our own documentation/knowledge base
+    const modelConfig: any = {
       model: 'gemini-2.0-flash-001',
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 1024,
       },
-      // TODO: Enable Google Search grounding when available in SDK
-      // tools: [{ googleSearch: {} }],
-    });
+    };
 
-    console.log('[GroundingService] Initialized with Google Search grounding');
+    // Only enable web search if explicitly configured
+    if (this.enableWebSearch) {
+      modelConfig.tools = [{ googleSearchRetrieval: {} }];
+      console.log('[GroundingService] Initialized with Google Search grounding ENABLED (web search active)');
+    } else {
+      console.log('[GroundingService] Initialized WITHOUT web search - using only documentation/knowledge base');
+      console.log('[GroundingService] Set ENABLE_GOOGLE_SEARCH_GROUNDING=true to enable web search');
+    }
+
+    this.model = this.genAI.getGenerativeModel(modelConfig);
   }
 
   /**
    * Decide whether to use grounding based on query analysis
+   * IMPORTANT: If web search is disabled, this will NEVER return useGrounding=true
+   * to prevent hallucinations from external sources
    */
   shouldUseGrounding(options: {
     query: string;
     ragConfidence?: number;
     ragResults?: any[];
   }): GroundingDecision {
+    // If web search is disabled, NEVER use grounding (prevent hallucinations)
+    if (!this.enableWebSearch) {
+      return {
+        useGrounding: false,
+        reason: 'Web search is disabled - using only documentation/knowledge base',
+        confidence: 0.9,
+        queryType: 'internal',
+      };
+    }
+
     const { query, ragConfidence, ragResults } = options;
     const lowerQuery = query.toLowerCase();
 
-    // Rule 1: RAG confidence too low
+    // Rule 1: RAG confidence too low (only if web search enabled)
     if (ragConfidence !== undefined && ragConfidence < this.RAG_CONFIDENCE_THRESHOLD) {
       return {
         useGrounding: true,
@@ -130,7 +158,7 @@ export class GroundingService {
       };
     }
 
-    // Rule 2: Query contains real-time keywords
+    // Rule 2: Query contains real-time keywords (only if web search enabled)
     const hasRealTimeKeyword = this.GROUNDING_KEYWORDS.some(keyword =>
       lowerQuery.includes(keyword)
     );
@@ -143,7 +171,7 @@ export class GroundingService {
       };
     }
 
-    // Rule 3: Query about external entities (other organizations, events, people)
+    // Rule 3: Query about external entities (only if web search enabled)
     const externalKeywords = [
       'organization', 'event', 'conference', 'news', 'company',
       'organización', 'evento', 'conferencia', 'noticia', 'empresa',
@@ -158,7 +186,7 @@ export class GroundingService {
       };
     }
 
-    // Rule 4: No RAG results found
+    // Rule 4: No RAG results found (only if web search enabled)
     if (ragResults !== undefined && ragResults.length === 0) {
       return {
         useGrounding: true,
@@ -179,34 +207,62 @@ export class GroundingService {
 
   /**
    * Query with Google Search grounding
+   * WARNING: Only works if web search is enabled
+   * If disabled, this will return an error to prevent hallucinations
    */
   async queryWithGrounding(query: GroundingQuery): Promise<GroundingResult> {
     const startTime = Date.now();
 
-    try {
-      // Build prompt with grounding instruction
-      // Note: When Google Search grounding is available in SDK, this will be automatic
-      const groundingInstruction = 'You have access to current, real-time information. Provide the most up-to-date answer possible.';
-      const prompt = query.context
-        ? `${groundingInstruction}\n\n${query.context}\n\nUser query: ${query.query}`
-        : `${groundingInstruction}\n\nUser query: ${query.query}`;
+    // Safety check: If web search is disabled, don't allow grounding
+    if (!this.enableWebSearch) {
+      console.warn('[GroundingService] Web search is disabled - refusing to use grounding to prevent hallucinations');
+      return {
+        answer: 'I can only provide information from our documentation and knowledge base. Web search is disabled for accuracy.',
+        confidence: 0,
+        groundingUsed: false,
+        metadata: {
+          queryTime: Date.now() - startTime,
+          modelUsed: 'gemini-2.0-flash-001',
+        },
+      };
+    }
 
-      // Generate content with grounding
+    try {
+      // Build prompt - Google Search grounding is automatic when tool is enabled
+      const prompt = query.context
+        ? `${query.context}\n\nUser query: ${query.query}`
+        : query.query;
+
+      // Generate content with grounding (Google Search is automatic)
       const result = await this.model.generateContent(prompt);
       const response = result.response;
 
       // Extract answer
       const answer = response.text();
 
-      // Extract grounding metadata (if available)
-      // Note: Grounding metadata format may vary
-      const groundingMetadata = (response as any).groundingMetadata;
+      // Extract grounding metadata and sources
       const sources: Array<{ title: string; url: string; snippet: string }> = [];
+      
+      // Check for grounding chunks in the response (type-safe access)
+      const responseAny = response as any;
+      const groundingChunks = responseAny.groundingMetadata?.groundingChunks || [];
+      
+      for (const chunk of groundingChunks) {
+        if (chunk.web) {
+          sources.push({
+            title: chunk.web.title || 'Web Source',
+            url: chunk.web.uri || '',
+            snippet: chunk.web.snippet || '',
+          });
+        }
+      }
 
-      if (groundingMetadata && groundingMetadata.searchEntryPoint) {
-        // Extract search results if available
-        const searchResults = groundingMetadata.webSearchQueries || [];
-        searchResults.forEach((result: any, index: number) => {
+      // Also check for grounding metadata in the response
+      const groundingMetadata = responseAny.groundingMetadata;
+      if (groundingMetadata && !sources.length) {
+        // Try alternative metadata structure
+        const webQueries = groundingMetadata.webSearchQueries || [];
+        webQueries.forEach((result: any, index: number) => {
           sources.push({
             title: result.title || `Source ${index + 1}`,
             url: result.uri || '',
