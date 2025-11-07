@@ -408,10 +408,13 @@ app.get('/api/social-media/monitor', (req, res) => {
 
 app.post('/api/social-media/monitor', async (req, res) => {
   try {
-    const { guardianId } = req.body || {};
-    console.log('📡 Received POST request to /api/social-media/monitor', guardianId ? `for guardian: ${guardianId}` : '(all guardians)');
+    const { guardianId, platform } = req.body || {};
+    const platformFilter = platform === 'twitter' || platform === 'instagram' ? platform : undefined;
+    console.log('📡 Received POST request to /api/social-media/monitor', 
+      guardianId ? `for guardian: ${guardianId}` : '(all guardians)',
+      platformFilter ? `platform: ${platformFilter}` : '(all platforms)');
 
-    const results = await schedulerService.triggerSocialMediaMonitoring(guardianId);
+    const results = await schedulerService.triggerSocialMediaMonitoring(guardianId, platformFilter);
     res.json({ success: true, results });
   } catch (error) {
     console.error('❌ Error in /api/social-media/monitor:', error);
