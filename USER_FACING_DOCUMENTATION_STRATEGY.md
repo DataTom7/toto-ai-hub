@@ -123,10 +123,19 @@ npm run index-docs  # Deprecated
 
 ## Next Steps
 
-1. ✅ Run `npm run sync-kb-to-vertex` to sync KB
+1. ✅ Run `npm run sync-kb-to-vertex` to sync KB (initial setup)
 2. ✅ Review KB entries - ensure they're comprehensive
 3. ✅ Add more entries to KB via toto-bo UI when needed
-4. ✅ Done! - KB is the single source of truth
+4. ✅ Run sync again after KB changes (see `WHEN_TO_SYNC_KB.md`)
+
+## When to Sync
+
+See `WHEN_TO_SYNC_KB.md` for detailed guidance on when to run the sync command.
+
+**Quick answer**: Run `npm run sync-kb-to-vertex`:
+- ✅ Initial setup
+- ✅ After adding/updating/deleting KB entries
+- ✅ Periodic maintenance
 
 ## Architecture
 

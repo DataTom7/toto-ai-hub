@@ -11,6 +11,8 @@ runConfig:
 scripts:
   buildCommand: npm ci && npm run build
   runCommand: npm start
+  # Note: KB sync to Vertex AI Search happens automatically on server startup
+  # No need to add sync command here - it's built into the server initialization
 
 env:
   # Google AI API Key for Gemini

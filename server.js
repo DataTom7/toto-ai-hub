@@ -1567,6 +1567,12 @@ app.post('/api/ai/knowledge', async (req, res) => {
     }
 
     const newItem = await apiGateway.addKnowledgeItem(title, content, category, agentTypes || [], audience || [], metadata);
+    
+    // Automatically sync KB to Vertex AI Search (non-blocking)
+    apiGateway.syncKBToVertexAI().catch(error => {
+      console.error('⚠️  KB sync after add failed (non-critical):', error);
+    });
+    
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating knowledge item:', error);
@@ -1596,6 +1602,11 @@ app.put('/api/ai/knowledge/:id', async (req, res) => {
     // Refresh RAG service
     await apiGateway.resetKnowledgeBase();
 
+    // Automatically sync KB to Vertex AI Search (non-blocking)
+    apiGateway.syncKBToVertexAI().catch(error => {
+      console.error('⚠️  KB sync after update failed (non-critical):', error);
+    });
+
     res.json(updatedItem);
   } catch (error) {
     console.error('Error updating knowledge item:', error);
@@ -1617,6 +1628,11 @@ app.delete('/api/ai/knowledge/:id', async (req, res) => {
 
     // Refresh RAG service
     await apiGateway.resetKnowledgeBase();
+
+    // Automatically sync KB to Vertex AI Search (non-blocking)
+    apiGateway.syncKBToVertexAI().catch(error => {
+      console.error('⚠️  KB sync after delete failed (non-critical):', error);
+    });
 
     res.json({
       success: true,

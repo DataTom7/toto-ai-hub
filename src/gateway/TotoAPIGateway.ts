@@ -4,7 +4,7 @@ import { CaseAgent } from '../agents/CaseAgent';
 import { TwitterAgent } from '../agents/TwitterAgent';
 import { RAGService, KnowledgeChunk } from '../services/RAGService';
 import { KnowledgeBaseService, KnowledgeItem as KBKnowledgeItem } from '../services/KnowledgeBaseService';
-import { VertexAISearchService } from '../services/VertexAISearchService';
+import { VertexAISearchService, SearchableDocument } from '../services/VertexAISearchService';
 
 // Types for API Gateway
 export interface AnalyticsData {
@@ -83,7 +83,6 @@ export class TotoAPIGateway {
   private analyticsCache: AnalyticsData | null = null;
   private knowledgeBaseService: KnowledgeBaseService;
   private ragService: RAGService;
-  private vertexAISearchService: VertexAISearchService;
   private lastAnalyticsUpdate: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -94,8 +93,7 @@ export class TotoAPIGateway {
    */
   constructor(sharedKbFirestore?: admin.firestore.Firestore) {
     this.totoAI = new TotoAI();
-    this.vertexAISearchService = new VertexAISearchService();
-    this.ragService = new RAGService(this.vertexAISearchService);
+    this.ragService = new RAGService();
     this.knowledgeBaseService = new KnowledgeBaseService(sharedKbFirestore);
     // Note: initializeKnowledgeBase() is no longer called here
     // KnowledgeBaseService will initialize from Firestore on first use
@@ -104,11 +102,18 @@ export class TotoAPIGateway {
   /**
    * Initialize knowledge base service, RAG service, and Vertex AI Search
    * Should be called after Firebase Admin is initialized
+   * Automatically syncs KB to Vertex AI Search on startup (non-blocking)
    */
   async initialize(): Promise<void> {
     await this.knowledgeBaseService.initialize();
     await this.vertexAISearchService.initialize();
     await this.initializeRAGService();
+    
+    // Automatically sync KB to Vertex AI Search on startup (non-blocking)
+    this.syncKBToVertexAI().catch(error => {
+      console.error('⚠️  KB sync on startup failed (non-critical):', error);
+      // Continue - sync will happen on next KB change or can be done manually
+    });
   }
 
   /**
@@ -311,6 +316,50 @@ export class TotoAPIGateway {
    */
   getVertexAISearchService(): VertexAISearchService {
     return this.vertexAISearchService;
+  }
+
+  /**
+   * Sync Knowledge Base to Vertex AI Search
+   * This is called automatically on startup and when KB entries change
+   */
+  async syncKBToVertexAI(): Promise<{ success: number; failed: number }> {
+    try {
+      console.log('🔄 Syncing Knowledge Base to Vertex AI Search...');
+      
+      // Get all KB entries
+      const kbEntries = await this.knowledgeBaseService.getAll();
+      
+      if (kbEntries.length === 0) {
+        console.log('⚠️  No Knowledge Base entries to sync');
+        return { success: 0, failed: 0 };
+      }
+
+      // Convert KB entries to searchable documents
+      const documents: SearchableDocument[] = kbEntries.map(item => ({
+        id: `kb-${item.id}`,
+        title: item.title,
+        content: item.content,
+        source: `knowledge_base/${item.id}`,
+        category: item.category,
+        metadata: {
+          kbId: item.id,
+          agentTypes: item.agentTypes || [],
+          audience: item.audience || [],
+          lastUpdated: item.lastUpdated,
+          usageCount: item.usageCount || 0,
+        },
+      }));
+
+      // Index documents
+      const result = await this.vertexAISearchService.indexDocuments(documents);
+      
+      console.log(`✅ KB sync complete: ${result.success} indexed, ${result.failed} failed`);
+      return result;
+    } catch (error) {
+      console.error('❌ Error syncing KB to Vertex AI Search:', error);
+      // Don't throw - allow server to continue even if sync fails
+      return { success: 0, failed: 0 };
+    }
   }
 
   /**
