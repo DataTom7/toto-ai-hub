@@ -1,0 +1,212 @@
+﻿[
+    {
+        "scenario":  "Affirmative Response Loop Test (Bug Fix Verification)",
+        "conversation":  1,
+        "analysis":  "Check if agent progresses conversation instead of repeating case info",
+        "conversationId":  "conv-1-affirmative-test",
+        "messages":  [
+                         {
+                             "content":  "Â¡Hola! Te presento a Nina...",
+                             "response":  "¡Hola! Nina es una perrita mayor en Rosario que necesita ayuda para su condición cardíaca. Actualmente está recibiendo tratamiento y medicación especial. ¿Te gustaría ayudar a Nina?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Si, claro.",
+                             "response":  "¡Qué bueno que quieres ayudar a Nina! Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián, que es diego.martinez.rescate. ¿Te gustaría saber cómo compartir el caso de Nina?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Si.",
+                             "response":  "¡Excelente! Como quieres ayudar a Nina, puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián: diego.martinez.rescate. No hay un monto mínimo para donar, ¡cada ayuda cuenta!\n\nAdemás de donar, compartir el caso de Nina en tus redes sociales también es una gran ayuda. ¿Te gustaría saber cómo hacerlo?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Si.",
+                             "response":  "¡Perfecto! Además de donar directamente a diego.martinez.rescate, compartir el caso de Nina en tus redes sociales también es una gran ayuda para que más personas conozcan su historia y puedan colaborar. ¿Te gustaría que te explique cómo compartir el caso de Nina?\n",
+                             "role":  "user"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Vague Questions - User needs guidance",
+        "conversation":  2,
+        "analysis":  "Check if agent provides clear guidance and actionable options",
+        "conversationId":  "conv-2-vague-questions",
+        "messages":  [
+                         {
+                             "content":  "Hola",
+                             "response":  "Hola Usuario Prueba. Max es un gatito en Buenos Aires que necesita urgentemente una cirugía de cadera. Actualmente, el caso está marcado como urgente.\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Â¿QuÃ© puedo hacer?",
+                             "response":  "Max, un gatito en Buenos Aires, necesita urgentemente una cirugía de cadera y el caso está marcado como urgente. Actualmente, el caso está financiado en un 30%.\n\nPuedes ayudar a Max de varias maneras: puedes hacer una donación directa a Ana López al alias ana.lopez.rescate. También puedes compartir el caso de Max en tus redes sociales para que más personas lo conozcan y puedan ayudar. ¿Te gustaría saber más sobre alguna de estas opciones?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "No sÃ©, dime algo",
+                             "response":  "Entiendo. Dado que el caso de Max es urgente y solo está financiado en un 30%, una donación directa sería de gran ayuda. Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián, que es ana.lopez.rescate. No hay un monto mínimo para donar, ¡cada ayuda cuenta!\n\nTambién, compartir el caso en tus redes sociales podría ayudar a que más personas se unan a la causa. ¿Cuál de estas opciones te gustaría explorar primero?\n",
+                             "role":  "user"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Emotional User - Worried about animal",
+        "conversation":  3,
+        "analysis":  "Check if agent shows empathy and provides urgent action options",
+        "conversationId":  "conv-3-emotional-worried",
+        "messages":  [
+                         {
+                             "content":  "Estoy muy preocupado por Luna...",
+                             "response":  "Entiendo tu preocupación. Luna, una perrita encontrada en Córdoba, necesita cirugía urgente debido a las graves heridas que tiene. Su estado es crítico. ¿Te gustaría saber cómo puedes ayudar?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Â¿CÃ³mo puedo ayudar urgentemente?",
+                             "response":  "Entiendo tu urgencia por ayudar a Luna. Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián, carlos.rodriguez.rescate. También, compartir el caso de Luna en tus redes sociales puede ayudar a que más personas se unan a la causa. ¿Te gustaría saber cómo compartir el caso?\n",
+                             "role":  "user"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Information Overload Request",
+        "conversation":  4,
+        "analysis":  "Check if agent provides digestible information and can clarify specific points",
+        "conversationId":  "conv-4-info-overload",
+        "messages":  [
+                         {
+                             "content":  "CuÃ©ntame todo sobre Toby...",
+                             "response":  "Toby es un perro joven en Rosario que necesita vacunación completa y esterilización. Está bajo el cuidado de María González.\n\nPara ayudar a Toby, puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián: maria.gonzalez.rescate.\n\nEl alias no está disponible. Si deseas ayudar a Toby, podemos usar el TRF (Fondo de Rescate de Toto).\n\nTRF es el Fondo de Rescate de Toto.\n\nPor ahora Toby no está buscando un hogar, pero puedes compartir su historia para que más personas lo conozcan.\n\nTotitos son un sistema de recompensas por donaciones verificadas. Puedes ver tus totitos en tu perfil. Cada vez que haces una donación verificada o compartes un caso en redes sociales, ganas totitos que puedes canjear por bienes o servicios para mascotas.\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Ok pero no me quedÃ³ claro lo de las donaciones",
+                             "response":  "Entiendo. Para donar a Toby, puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián: maria.gonzalez.rescate.\n\nNo hay un monto mínimo para donar, ¡cada ayuda cuenta!\n\nSi deseas ayudar a Toby, pero tienes problemas con el alias, podemos usar el TRF (Fondo de Rescate de Toto). TRF es el Fondo de Rescate de Toto.\n\n¿Te gustaría que te explique cómo funciona el TRF?\n",
+                             "role":  "user"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Topic Change - User changes mind",
+        "conversation":  5,
+        "analysis":  "Check if agent adapts smoothly to topic changes",
+        "conversationId":  "conv-5-topic-change",
+        "messages":  [
+                         {
+                             "content":  "Hola, quiero saber sobre Bella",
+                             "response":  "Hola Usuario Prueba, Bella en Mendoza necesita un hogar temporal mientras se recupera de una cirugía. ¿Te gustaría saber más sobre cómo puedes ayudarla?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Â¿CÃ³mo funciona la adopciÃ³n?",
+                             "response":  "Entiendo tu interés en adoptar a Bella. Actualmente, Bella necesita un hogar temporal en Mendoza mientras se recupera de una cirugía. No tengo información disponible sobre si está lista para adopción permanente en este momento. ¿Te gustaría saber más sobre cómo puedes ofrecerle un hogar temporal o ayudar con sus gastos veterinarios?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Ah, pero en realidad quiero donar, no adoptar",
+                             "response":  "Entiendo, Usuario Prueba. Puedes ayudar a Bella donando directamente al alias bancario de su guardián, Pedro Sánchez. El alias es pedro.sanchez.rescate. Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián. ¿Te gustaría que te explique cómo funciona nuestro sistema de recompensas, Totitos, por donar y compartir casos?\n",
+                             "role":  "user"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Fully Funded Case",
+        "conversation":  6,
+        "analysis":  "Check if agent handles completed/fully-funded cases appropriately",
+        "conversationId":  "conv-6-fully-funded",
+        "messages":  [
+                         {
+                             "content":  "Quiero donar a Rocky",
+                             "response":  "¡Qué bueno que quieres ayudar a Rocky! Rocky, un perrito de Buenos Aires, ya ha completado su tratamiento gracias a personas como tú. ¿Te gustaría saber cómo puedes hacer una donación directa para apoyar a Laura Fernández, su guardiana?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Â¿Puedo donar de todas formas?",
+                             "response":  "¡Claro que sí! Aunque Rocky ya completó su tratamiento, tu donación puede ayudar a Laura Fernández a seguir rescatando otros animalitos en Buenos Aires.\n\nPuedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias de Laura, que es laura.fernandez.rescate. No hay un monto mínimo para donar, ¡cada ayuda cuenta!\n",
+                             "role":  "user"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Minimal Responses - Very short user messages",
+        "conversation":  7,
+        "analysis":  "Check if agent can handle very short, minimal responses and still progress conversation",
+        "conversationId":  "conv-7-minimal-responses",
+        "messages":  [
+                         {
+                             "content":  "Hola",
+                             "response":  "Hola Usuario Prueba, te presento a Simba. Es un gatito de La Plata que necesita tratamiento para parásitos. ¿Te gustaría saber más sobre cómo puedes ayudar?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Ok",
+                             "response":  "¡Entendido! Hay varias maneras en las que puedes ayudar a Simba.\n\nPuedes hacer una donación directa desde tu cuenta bancaria o billetera al alias del guardián: juan.perez.rescate. Cada ayuda cuenta, ¡no hay un monto mínimo!\n\nTambién, compartir el caso de Simba en tus redes sociales ayuda a que más personas lo conozcan y puedan colaborar.\n\n¿Cómo te gustaría ayudar a Simba?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Donar",
+                             "response":  "¡Genial! Para donar a Simba, puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias juan.perez.rescate. No hay un monto mínimo para donar, ¡cada ayuda cuenta!\n\nDespués de hacer la donación, ¿te gustaría verificarla para ganar totitos? Los totitos son un sistema de recompensas por donaciones verificadas.\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "CÃ³mo",
+                             "response":  "¿Cómo te gustaría realizar la donación? Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias juan.perez.rescate. No hay un monto mínimo para donar, ¡cada ayuda cuenta!\n\nDespués de hacer la donación, avísame para que puedas verificarla y ganar totitos. Totitos son un sistema de recompensas por donaciones verificadas.\n",
+                             "role":  "user"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Technical Questions - Verification and process details",
+        "conversation":  8,
+        "analysis":  "Check if agent provides accurate technical information about donation process",
+        "conversationId":  "conv-8-technical",
+        "messages":  [
+                         {
+                             "content":  "Â¿CÃ³mo verifico que mi donaciÃ³n llegÃ³? Â¿Hay algÃºn comprobante?",
+                             "response":  "Entiendo que quieres ayudar a Lola, una perrita en Córdoba que necesita una cirugía de cadera.\n\nPara verificar tu donación, puedes enviar el comprobante de la transferencia a Ana Martínez, la guardiana de Lola. No tengo esa información disponible para verificarlo directamente. Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián: ana.martinez.rescate.\n\n¿Te gustaría saber cómo compartir el caso de Lola para que más personas puedan ayudar?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Â¿El dinero va directo al guardiÃ¡n o pasa por la plataforma?",
+                             "response":  "El dinero va directamente a Ana Martínez, la guardiana de Lola. Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias ana.martinez.rescate. La plataforma solo provee el alias bancario para que puedas hacer la donación directamente. ¿Te gustaría saber cómo compartir el caso de Lola para que más personas puedan ayudar?\n",
+                             "role":  "user"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Multiple Help Options - User wants alternatives to donation",
+        "conversation":  9,
+        "analysis":  "Check if agent provides multiple ways to help beyond just donations",
+        "conversationId":  "conv-9-multiple-options",
+        "messages":  [
+                         {
+                             "content":  "Quiero ayudar a Chico pero no tengo mucho dinero...",
+                             "response":  "Entiendo, Usuario Prueba. Chico, un perrito en Buenos Aires, necesita un hogar permanente. Aunque no puedas donar mucho, ¡hay otras formas de ayudar! Puedes compartir su historia en tus redes sociales para que más personas lo conozcan. ¿Te gustaría compartir el caso de Chico en Twitter o Instagram? La guardiana de Chico es María González (@maria_rescate en Twitter e Instagram).\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Â¿Compartir en redes sociales ayuda realmente?",
+                             "response":  "Sí, Usuario Prueba, compartir en redes sociales realmente ayuda a Chico. Al compartir su historia, más personas pueden conocerlo y aumentar las posibilidades de que encuentre un hogar amoroso. Además, al compartir el caso, ¡ganas totitos! ¿Te gustaría que te explique qué son los totitos?\n",
+                             "role":  "user"
+                         }
+                     ]
+    },
+    {
+        "scenario":  "Missing Information - Incomplete case data",
+        "conversation":  10,
+        "analysis":  "Check if agent handles missing case information gracefully and offers alternatives",
+        "conversationId":  "conv-10-missing-info",
+        "messages":  [
+                         {
+                             "content":  "Quiero ayudar a este caso",
+                             "response":  "¡Hola! Tenemos un animalito sin nombre que fue encontrado en la calle y necesita nuestra ayuda. Su caso está activo y es de urgencia media. ¿Cómo te gustaría ayudar?\n",
+                             "role":  "user"
+                         },
+                         {
+                             "content":  "Â¿CÃ³mo dono si no hay alias?",
+                             "response":  "Entiendo. Como no hay un alias disponible para este caso, podemos usar el TRF (Fondo de Rescate de Toto). TRF es el Fondo de Rescate de Toto. ¿Te gustaría donar a través del TRF?\n",
+                             "role":  "user"
+                         }
+                     ]
+    }
+]

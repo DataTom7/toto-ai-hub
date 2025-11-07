@@ -151,8 +151,8 @@ async function migrateChunks(chunks: KnowledgeChunk[], options: MigrationOptions
     return;
   }
 
-  // Create RAGService with VectorDBService
-  const ragService = new RAGService(vectorDBConfig);
+  // Create RAGService (constructor takes no arguments)
+  const ragService = new RAGService();
 
   // Migrate chunks in batches
   const batchSize = 100;
@@ -179,11 +179,11 @@ async function migrateChunks(chunks: KnowledgeChunk[], options: MigrationOptions
   console.log('\n✅ Migration complete!');
 
   // Get stats
-  const stats = await ragService.getMemoryStats();
+  const stats = ragService.getMemoryStats();
   console.log(`\n📊 Final Statistics:`);
   console.log(`   Total chunks: ${stats.chunks === -1 ? 'Unlimited backend' : stats.chunks}`);
+  console.log(`   Max chunks: ${stats.maxChunks}`);
   console.log(`   Memory usage: ${stats.memoryUsage}`);
-  console.log(`   Cache size: ${stats.cacheSize}`);
 }
 
 /**

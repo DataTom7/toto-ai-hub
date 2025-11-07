@@ -343,7 +343,22 @@ export class InstagramService {
         if (pageText.includes('suspicious activity') || pageText.includes('verify your account')) {
           console.error('   ⚠️ Instagram detected suspicious activity - manual verification required');
         } else if (pageText.includes('incorrect') || pageText.includes('wrong password')) {
-          console.error('   ⚠️ Incorrect username or password');
+          // Instagram often shows "incorrect password" even when password is correct but automation is detected
+          // Check if this might be automation blocking rather than actual wrong password
+          const mightBeAutomationBlock = this.loginAttemptCount > 1 || 
+                                        pageText.includes('try again') ||
+                                        pageText.includes('temporarily');
+          
+          if (mightBeAutomationBlock) {
+            console.error('   ⚠️ Instagram may be blocking automation (showing "incorrect password" as generic error)');
+            console.error('   💡 Try logging in manually in a browser first to "unlock" the account');
+            console.error('   💡 Wait 10-15 minutes before retrying automated login');
+            // Reset attempt count to force cooldown
+            this.loginAttemptCount = this.MAX_LOGIN_ATTEMPTS;
+          } else {
+            console.error('   ⚠️ Incorrect username or password (or automation detected)');
+            console.error('   💡 If password is correct, Instagram is likely blocking automation');
+          }
         } else if (pageText.includes('try again') || pageText.includes('temporarily locked')) {
           console.error('   ⚠️ Account temporarily locked - wait before retrying');
           // Reset attempt count to force cooldown

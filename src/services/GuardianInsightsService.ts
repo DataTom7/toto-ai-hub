@@ -320,8 +320,21 @@ export class GuardianInsightsService {
     const seenWhatsApp = new Set<string>();
     const seenPhones = new Set<string>();
 
-    for (const post of posts) {
+      for (const post of posts) {
       const extracted = this.extractPaymentInfo(post.postContent);
+      
+      // Validate and convert createdAt to a valid Date
+      let postDate: Date;
+      if (post.createdAt instanceof Date && !isNaN(post.createdAt.getTime())) {
+        postDate = post.createdAt;
+      } else if (typeof post.createdAt === 'string' || typeof post.createdAt === 'number') {
+        postDate = new Date(post.createdAt);
+        if (isNaN(postDate.getTime())) {
+          postDate = new Date(); // Fallback to current date if invalid
+        }
+      } else {
+        postDate = new Date(); // Fallback to current date if invalid
+      }
       
       extracted.bankingAliases.forEach(alias => {
         const key = alias.value.toLowerCase();
@@ -333,7 +346,7 @@ export class GuardianInsightsService {
             verified: false,
             source: post.postUrl || post.id,
             confidence: alias.confidence,
-            extractedAt: post.createdAt
+            extractedAt: postDate
           });
         }
       });
@@ -347,7 +360,7 @@ export class GuardianInsightsService {
             verified: false,
             source: post.postUrl || post.id,
             confidence: wa.confidence,
-            extractedAt: post.createdAt
+            extractedAt: postDate
           });
         }
       });
@@ -361,7 +374,7 @@ export class GuardianInsightsService {
             verified: false,
             source: post.postUrl || post.id,
             confidence: phone.confidence,
-            extractedAt: post.createdAt
+            extractedAt: postDate
           });
         }
       });
@@ -459,11 +472,42 @@ export class GuardianInsightsService {
         }
       }
 
-      // Remove undefined values before saving (Firestore doesn't accept undefined)
+      // Remove undefined values and convert Date objects to Firestore Timestamps
       const cleanedInsight: any = {};
       for (const [key, value] of Object.entries(insight)) {
         if (value !== undefined) {
-          cleanedInsight[key] = value;
+          // Convert Date objects to Firestore Timestamps
+          if (value instanceof Date) {
+            if (!isNaN(value.getTime())) {
+              cleanedInsight[key] = admin.firestore.Timestamp.fromDate(value);
+            } else {
+              // Skip invalid dates
+              continue;
+            }
+          } else if (key === 'paymentMethods' && value && typeof value === 'object') {
+            // Recursively convert dates in paymentMethods
+            const cleanedPaymentMethods: any = {};
+            for (const [pmKey, pmValue] of Object.entries(value)) {
+              if (Array.isArray(pmValue)) {
+                cleanedPaymentMethods[pmKey] = pmValue.map((item: any) => {
+                  if (item && typeof item === 'object' && item.extractedAt instanceof Date) {
+                    if (!isNaN(item.extractedAt.getTime())) {
+                      return {
+                        ...item,
+                        extractedAt: admin.firestore.Timestamp.fromDate(item.extractedAt)
+                      };
+                    }
+                  }
+                  return item;
+                });
+              } else {
+                cleanedPaymentMethods[pmKey] = pmValue;
+              }
+            }
+            cleanedInsight[key] = cleanedPaymentMethods;
+          } else {
+            cleanedInsight[key] = value;
+          }
         }
       }
 
