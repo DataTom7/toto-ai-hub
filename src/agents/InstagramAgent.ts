@@ -400,13 +400,15 @@ Be thorough but concise in your analysis, paying special attention to visual con
       try {
         let posts: InstagramPost[] = [];
         
-        // Try to get access token from guardian or environment
+        // Try to get access token from guardian or environment secrets
+        // Priority: 1) Guardian-specific token (from Firestore), 2) Global secret (from Secret Manager)
         const accessToken = guardian.accessToken || process.env.INSTAGRAM_ACCESS_TOKEN;
         const userId = guardian.instagramUserId || process.env.INSTAGRAM_USER_ID;
         
         if (accessToken && userId) {
           // Use Basic Display API if access token available
-          console.log(`📡 Using Instagram Basic Display API for @${guardian.instagramHandle} (userId: ${userId})`);
+          const source = guardian.accessToken ? 'guardian-specific' : 'global-secret';
+          console.log(`📡 Using Instagram Basic Display API for @${guardian.instagramHandle} (userId: ${userId}, source: ${source})`);
           posts = await this.instagramService.getUserPosts(
             userId, 
             this.config.maxPostsPerFetch,
@@ -416,11 +418,11 @@ Be thorough but concise in your analysis, paying special attention to visual con
           // Log why we're not using Basic API
           if (!accessToken) {
             console.log(`⚠️  No access token found for @${guardian.instagramHandle} - falling back to web scraping`);
-            console.log(`   💡 To use Basic Display API, set guardian.instagramAccessToken or INSTAGRAM_ACCESS_TOKEN env var`);
+            console.log(`   💡 To use Basic Display API, set guardian.instagramAccessToken in Firestore or INSTAGRAM_ACCESS_TOKEN secret`);
           }
           if (!userId) {
             console.log(`⚠️  No Instagram user ID found for @${guardian.instagramHandle} - falling back to web scraping`);
-            console.log(`   💡 To use Basic Display API, set guardian.instagramUserId or INSTAGRAM_USER_ID env var`);
+            console.log(`   💡 To use Basic Display API, set guardian.instagramUserId in Firestore or INSTAGRAM_USER_ID secret`);
           }
           
           // Fallback to web scraping
@@ -464,12 +466,14 @@ Be thorough but concise in your analysis, paying special attention to visual con
 
     for (const guardian of activeGuardians) {
       try {
-        // Try to get access token from guardian or environment
+        // Try to get access token from guardian or environment secrets
+        // Priority: 1) Guardian-specific token (from Firestore), 2) Global secret (from Secret Manager)
         const accessToken = guardian.accessToken || process.env.INSTAGRAM_ACCESS_TOKEN;
         const userId = guardian.instagramUserId || process.env.INSTAGRAM_USER_ID;
         
         if (accessToken && userId) {
-          console.log(`📡 Using Instagram Basic Display API for stories from @${guardian.instagramHandle} (userId: ${userId})`);
+          const source = guardian.accessToken ? 'guardian-specific' : 'global-secret';
+          console.log(`📡 Using Instagram Basic Display API for stories from @${guardian.instagramHandle} (userId: ${userId}, source: ${source})`);
           const stories = await this.instagramService.getUserStories(
             userId,
             accessToken
@@ -489,6 +493,7 @@ Be thorough but concise in your analysis, paying special attention to visual con
           console.log(`Fetched ${stories.length} stories from @${guardian.instagramHandle}`);
         } else {
           console.log(`⚠️  Skipping stories for @${guardian.instagramHandle} - Basic Display API credentials not available`);
+          console.log(`   💡 Set guardian.instagramAccessToken/instagramUserId in Firestore or INSTAGRAM_ACCESS_TOKEN/INSTAGRAM_USER_ID secrets`);
         }
       } catch (error) {
         console.error(`Error fetching stories for @${guardian.instagramHandle}:`, error);

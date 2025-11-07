@@ -12,18 +12,24 @@ export class InstagramService {
   private isLoggedIn: boolean = false;
   private loginUsername: string;
   private loginPassword: string;
+  private lastLoginAttempt: Date | null = null;
+  private loginAttemptCount: number = 0;
+  private readonly LOGIN_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes cooldown between login attempts
+  private readonly MAX_LOGIN_ATTEMPTS = 3; // Max attempts before cooldown
 
   constructor(credentials: InstagramCredentials) {
     console.log('InstagramService initialized with web scraping and API support');
     
-    // Load Instagram login credentials from environment
-    this.loginUsername = process.env.INSTAGRAM_USERNAME || 'betoto.bot';
-    this.loginPassword = process.env.INSTAGRAM_PASSWORD || 'Toto2025?';
+    // Load Instagram login credentials from environment (secrets)
+    // These are stored in Google Secret Manager and referenced in apphosting.yaml
+    this.loginUsername = process.env.INSTAGRAM_USERNAME || '';
+    this.loginPassword = process.env.INSTAGRAM_PASSWORD || '';
     
     if (this.loginUsername && this.loginPassword) {
       console.log(`✅ Instagram login credentials configured for: ${this.loginUsername}`);
     } else {
       console.warn('⚠️ No Instagram login credentials configured - scraping may be limited');
+      console.warn('   Set INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD secrets in Secret Manager');
     }
   }
 
@@ -32,11 +38,40 @@ export class InstagramService {
    * OPTIMIZED: Reduced timeouts and better error handling
    */
   private async loginToInstagram(page: any): Promise<boolean> {
-    const loginTimeout = 20000; // 20 second total timeout for login
+    const loginTimeout = 30000; // 30 second total timeout for login
     const startTime = Date.now();
     
+    // Check if we should wait due to rate limiting
+    const now = new Date();
+    if (this.lastLoginAttempt) {
+      const timeSinceLastAttempt = now.getTime() - this.lastLoginAttempt.getTime();
+      if (timeSinceLastAttempt < this.LOGIN_COOLDOWN_MS) {
+        const remainingMinutes = Math.ceil((this.LOGIN_COOLDOWN_MS - timeSinceLastAttempt) / 60000);
+        console.warn(`⚠️ Login cooldown active - ${remainingMinutes} minute(s) remaining before next attempt`);
+        console.warn(`   This is likely due to rate limiting from too many login attempts`);
+        return false;
+      }
+      
+      // Reset attempt count if enough time has passed
+      if (timeSinceLastAttempt > this.LOGIN_COOLDOWN_MS) {
+        this.loginAttemptCount = 0;
+      }
+    }
+    
+    // Check if we've exceeded max attempts
+    if (this.loginAttemptCount >= this.MAX_LOGIN_ATTEMPTS) {
+      const timeSinceLastAttempt = this.lastLoginAttempt ? 
+        now.getTime() - this.lastLoginAttempt.getTime() : 0;
+      const remainingMinutes = Math.ceil((this.LOGIN_COOLDOWN_MS - timeSinceLastAttempt) / 60000);
+      console.error(`❌ Too many login attempts (${this.loginAttemptCount}) - Instagram may be rate limiting`);
+      console.error(`   Please wait ${remainingMinutes} minute(s) before trying again`);
+      return false;
+    }
+    
     try {
-      console.log(`🔐 Attempting to login to Instagram as ${this.loginUsername}...`);
+      this.loginAttemptCount++;
+      this.lastLoginAttempt = now;
+      console.log(`🔐 Attempting to login to Instagram as ${this.loginUsername}... (attempt ${this.loginAttemptCount}/${this.MAX_LOGIN_ATTEMPTS})`);
       
       // Navigate to login page
       await page.goto('https://www.instagram.com/accounts/login/', {
@@ -44,8 +79,8 @@ export class InstagramService {
         timeout: 15000
       });
 
-      // Wait a bit for page to fully load
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for page to fully load and check what we got
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       // Check what page we actually loaded
       const currentUrl = page.url();
@@ -53,24 +88,50 @@ export class InstagramService {
       console.log(`   Navigated to: ${currentUrl}`);
       console.log(`   Page title: ${pageTitle}`);
 
-      // Try multiple selectors for username field (Instagram changes their structure)
+      // Wait for login form to be visible
+      try {
+        await page.waitForSelector('form', { timeout: 5000 });
+      } catch (e) {
+        console.warn('   ⚠️ Could not find form element');
+      }
+
+      // Try multiple selectors for username field (Instagram changes their structure frequently)
       let usernameSelector = null;
       const possibleSelectors = [
+        'input[autocomplete="username"]',
+        'input[autocomplete="tel"]',
         'input[name="username"]',
+        'input[name="text"]',
         'input[type="text"]',
         'input[placeholder*="username" i]',
         'input[placeholder*="phone" i]',
+        'input[placeholder*="email" i]',
         'input[aria-label*="username" i]',
-        'input[aria-label*="phone" i]'
+        'input[aria-label*="phone" i]',
+        'input[aria-label*="email" i]',
+        'input[id*="username" i]',
+        'input[id*="phone" i]',
+        'input[id*="email" i]',
+        // Try to find first text input in form
+        'form input[type="text"]:first-of-type',
+        'form input:not([type="password"]):first-of-type'
       ];
 
       for (const selector of possibleSelectors) {
         try {
           const element = await page.$(selector);
           if (element) {
-            usernameSelector = selector;
-            console.log(`   ✅ Found username field with selector: ${selector}`);
-            break;
+            // Verify it's visible and enabled
+            const isVisible = await page.evaluate((el: HTMLElement) => {
+              const style = window.getComputedStyle(el);
+              return style.display !== 'none' && style.visibility !== 'hidden' && !(el as HTMLInputElement).disabled;
+            }, element);
+            
+            if (isVisible) {
+              usernameSelector = selector;
+              console.log(`   ✅ Found username field with selector: ${selector}`);
+              break;
+            }
           }
         } catch (e) {
           // Continue trying other selectors
@@ -96,9 +157,12 @@ export class InstagramService {
       
       // Find password field (try multiple selectors)
       const passwordSelectors = [
+        'input[autocomplete="current-password"]',
         'input[name="password"]',
         'input[type="password"]',
-        'input[aria-label*="password" i]'
+        'input[aria-label*="password" i]',
+        'input[id*="password" i]',
+        'form input[type="password"]'
       ];
       
       let passwordSelector = null;
@@ -106,8 +170,19 @@ export class InstagramService {
         try {
           const element = await page.$(selector);
           if (element) {
-            passwordSelector = selector;
-            break;
+            // Verify it's visible and enabled
+            const isVisible = await page.evaluate((el: HTMLElement) => {
+              const style = window.getComputedStyle(el);
+              return style.display !== 'none' && style.visibility !== 'hidden' && !(el as HTMLInputElement).disabled;
+            }, element);
+            
+            if (isVisible) {
+              passwordSelector = selector;
+              console.log(`   ✅ Found password field with selector: ${selector}`);
+              break;
+            } else {
+              console.log(`   ⚠️ Password field found with ${selector} but not visible`);
+            }
           }
         } catch (e) {
           // Continue
@@ -116,37 +191,153 @@ export class InstagramService {
       
       if (!passwordSelector) {
         console.error('   ❌ Could not find password input field');
+        // Debug: List all input fields on the page
+        const allInputs = await page.evaluate(() => {
+          const inputs = Array.from(document.querySelectorAll('input'));
+          return inputs.map((input: HTMLInputElement) => ({
+            type: input.type,
+            name: input.name,
+            id: input.id,
+            autocomplete: input.autocomplete,
+            placeholder: input.placeholder,
+            ariaLabel: input.getAttribute('aria-label')
+          }));
+        });
+        console.error(`   📋 Found ${allInputs.length} input fields on page:`, JSON.stringify(allInputs, null, 2));
         return false;
       }
       
       // Type password
       await page.type(passwordSelector, this.loginPassword, { delay: 50 });
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log(`   ✅ Typed password (${this.loginPassword.length} characters)`);
 
-      // Click login button
-      await page.click('button[type="submit"]');
-      
-      // Wait for navigation with timeout
-      await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => {
-        console.warn('⚠️ Navigation timeout after login - checking current state...');
-      });
+      // Wait a bit before clicking login
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Check if we exceeded timeout
-      if (Date.now() - startTime > loginTimeout) {
-        console.error('❌ Login timeout exceeded');
-        return false;
+      // Try multiple selectors for login button
+      const loginButtonSelectors = [
+        'button[type="submit"]',
+        'button:has-text("Log in")',
+        'button:has-text("Log In")',
+        'button:has-text("Login")',
+        'form button[type="submit"]',
+        'button._acan._acap._acas._aj1-'
+      ];
+
+      let loginButtonClicked = false;
+      for (const selector of loginButtonSelectors) {
+        try {
+          const button = await page.$(selector);
+          if (button) {
+            const isVisible = await page.evaluate((el: HTMLElement) => {
+              const style = window.getComputedStyle(el);
+              return style.display !== 'none' && style.visibility !== 'hidden';
+            }, button);
+            
+            if (isVisible) {
+              console.log(`   ✅ Found login button with selector: ${selector}`);
+              await button.click();
+              loginButtonClicked = true;
+              break;
+            }
+          }
+        } catch (e) {
+          // Continue trying other selectors
+        }
       }
 
-      // Check if login was successful
-      const loginResultUrl = page.url();
-      console.log(`   Current URL after login: ${loginResultUrl}`);
+      if (!loginButtonClicked) {
+        console.error('   ❌ Could not find or click login button');
+        return false;
+      }
       
-      // Check for specific error messages on the page
+      // Wait a bit for the page to respond
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Wait for navigation with timeout
+      try {
+        await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 20000 });
+      } catch (navError) {
+        console.warn('⚠️ Navigation timeout after login - checking current state...');
+      }
+
+      // Wait a bit more and check the page state
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Check if login was successful FIRST (before timeout check)
+      let loginResultUrl = '';
+      let pageText = '';
+      try {
+        loginResultUrl = page.url();
+        console.log(`   Current URL after login: ${loginResultUrl}`);
+        pageText = await page.evaluate(() => document.body.innerText);
+      } catch (pageError) {
+        console.error(`   ⚠️ Error checking page state: ${pageError instanceof Error ? pageError.message : 'Unknown error'}`);
+      }
+      
+      // Check if we exceeded timeout (after checking page state)
+      if (Date.now() - startTime > loginTimeout) {
+        console.error(`❌ Login timeout exceeded (${Date.now() - startTime}ms)`);
+        // Still check page state to see what Instagram is showing
+        if (pageText) {
+          console.error(`   Page content: ${pageText.substring(0, 300)}...`);
+        }
+        if (loginResultUrl) {
+          console.error(`   Final URL: ${loginResultUrl}`);
+        }
+        return false;
+      }
+      
+      // Check for specific error messages on the page (reuse pageText if we already have it)
       const pageContent = await page.content();
-      const pageText = await page.evaluate(() => document.body.innerText);
+      if (!pageText) {
+        pageText = await page.evaluate(() => document.body.innerText);
+      }
       
-      if (loginResultUrl.includes('/accounts/login') || loginResultUrl.includes('/challenge')) {
+      // Check for challenge/CAPTCHA pages
+      const hasChallenge = loginResultUrl.includes('/challenge') || 
+                           loginResultUrl.includes('/accounts/suspended') ||
+                           pageText.includes('suspicious activity') ||
+                           pageText.includes('verify your account') ||
+                           pageText.includes('Help us confirm') ||
+                           await page.$('input[name="verificationCode"]') !== null ||
+                           await page.$('button:has-text("Verify")') !== null;
+      
+      if (hasChallenge) {
+        console.error('❌ Login blocked - Instagram challenge/CAPTCHA detected');
+        console.error('   ⚠️ Instagram requires manual verification - cannot proceed with automation');
+        console.error(`   Current URL: ${loginResultUrl}`);
+        return false;
+      }
+      
+      if (loginResultUrl.includes('/accounts/login')) {
         console.error('❌ Login failed - still on login page');
+        
+        // Check for error messages
+        const errorSelectors = [
+          'div[role="alert"]',
+          'p:has-text("incorrect")',
+          'p:has-text("wrong")',
+          'span:has-text("Sorry")'
+        ];
+        
+        let errorFound = false;
+        for (const selector of errorSelectors) {
+          try {
+            const errorElement = await page.$(selector);
+            if (errorElement) {
+              const errorText = await page.evaluate((el: HTMLElement) => el.innerText, errorElement);
+              if (errorText) {
+                console.error(`   ⚠️ Error message: ${errorText.substring(0, 100)}`);
+                errorFound = true;
+                break;
+              }
+            }
+          } catch (e) {
+            // Continue
+          }
+        }
         
         // Detect specific error types
         if (pageText.includes('suspicious activity') || pageText.includes('verify your account')) {
@@ -155,13 +346,24 @@ export class InstagramService {
           console.error('   ⚠️ Incorrect username or password');
         } else if (pageText.includes('try again') || pageText.includes('temporarily locked')) {
           console.error('   ⚠️ Account temporarily locked - wait before retrying');
-        } else if (loginResultUrl.includes('/challenge')) {
-          console.error('   ⚠️ Instagram challenge page - CAPTCHA or verification required');
-        } else {
+          // Reset attempt count to force cooldown
+          this.loginAttemptCount = this.MAX_LOGIN_ATTEMPTS;
+        } else if (pageText.includes('try again later') || pageText.includes('too many') || pageText.includes('rate limit')) {
+          console.error('   ⚠️ Rate limiting detected - too many login attempts');
+          // Reset attempt count to force cooldown
+          this.loginAttemptCount = this.MAX_LOGIN_ATTEMPTS;
+        } else if (!errorFound) {
           console.error('   ⚠️ Unknown error - Instagram may be blocking automation');
           console.error(`   Page contains: ${pageText.substring(0, 200)}...`);
         }
         return false;
+      }
+      
+      // Check if we're on the main Instagram page (successful login)
+      if (loginResultUrl.includes('instagram.com') && 
+          !loginResultUrl.includes('/accounts/') && 
+          !loginResultUrl.includes('/challenge')) {
+        console.log('   ✅ Successfully navigated away from login page');
       }
 
       // Quick check for popups (don't wait long)
@@ -178,6 +380,9 @@ export class InstagramService {
 
       console.log(`✅ Successfully logged in to Instagram (${Date.now() - startTime}ms)`);
       this.isLoggedIn = true;
+      // Reset attempt count on successful login
+      this.loginAttemptCount = 0;
+      this.lastLoginAttempt = null;
       return true;
 
     } catch (error) {
@@ -203,13 +408,53 @@ export class InstagramService {
       const posts: InstagramPost[] = [];
       
       for (const item of data.data || []) {
+        const images: string[] = [];
+        const videos: string[] = [];
+        const carousel: string[] = [];
+        
+        // Handle carousel albums - fetch all children
+        if (item.media_type === 'CAROUSEL_ALBUM') {
+          try {
+            const childrenResponse = await fetch(`https://graph.instagram.com/${item.id}/children?fields=id,media_type,media_url,thumbnail_url&access_token=${accessToken}`);
+            if (childrenResponse.ok) {
+              const childrenData = await childrenResponse.json();
+              for (const child of childrenData.data || []) {
+                if (child.media_type === 'IMAGE' && child.media_url) {
+                  images.push(child.media_url);
+                  carousel.push(child.media_url);
+                } else if (child.media_type === 'VIDEO' && child.media_url) {
+                  videos.push(child.media_url);
+                  carousel.push(child.media_url);
+                }
+              }
+            } else {
+              // Fallback: use the main media_url if children fetch fails
+              if (item.media_url) {
+                images.push(item.media_url);
+                carousel.push(item.media_url);
+              }
+            }
+          } catch (childrenError) {
+            console.warn(`Failed to fetch carousel children for ${item.id}:`, childrenError);
+            // Fallback: use the main media_url
+            if (item.media_url) {
+              images.push(item.media_url);
+              carousel.push(item.media_url);
+            }
+          }
+        } else if (item.media_type === 'IMAGE' && item.media_url) {
+          images.push(item.media_url);
+        } else if (item.media_type === 'VIDEO' && item.media_url) {
+          videos.push(item.media_url);
+        }
+        
         const post: InstagramPost = {
           id: item.id,
           caption: item.caption || '',
           media: {
-            images: item.media_type === 'IMAGE' ? [item.media_url] : [],
-            videos: item.media_type === 'VIDEO' ? [item.media_url] : [],
-            carousel: item.media_type === 'CAROUSEL_ALBUM' ? [item.media_url] : []
+            images: images,
+            videos: videos,
+            carousel: carousel
           },
           author: {
             name: '', // Will be filled from user profile
@@ -305,25 +550,55 @@ export class InstagramService {
     try {
       console.log(`Fetching posts from @${username} using Instagram API endpoint (no login required)...`);
 
-      const url = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
+      // Try alternative endpoint first (public profile page)
+      const url = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
 
       const response = await fetch(url, {
         headers: {
           'X-IG-App-ID': '936619743392459', // Instagram's internal app ID
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': '*/*',
+          'X-Requested-With': 'XMLHttpRequest',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          'Accept': 'application/json',
           'Accept-Language': 'en-US,en;q=0.9',
           'Accept-Encoding': 'gzip, deflate, br',
-          'Referer': 'https://www.instagram.com/',
-          'Origin': 'https://www.instagram.com'
+          'Referer': `https://www.instagram.com/${username}/`,
+          'Origin': 'https://www.instagram.com',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+          'X-CSRFToken': 'missing' // Some endpoints require this even if empty
         }
       });
 
+      let data: any;
+      
       if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+        // If 401, try the i.instagram.com endpoint as fallback
+        if (response.status === 401) {
+          console.log(`  ⚠️ www.instagram.com endpoint returned 401, trying i.instagram.com...`);
+          const altUrl = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${username}`;
+          const altResponse = await fetch(altUrl, {
+            headers: {
+              'X-IG-App-ID': '936619743392459',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+              'Accept': '*/*',
+              'Accept-Language': 'en-US,en;q=0.9',
+              'Referer': `https://www.instagram.com/${username}/`,
+              'Origin': 'https://www.instagram.com'
+            }
+          });
+          
+          if (!altResponse.ok) {
+            throw new Error(`API request failed with status ${altResponse.status} (both endpoints failed)`);
+          }
+          
+          data = await altResponse.json();
+        } else {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+      } else {
+        data = await response.json();
       }
-
-      const data: any = await response.json();
 
       if (!data.data || !data.data.user) {
         throw new Error('Invalid API response structure');
@@ -335,6 +610,71 @@ export class InstagramService {
       console.log(`  ✅ Found ${edges.length} posts from API`);
 
       const posts: InstagramPost[] = [];
+      
+      // Helper function to normalize URLs (remove query params that don't affect the image)
+      const normalizeUrl = (url: string): string => {
+        try {
+          const urlObj = new URL(url);
+          // Remove query parameters that don't change the actual image
+          urlObj.searchParams.delete('_nc_cat');
+          urlObj.searchParams.delete('_nc_sid');
+          urlObj.searchParams.delete('_nc_ohc');
+          urlObj.searchParams.delete('_nc_ht');
+          urlObj.searchParams.delete('ccb');
+          urlObj.searchParams.delete('oe');
+          urlObj.searchParams.delete('oh');
+          return urlObj.toString();
+        } catch {
+          return url;
+        }
+      };
+
+      // Helper function to fetch carousel children for a post
+      const fetchCarouselChildren = async (shortcode: string): Promise<{ images: string[], videos: string[] }> => {
+        const images: string[] = [];
+        const videos: string[] = [];
+        const seenUrls = new Set<string>(); // Track normalized URLs to avoid duplicates
+        
+        try {
+          // Try to fetch post details from Instagram's post API
+          const postUrl = `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`;
+          const postResponse = await fetch(postUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': '*/*',
+              'Referer': 'https://www.instagram.com/',
+            }
+          });
+          
+          if (postResponse.ok) {
+            const postData = await postResponse.json();
+            // Try to extract carousel items from various possible locations
+            const graphql = postData.graphql?.shortcode_media || postData.items?.[0];
+            if (graphql?.edge_sidecar_to_children?.edges) {
+              for (const edge of graphql.edge_sidecar_to_children.edges) {
+                const node = edge.node;
+                if (node.is_video && node.video_url) {
+                  const normalizedUrl = normalizeUrl(node.video_url);
+                  if (!seenUrls.has(normalizedUrl)) {
+                    videos.push(node.video_url);
+                    seenUrls.add(normalizedUrl);
+                  }
+                } else if (node.display_url) {
+                  const normalizedUrl = normalizeUrl(node.display_url);
+                  if (!seenUrls.has(normalizedUrl)) {
+                    images.push(node.display_url);
+                    seenUrls.add(normalizedUrl);
+                  }
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.warn(`  ⚠️ Could not fetch carousel children for ${shortcode}:`, error);
+        }
+        
+        return { images, videos };
+      };
 
       for (const edge of edges.slice(0, limit)) {
         const node = edge.node;
@@ -342,11 +682,161 @@ export class InstagramService {
         // Extract media URLs
         const images: string[] = [];
         const videos: string[] = [];
+        const carousel: string[] = [];
 
-        if (node.is_video && node.video_url) {
-          videos.push(node.video_url);
-        } else if (node.display_url) {
-          images.push(node.display_url);
+        // Check if this is a carousel post - prioritize __typename check first
+        // The web_profile_info endpoint may not include edge_sidecar_to_children
+        const isCarousel = node.__typename === 'GraphSidecar' || 
+                          node.__typename === 'Sidecar' ||
+                          !!node.edge_sidecar_to_children;
+
+        if (isCarousel && node.shortcode) {
+          // Carousel post detected - fetch all media items
+          console.log(`  📸 Carousel post detected (${node.id}, shortcode: ${node.shortcode}, typename: ${node.__typename})`);
+          
+          // Helper to normalize URLs for duplicate detection
+          const normalizeUrl = (url: string): string => {
+            try {
+              const urlObj = new URL(url);
+              // Remove query parameters that don't change the actual image
+              urlObj.searchParams.delete('_nc_cat');
+              urlObj.searchParams.delete('_nc_sid');
+              urlObj.searchParams.delete('_nc_ohc');
+              urlObj.searchParams.delete('_nc_ht');
+              urlObj.searchParams.delete('ccb');
+              urlObj.searchParams.delete('oe');
+              urlObj.searchParams.delete('oh');
+              return urlObj.toString();
+            } catch {
+              return url;
+            }
+          };
+          
+          const seenUrls = new Set<string>(); // Track normalized URLs to avoid duplicates
+          let extractedFromSidecar = false;
+          
+          // First, try to extract from edge_sidecar_to_children if available
+          const sidecarData = node.edge_sidecar_to_children || node.sidecar_to_children;
+          if (sidecarData && sidecarData.edges) {
+            const carouselEdges = sidecarData.edges || [];
+            console.log(`  📦 Extracting ${carouselEdges.length} items from edge_sidecar_to_children`);
+            for (const carouselEdge of carouselEdges) {
+              const carouselNode = carouselEdge.node || carouselEdge;
+              // Prefer display_url over thumbnail_src, and check for duplicates using normalized URLs
+              if (carouselNode.is_video && carouselNode.video_url) {
+                const normalizedUrl = normalizeUrl(carouselNode.video_url);
+                if (!seenUrls.has(normalizedUrl)) {
+                  videos.push(carouselNode.video_url);
+                  carousel.push(carouselNode.video_url);
+                  seenUrls.add(normalizedUrl);
+                }
+              } else if (carouselNode.display_url) {
+                const normalizedUrl = normalizeUrl(carouselNode.display_url);
+                if (!seenUrls.has(normalizedUrl)) {
+                  images.push(carouselNode.display_url);
+                  carousel.push(carouselNode.display_url);
+                  seenUrls.add(normalizedUrl);
+                }
+              } else if (carouselNode.thumbnail_src) {
+                const normalizedUrl = normalizeUrl(carouselNode.thumbnail_src);
+                if (!seenUrls.has(normalizedUrl)) {
+                  images.push(carouselNode.thumbnail_src);
+                  carousel.push(carouselNode.thumbnail_src);
+                  seenUrls.add(normalizedUrl);
+                }
+              }
+            }
+            extractedFromSidecar = true; // Mark that we successfully extracted from sidecar
+          } else {
+            // Fallback: fetch carousel data via individual post API call
+            console.log(`  🔄 Fetching carousel data for post ${node.shortcode} (no edge_sidecar_to_children found)...`);
+            try {
+              const carouselData = await fetchCarouselChildren(node.shortcode);
+              
+              // Add images with duplicate check using normalized URLs (reuse seenUrls from above)
+              for (const imgUrl of carouselData.images) {
+                const normalizedUrl = normalizeUrl(imgUrl);
+                if (!seenUrls.has(normalizedUrl)) {
+                  images.push(imgUrl);
+                  carousel.push(imgUrl);
+                  seenUrls.add(normalizedUrl);
+                }
+              }
+              
+              // Add videos with duplicate check using normalized URLs
+              for (const vidUrl of carouselData.videos) {
+                const normalizedUrl = normalizeUrl(vidUrl);
+                if (!seenUrls.has(normalizedUrl)) {
+                  videos.push(vidUrl);
+                  carousel.push(vidUrl);
+                  seenUrls.add(normalizedUrl);
+                }
+              }
+              
+              if (carouselData.images.length > 0 || carouselData.videos.length > 0) {
+                console.log(`  ✅ Fetched ${images.length} unique images and ${videos.length} unique videos from carousel`);
+                extractedFromSidecar = true; // Mark that we successfully extracted from carousel
+              } else {
+                console.log(`  ⚠️ No carousel data found, falling back to single media`);
+                // Fallback to single media if carousel fetch fails (only if not already in seenUrls)
+                if (node.is_video && node.video_url) {
+                  const normalizedUrl = normalizeUrl(node.video_url);
+                  if (!seenUrls.has(normalizedUrl)) {
+                    videos.push(node.video_url);
+                    seenUrls.add(normalizedUrl);
+                  }
+                } else if (node.display_url) {
+                  const normalizedUrl = normalizeUrl(node.display_url);
+                  if (!seenUrls.has(normalizedUrl)) {
+                    images.push(node.display_url);
+                    seenUrls.add(normalizedUrl);
+                  }
+                }
+              }
+            } catch (error) {
+              console.log(`  ⚠️ Error fetching carousel data: ${error instanceof Error ? error.message : 'Unknown error'}, falling back to single media`);
+              // Fallback to single media if carousel fetch fails (only if not already in seenUrls)
+              if (node.is_video && node.video_url) {
+                const normalizedUrl = normalizeUrl(node.video_url);
+                if (!seenUrls.has(normalizedUrl)) {
+                  videos.push(node.video_url);
+                  seenUrls.add(normalizedUrl);
+                }
+              } else if (node.display_url) {
+                const normalizedUrl = normalizeUrl(node.display_url);
+                if (!seenUrls.has(normalizedUrl)) {
+                  images.push(node.display_url);
+                  seenUrls.add(normalizedUrl);
+                }
+              }
+            }
+          }
+          
+          // IMPORTANT: If we successfully extracted from carousel, DON'T add the main node's media
+          // because it's already included in the carousel items (usually as the first item)
+          if (!extractedFromSidecar) {
+            // Only add main node media if we didn't extract from carousel
+            if (node.is_video && node.video_url) {
+              const normalizedUrl = normalizeUrl(node.video_url);
+              if (!seenUrls.has(normalizedUrl)) {
+                videos.push(node.video_url);
+                seenUrls.add(normalizedUrl);
+              }
+            } else if (node.display_url) {
+              const normalizedUrl = normalizeUrl(node.display_url);
+              if (!seenUrls.has(normalizedUrl)) {
+                images.push(node.display_url);
+                seenUrls.add(normalizedUrl);
+              }
+            }
+          }
+        } else {
+          // Single media post
+          if (node.is_video && node.video_url) {
+            videos.push(node.video_url);
+          } else if (node.display_url) {
+            images.push(node.display_url);
+          }
         }
 
         // Extract caption
@@ -360,7 +850,7 @@ export class InstagramService {
           media: {
             images: images,
             videos: videos,
-            carousel: []
+            carousel: carousel
           },
           author: {
             name: user.full_name || username,
@@ -382,7 +872,9 @@ export class InstagramService {
 
         posts.push(post);
 
-        console.log(`  ✅ Post ${posts.length}/${limit}: "${caption.substring(0, 50)}..." (${images.length} images, ${videos.length} videos)`);
+        const totalMedia = images.length + videos.length;
+        const carouselInfo = carousel.length > 0 ? `, ${carousel.length} carousel items` : '';
+        console.log(`  ✅ Post ${posts.length}/${limit}: "${caption.substring(0, 50)}..." (${images.length} images, ${videos.length} videos${carouselInfo})`);
       }
 
       console.log(`✅ Successfully fetched ${posts.length} posts from @${username} via API`);
