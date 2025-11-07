@@ -267,7 +267,9 @@ export class RAGService {
         chunks: [],
         totalResults: 0,
         query: query.query,
-        agentType: query.agentType
+        agentType: query.agentType,
+        confidence: 0,
+        fallbackUsed: false,
       };
     }
   }
