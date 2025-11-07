@@ -76,11 +76,20 @@ try {
   } else {
     // FALLBACK: Local file only for local development
     // In production/staging, this should not be used - use Secret Manager instead
+    // For local development, prefer staging to match toto-bo local setup
+    const totoBoStgServiceAccountPath = path.join(__dirname, 'toto-bo-stg-firebase-adminsdk-fbsvc-369557e118.json');
     const totoBoServiceAccountPath = path.join(__dirname, 'toto-bo-firebase-adminsdk-fbsvc-138f229598.json');
-    if (fs.existsSync(totoBoServiceAccountPath)) {
+    
+    // Try staging first for local development (to match toto-bo)
+    if (fs.existsSync(totoBoStgServiceAccountPath)) {
+      const totoBoServiceAccountFile = fs.readFileSync(totoBoStgServiceAccountPath, 'utf8');
+      totoBoServiceAccount = JSON.parse(totoBoServiceAccountFile);
+      console.log('⚠️ Using local toto-bo-stg service account file (development mode - staging)');
+      console.log('   For production/staging, use Secret Manager: TOTO_BO_SERVICE_ACCOUNT_KEY');
+    } else if (fs.existsSync(totoBoServiceAccountPath)) {
       const totoBoServiceAccountFile = fs.readFileSync(totoBoServiceAccountPath, 'utf8');
       totoBoServiceAccount = JSON.parse(totoBoServiceAccountFile);
-      console.log('⚠️ Using local toto-bo service account file (development mode)');
+      console.log('⚠️ Using local toto-bo service account file (development mode - production)');
       console.log('   For production/staging, use Secret Manager: TOTO_BO_SERVICE_ACCOUNT_KEY');
     } else {
       console.log('⚠️ TOTO_BO_SERVICE_ACCOUNT_KEY not found in Secret Manager');
@@ -114,7 +123,9 @@ try {
                         projectId.includes('stg') ||
                         projectId === 'toto-bo-stg';
       
-      const storageBucket = isStaging ? 'toto-bo-stg.appspot.com' : 'toto-bo.appspot.com';
+      // Use the correct bucket names - both .appspot.com and .firebasestorage.app work
+      // but .firebasestorage.app is the newer format
+      const storageBucket = isStaging ? 'toto-bo-stg.firebasestorage.app' : 'toto-bo.firebasestorage.app';
       
       // Initialize toto-bo app for shared KB access
       // This allows both staging and production toto-ai-hub to access the same KB
@@ -155,18 +166,23 @@ const getTotoBoStorage = () => {
     // Get the bucket name from the app options
     const bucketName = totoBoApp.options?.storageBucket;
     if (bucketName) {
+      console.log(`📦 Using Storage bucket: ${bucketName}`);
       return storage.bucket(bucketName);
     }
     // Fallback: try to get default bucket
+    console.log('⚠️ No bucket name in app options, using default bucket');
     return storage;
   }
   // Fallback to default app (toto-app-stg) for local development
   if (totoAppStgApp) {
     console.log('⚠️ Using toto-app-stg Storage as fallback for social media images');
     const storage = admin.storage(totoAppStgApp);
-    const bucketName = totoAppStgApp.options?.storageBucket || 'toto-f9d2f-stg.appspot.com';
+    // Use the correct bucket name - both .appspot.com and .firebasestorage.app work
+    const bucketName = totoAppStgApp.options?.storageBucket || 'toto-f9d2f-stg.firebasestorage.app';
+    console.log(`📦 Using fallback Storage bucket: ${bucketName}`);
     return storage.bucket(bucketName);
   }
+  console.error('❌ No Storage bucket available - totoBoApp and totoAppStgApp are both null');
   return null;
 };
 
@@ -2303,114 +2319,6 @@ app.post('/api/test-save', async (req, res) => {
       error: 'Exception occurred during testing'
     };
     res.status(500).json(diagnostics);
-  }
-});
-
-// ===== MODEL SELECTION ANALYTICS API ENDPOINTS =====
-
-// Get model usage statistics
-app.get('/api/models/usage', (req, res) => {
-  try {
-    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
-    const modelService = getModelSelectionService();
-    const stats = modelService.getUsageStats();
-
-    res.json({
-      success: true,
-      data: stats,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get cost breakdown by model
-app.get('/api/models/costs', (req, res) => {
-  try {
-    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
-    const modelService = getModelSelectionService();
-    const breakdown = modelService.getCostBreakdown();
-    const totalCost = modelService.getTotalCost();
-
-    res.json({
-      success: true,
-      data: {
-        totalCost,
-        breakdown
-      },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get analytics summary
-app.get('/api/models/analytics', (req, res) => {
-  try {
-    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
-    const modelService = getModelSelectionService();
-    const summary = modelService.getAnalyticsSummary();
-
-    res.json({
-      success: true,
-      data: summary,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get stats for a specific model
-app.get('/api/models/:modelName/stats', (req, res) => {
-  try {
-    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
-    const modelService = getModelSelectionService();
-    const { modelName } = req.params;
-    const stats = modelService.getModelStats(modelName);
-
-    if (!stats) {
-      return res.status(404).json({
-        success: false,
-        error: `Model '${modelName}' not found`
-      });
-    }
-
-    res.json({
-      success: true,
-      data: stats,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Get model recommendation for a scenario
-app.post('/api/models/recommend', (req, res) => {
-  try {
-    const { getModelSelectionService } = require('./dist/services/ModelSelectionService');
-    const modelService = getModelSelectionService();
-    const { scenario } = req.body;
-
-    if (!scenario) {
-      return res.status(400).json({
-        success: false,
-        error: 'Scenario is required'
-      });
-    }
-
-    const recommendation = modelService.getRecommendationForScenario(scenario);
-
-    res.json({
-      success: true,
-      data: recommendation,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
   }
 });
 

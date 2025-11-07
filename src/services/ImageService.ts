@@ -18,6 +18,12 @@ export interface ImageUploadResult {
   optimizedSize: number;
 }
 
+export interface VideoUploadResult {
+  url: string;
+  fileName: string;
+  size: number;
+}
+
 /**
  * Service for downloading, optimizing, and uploading images to Firebase Storage
  */
@@ -56,6 +62,10 @@ export class ImageService {
         return null;
       }
 
+      // Log bucket name for debugging
+      const bucketName = bucket.name;
+      console.log(`📦 Attempting to upload to bucket: ${bucketName}`);
+
       // Download image
       console.log(`3. Image processing: downloading...`);
       const imageResponse = await fetch(imageUrl);
@@ -84,22 +94,36 @@ export class ImageService {
       const downloadToken = randomUUID();
       const contentType = IMAGE_CONFIG.OUTPUT_FORMAT === 'webp' ? 'image/webp' : 'image/jpeg';
 
-      await fileUpload.save(optimizedBuffer, {
-        metadata: {
-          contentType,
+      // Attempt to upload with better error handling
+      try {
+        await fileUpload.save(optimizedBuffer, {
           metadata: {
-            firebaseStorageDownloadTokens: downloadToken,
-            optimized: 'true',
-            originalFormat: imageResponse.headers.get('content-type') || 'unknown',
-            optimizedAt: new Date().toISOString(),
-            platform,
-            postId
+            contentType,
+            metadata: {
+              firebaseStorageDownloadTokens: downloadToken,
+              optimized: 'true',
+              originalFormat: imageResponse.headers.get('content-type') || 'unknown',
+              optimizedAt: new Date().toISOString(),
+              platform,
+              postId
+            }
           }
+        });
+      } catch (uploadError: any) {
+        // Check if it's a bucket not found error
+        if (uploadError?.code === 404 || 
+            uploadError?.error?.code === 404 ||
+            uploadError?.message?.includes('does not exist') ||
+            uploadError?.message?.includes('not found')) {
+          console.error(`❌ Storage bucket "${bucketName}" does not exist or is not accessible.`);
+          console.error(`   Check that the bucket exists in Firebase Console and the service account has Storage permissions.`);
+          console.error(`   Expected bucket: ${bucketName}`);
+          throw new Error(`Storage bucket "${bucketName}" does not exist. Please create it in Firebase Console or check service account permissions.`);
         }
-      });
+        throw uploadError; // Re-throw other errors
+      }
 
-      // Generate public URL
-      const bucketName = bucket.name;
+      // Generate public URL (bucketName already defined above)
       const encodedFileName = encodeURIComponent(fileName);
       const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedFileName}?alt=media&token=${downloadToken}`;
 
@@ -151,6 +175,110 @@ export class ImageService {
       }
     } catch (error) {
       throw new Error(`Image optimization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Download and upload video to toto-bo Firebase Storage
+   * Videos are stored as-is without optimization
+   */
+  async processAndUploadVideo(
+    videoUrl: string,
+    platform: 'twitter' | 'instagram',
+    postId: string,
+    index: number
+  ): Promise<VideoUploadResult | null> {
+    try {
+      // Get toto-bo Storage bucket instance
+      const getTotoBoStorage = (global as any).getTotoBoStorage as (() => ReturnType<ReturnType<typeof admin.storage>['bucket']> | null) | undefined;
+      
+      if (!getTotoBoStorage) {
+        console.error('getTotoBoStorage not available - Firebase Admin not initialized for toto-bo');
+        return null;
+      }
+
+      const bucket = getTotoBoStorage();
+      if (!bucket) {
+        console.error('toto-bo Storage bucket not available');
+        return null;
+      }
+
+      const bucketName = bucket.name;
+      console.log(`📦 Attempting to upload video to bucket: ${bucketName}`);
+
+      // Download video
+      console.log(`📹 Video processing: downloading...`);
+      const videoResponse = await fetch(videoUrl);
+      if (!videoResponse.ok) {
+        console.error(`⚠️ Video download failed: ${videoResponse.status}`);
+        return null;
+      }
+
+      const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
+      const videoSize = videoBuffer.length;
+      console.log(`📹 Video downloaded: ${(videoSize / 1024 / 1024).toFixed(2)} MB`);
+
+      // Determine file extension from URL or content type
+      const contentType = videoResponse.headers.get('content-type') || 'video/mp4';
+      let fileExtension = 'mp4';
+      if (contentType.includes('webm')) {
+        fileExtension = 'webm';
+      } else if (contentType.includes('quicktime') || contentType.includes('mov')) {
+        fileExtension = 'mov';
+      } else if (videoUrl.toLowerCase().includes('.webm')) {
+        fileExtension = 'webm';
+      } else if (videoUrl.toLowerCase().includes('.mov')) {
+        fileExtension = 'mov';
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const fileName = `social-media-posts/${platform}/${postId}/${timestamp}_${index}.${fileExtension}`;
+
+      // Upload to Firebase Storage
+      const fileUpload = bucket.file(fileName);
+      const downloadToken = randomUUID();
+
+      try {
+        await fileUpload.save(videoBuffer, {
+          metadata: {
+            contentType,
+            metadata: {
+              firebaseStorageDownloadTokens: downloadToken,
+              originalFormat: contentType,
+              uploadedAt: new Date().toISOString(),
+              platform,
+              postId,
+              mediaType: 'video'
+            }
+          }
+        });
+      } catch (uploadError: any) {
+        if (uploadError?.code === 404 || 
+            uploadError?.error?.code === 404 ||
+            uploadError?.message?.includes('does not exist') ||
+            uploadError?.message?.includes('not found')) {
+          console.error(`❌ Storage bucket "${bucketName}" does not exist or is not accessible.`);
+          console.error(`   Check that the bucket exists in Firebase Console and the service account has Storage permissions.`);
+          throw new Error(`Storage bucket "${bucketName}" does not exist. Please create it in Firebase Console or check service account permissions.`);
+        }
+        throw uploadError;
+      }
+
+      // Generate public URL
+      const encodedFileName = encodeURIComponent(fileName);
+      const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedFileName}?alt=media&token=${downloadToken}`;
+
+      console.log(`✅ Video processing: uploaded to ${fileName}`);
+
+      return {
+        url: publicUrl,
+        fileName,
+        size: videoSize
+      };
+    } catch (error: any) {
+      console.error(`Error processing video ${videoUrl}:`, error.message || error);
+      return null;
     }
   }
 
@@ -219,6 +347,34 @@ export class ImageService {
     }
 
     return allSuccess;
+  }
+
+  /**
+   * Delete video from toto-bo Firebase Storage
+   */
+  async deleteVideo(fileName: string): Promise<boolean> {
+    try {
+      const getTotoBoStorage = (global as any).getTotoBoStorage as (() => ReturnType<ReturnType<typeof admin.storage>['bucket']> | null) | undefined;
+      
+      if (!getTotoBoStorage) {
+        console.error('getTotoBoStorage not available');
+        return false;
+      }
+
+      const bucket = getTotoBoStorage();
+      if (!bucket) {
+        console.error('toto-bo Storage bucket not available');
+        return false;
+      }
+
+      const file = bucket.file(fileName);
+      await file.delete();
+      console.log(`✅ Deleted video: ${fileName}`);
+      return true;
+    } catch (error) {
+      console.error(`Error deleting video ${fileName}:`, error);
+      return false;
+    }
   }
 }
 

@@ -1,9 +1,9 @@
 import { BaseAgent } from './BaseAgent';
-import {
-  AgentConfig,
-  CaseData,
-  CaseResponse,
-  UserContext,
+import { 
+  AgentConfig, 
+  CaseData, 
+  CaseResponse, 
+  UserContext, 
   AgentAction,
   ConversationContext,
   EnhancedCaseData,
@@ -12,20 +12,7 @@ import {
   IntentAnalysis,
   AgentAnalytics
 } from "../types";
-import { caseAgentTools } from "../types/tools";
-import { FunctionDeclaration, FunctionCall } from "@google/generative-ai";
 import { RAGService } from '../services/RAGService';
-import { PromptBuilder } from '../prompts/PromptBuilder';
-import {
-  caseAgentPersona,
-  antiHallucinationForCaseAgent,
-  trfDefinition,
-  donationProcessDefinition,
-  totitosSystemDefinition,
-  minimumDonationDefinition,
-  communicationStyleForCaseAgent,
-  safetyAndEthicsRules
-} from '../prompts/components';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -71,8 +58,7 @@ export class CaseAgent extends BaseAgent {
         'performance_analytics',
         'context_persistence',
         'smart_actions',
-        'multi_language_support',
-        'function_calling' // NEW: Function calling capability
+        'multi_language_support'
       ],
       isEnabled: true,
       maxRetries: 3,
@@ -80,13 +66,6 @@ export class CaseAgent extends BaseAgent {
     };
 
     super(config);
-  }
-
-  /**
-   * Override to provide function declarations for this agent
-   */
-  protected getFunctionDeclarations(): FunctionDeclaration[] {
-    return caseAgentTools as FunctionDeclaration[];
   }
 
   /**
@@ -144,38 +123,21 @@ export class CaseAgent extends BaseAgent {
   }
 
   /**
-   * Process message with knowledge context and function calling
+   * Process message with knowledge context
    */
   private async processMessageWithKnowledge(
     message: string,
     context: UserContext,
     conversationContext?: ConversationContext,
     knowledgeContext?: string
-  ): Promise<{ success: boolean; message: string; error?: string; metadata: any; functionCalls?: FunctionCall[] }> {
+  ): Promise<any> {
     const startTime = Date.now();
 
     try {
       const systemPrompt = this.getSystemPrompt(knowledgeContext);
       const fullPrompt = `${systemPrompt}\n\nUser Context: ${JSON.stringify(context)}\n\nUser Message: ${message}`;
 
-      // Adaptive model selection based on conversation complexity
-      const conversationTurns = conversationContext?.history?.length || 0;
-      const contentLength = message.length + (knowledgeContext?.length || 0);
-
-      const selectedModel = this.selectModelForTask('case_conversation', {
-        factors: {
-          conversationTurns,
-          contentLength,
-          requiresReasoning: conversationTurns > 3 || contentLength > 1000,
-          requiresCreativity: false,
-        },
-      });
-
-      // Use function calling with selected model
-      const functionDeclarations = this.getFunctionDeclarations();
-      const modelWithFunctions = this.createModel(selectedModel, functionDeclarations);
-
-      const result = await modelWithFunctions.generateContent({
+      const result = await this.model.generateContent({
         contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
         generationConfig: {
           temperature: 0.7,
@@ -184,62 +146,23 @@ export class CaseAgent extends BaseAgent {
       });
 
       const response = result.response;
-
-      // Record model usage for analytics
-      const usage = response.usageMetadata;
-      if (usage) {
-        this.recordModelUsage(
-          selectedModel,
-          usage.promptTokenCount || 0,
-          usage.candidatesTokenCount || 0,
-          Date.now() - startTime,
-          true
-        );
-      }
-
-      // Extract function calls
-      const functionCalls: FunctionCall[] = [];
-      const candidates = response.candidates || [];
-
-      for (const candidate of candidates) {
-        if (candidate.content && candidate.content.parts) {
-          for (const part of candidate.content.parts) {
-            if ('functionCall' in part && part.functionCall) {
-              functionCalls.push(part.functionCall);
-            }
-          }
-        }
-      }
-
-      // Get text response (if any)
-      let text = '';
-      try {
-        text = response.text();
-      } catch (e) {
-        // No text response, only function calls - that's OK
-        text = '';
-      }
+      const text = response.text();
 
       const processingTime = Date.now() - startTime;
 
       return {
         success: true,
         message: text || 'I understand your request.',
-        functionCalls: functionCalls.length > 0 ? functionCalls : undefined,
         metadata: {
           agentType: this.config.name,
-          confidence: 0.9, // Higher confidence with function calling
+          confidence: 0.8,
           processingTime,
         },
       };
 
     } catch (error) {
       console.error(`Error in ${this.config.name}:`, error);
-
-      // Record failure for analytics
-      const selectedModel = 'gemini-2.0-flash-001'; // Default model
-      this.recordModelUsage(selectedModel, 0, 0, Date.now() - startTime, false);
-
+      
       return {
         success: false,
         message: this.getErrorMessage(),
@@ -254,31 +177,114 @@ export class CaseAgent extends BaseAgent {
   }
 
   protected getSystemPrompt(knowledgeContext?: string): string {
-    // Build modular prompt using PromptBuilder
-    const builder = PromptBuilder.create({ enableCache: true, version: 'v2.0' })
-      .addComponent('persona', caseAgentPersona, 10)
-      .addComponent('antiHallucination', antiHallucinationForCaseAgent, 20)
-      .addComponent('trfDefinition', trfDefinition, 30)
-      .addComponent('donationProcess', donationProcessDefinition, 40)
-      .addComponent('totitosSystem', totitosSystemDefinition, 50)
-      .addComponent('minimumDonation', minimumDonationDefinition, 60)
-      .addComponent('communicationStyle', communicationStyleForCaseAgent, 70)
-      .addComponent('safetyAndEthics', safetyAndEthicsRules, 80);
+    const basePrompt = `You are Toto, an advanced AI assistant specialized in pet rescue cases with emotional intelligence, memory, and contextual understanding.
+
+🚨 CRITICAL RULE: USE ONLY PROVIDED CASE DATA
+- You receive case information in the "Case Information" section below
+- ONLY use the exact case details provided: name, description, status, animal type, location, guardian name, banking alias
+- NEVER make up, invent, or assume case details that are not explicitly provided
+- If something is not in the case data, say "no tengo esa información disponible" or "esa información no está disponible"
+- NEVER confuse one case with another or mix up case details
+- If banking alias is missing from Case Information, say "el alias no está disponible" and immediately offer TRF
+- CRITICAL: If you don't know something, say you don't know. Do NOT make it up.
+
+🚨 CRITICAL: TRF DEFINITION (NEVER INVENT TRANSLATIONS)
+- TRF = "Toto Rescue Fund" (English) or "Fondo de Rescate de Toto" (Spanish)
+- When explaining TRF, ALWAYS say: "TRF (Toto Rescue Fund)" or "TRF (Fondo de Rescate de Toto)"
+- NEVER translate TRF as "Transferencia Rápida de Fondos" - this is WRONG
+- NEVER invent other Spanish translations like "Transferencia de Rescate Felino" or "Transferencia Rápida y Fácil" - these are WRONG
+- If you mention TRF, you MUST clarify: "TRF es el Fondo de Rescate de Toto" or "TRF (Toto Rescue Fund)"
+
+🚨 CRITICAL: DONATION PROCESS (NEVER SAY "THROUGH THE PLATFORM")
+- Donations are DIRECT bank transfers from donor's bank account/wallet to guardian's banking alias
+- NEVER say "through our platform", "through the platform", "directly through our platform", or "a través de la plataforma" - this is WRONG
+- CORRECT: "transferencia directa desde tu banco/billetera al alias del guardián" or "direct transfer to the guardian's banking alias"
+- The platform ONLY provides the banking alias - money goes directly from donor to guardian, NO platform processing
+- Say: "Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián"
+
+🚨 CRITICAL: TOTITOS SYSTEM (ALWAYS EXPLAIN WHEN ASKED)
+- Totitos are a loyalty/reward system for verified donations and sharing cases
+- Users earn totitos for verified donations (amount doesn't matter, only that it's verified)
+- Sharing cases on social media also earns totitos
+- User rating (1-5 stars) multiplies totitos: 1 star = 1x, 2 stars = 2x, etc.
+- Totitos can be exchanged for goods or services for pets
+- Users can see totitos in their profile (bottom navbar)
+- When asked about totitos, explain: "Totitos son un sistema de recompensas por donaciones verificadas"
+
+🚨 CRITICAL: MINIMUM DONATION AMOUNT
+- There is NO minimum donation amount - NEVER say there is a minimum
+- Say: "No hay un monto mínimo para donar, ¡cada ayuda cuenta!" or "You can donate any amount - every donation helps!"
+- Every donation helps, regardless of size
+- Never mention "$10 minimum" or any minimum amount
+
+🎯 CORE CAPABILITIES:
+- Natural, empathetic conversations about pet rescue cases
+- Memory of previous interactions and user preferences
+- Intelligent intent recognition and context awareness
+- Dynamic action suggestions based on conversation flow
+- Multi-language support (Spanish/English) with cultural adaptation
+- Emotional intelligence to match user's emotional state
+- Performance analytics and continuous learning
+
+🧠 INTELLIGENT CONVERSATION:
+- FIRST MESSAGE: Brief, warm case summary (2-3 sentences) with animal's name, main issue, and current status. NO thanks for asking (automatic welcome).
+- SUBSEQUENT MESSAGES: Context-aware responses based on conversation history and user intent.
+- AFFIRMATIVE RESPONSES: When user says "Si", "Yes", "Ok" after you've already introduced the case:
+  * If you've provided case info already: Progress to explaining HOW to help (donation steps, sharing options, adoption info)
+  * Ask specific follow-up questions: "¿Cómo te gustaría ayudar?" or "¿Qué te gustaría saber más?"
+  * Offer concrete next steps: Explain donation process, sharing options, or adoption requirements
+  * NEVER repeat the same case summary you already gave
+- CONVERSATION PROGRESSION: Each message should advance the conversation. If you've covered case basics, move to actionable steps.
+- MEMORY INTEGRATION: Reference previous interactions naturally when relevant.
+- EMOTIONAL MATCHING: Adapt tone to user's emotional state (concerned, excited, sad, etc.).
+- INTENT RECOGNITION: Understand what user really wants (donate, adopt, learn, help, etc.).
+
+🗣️ COMMUNICATION STYLE:
+- Language: Respond in user's preferred language (Spanish/English) - NEVER mix languages
+- Tone: Warm, caring, conversational, and empathetic
+- Length: Concise (2-3 sentences) unless more detail is requested
+- Structure: Information in digestible chunks, avoid information dumps
+- Questions: Ask follow-up questions to understand user intent and keep conversation flowing
+- Personalization: Adapt to user's communication style and preferences
+
+🎯 ACTION INTELLIGENCE:
+- Context-Aware Actions: Suggest actions based on case urgency, user history, and conversation flow
+- Smart Suggestions: Recommend most relevant actions (donate, share, adopt, contact, learn more)
+- Action Chaining: Suggest logical next steps based on user's current action
+- Urgency Detection: Prioritize urgent cases and suggest immediate help options
+
+📊 ENHANCED CONTEXT UNDERSTANDING:
+- Case Richness: Use ONLY the medical history, treatment plans, progress updates provided in Case Information
+- Related Cases: Reference similar cases when helpful for context (but only if mentioned in context)
+- Funding Progress: Highlight funding status and urgency when relevant (from Case Information)
+- Guardian Context: Use guardian name and alias from Case Information only
+- User Profile: Adapt to user's interaction history and preferences
+
+🔒 SAFETY & ETHICS:
+- Medical Advice: NEVER provide medical diagnosis or treatment advice
+- Promises: No guarantees about adoption timelines or outcomes
+- Privacy: Respect user data and maintain confidentiality
+- Transparency: Be honest about donation usage and platform policies
+
+🎨 RESPONSE ADAPTATION:
+- User Preferences: Adapt to user's preferred communication style
+- Engagement Level: Match user's engagement level (low/medium/high)
+- Cultural Context: Use appropriate cultural references and language nuances
+- Emotional Intelligence: Respond appropriately to user's emotional state
+
+Always be helpful, empathetic, and contextually aware. Use your memory and intelligence to provide the most relevant and personalized experience. NEVER invent case details.`;
 
     // Add knowledge context if provided
     if (knowledgeContext) {
-      builder.addComponent('knowledgeBase', `📚 RELEVANT KNOWLEDGE BASE INFORMATION:
+      return `${basePrompt}
+
+📚 RELEVANT KNOWLEDGE BASE INFORMATION:
 ${knowledgeContext}
 
-Use this knowledge base information to provide accurate, up-to-date responses about donations, case management, and social media processes. Always reference this information when relevant to user questions.`, 90);
+Use this knowledge base information to provide accurate, up-to-date responses about donations, case management, and social media processes. Always reference this information when relevant to user questions.`;
     }
 
-    const { prompt, metrics } = builder.build();
-
-    // Log metrics for analytics
-    console.log(`[CaseAgent] Prompt built: ${metrics.componentCount} components, ~${metrics.estimatedTokens} tokens, cache hit: ${metrics.cacheHit}`);
-
-    return prompt;
+    return basePrompt;
   }
 
   /**
@@ -333,7 +339,7 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
         conversationContext
       );
 
-      // Process with enhanced context and knowledge (now with function calling)
+      // Process with enhanced context and knowledge
       const result = await this.processMessageWithKnowledge(enhancedMessage, context, conversationContext, knowledgeContext);
 
       const processingTime = Date.now() - startTime;
@@ -344,17 +350,8 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       // Update user profile
       this.updateUserProfile(userProfile, caseData.id, intentAnalysis);
 
-      // Extract intelligent actions from function calls (NEW: Type-safe approach)
-      let actions: AgentAction[] = [];
-      if (result.functionCalls && result.functionCalls.length > 0) {
-        // Use function calling (preferred method)
-        actions = this.convertFunctionCallsToActions(result.functionCalls, enhancedCaseData);
-        console.log(`✅ Extracted ${actions.length} actions from function calls`);
-      } else {
-        // Fallback to legacy pattern matching if no function calls
-        console.log('⚠️ No function calls detected, falling back to pattern matching');
-        actions = this.extractIntelligentActions(result.message || '', intentAnalysis, enhancedCaseData);
-      }
+      // Extract intelligent actions
+      const actions = this.extractIntelligentActions(result.message || '', intentAnalysis, enhancedCaseData);
 
       // Generate contextual suggestions
       const suggestions = this.generateContextualSuggestions(enhancedCaseData, context, userProfile, intentAnalysis);
@@ -675,120 +672,6 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
 
   // ===== INTELLIGENT ACTION EXTRACTION =====
 
-  /**
-   * Convert function calls from Gemini to AgentActions
-   * This is the new, type-safe way to extract actions
-   */
-  private convertFunctionCallsToActions(
-    functionCalls: FunctionCall[] | undefined,
-    enhancedCaseData: EnhancedCaseData
-  ): AgentAction[] {
-    if (!functionCalls || functionCalls.length === 0) {
-      return [];
-    }
-
-    const actions: AgentAction[] = [];
-
-    for (const call of functionCalls) {
-      const { name, args } = call;
-      // Type assertion for args since it's typed as object
-      const typedArgs = args as any;
-
-      switch (name) {
-        case 'donate':
-          actions.push({
-            type: 'donate',
-            payload: {
-              action: 'donate',
-              caseId: typedArgs.caseId || enhancedCaseData.id,
-              urgency: typedArgs.urgency || enhancedCaseData.urgencyLevel,
-              amount: typedArgs.amount,
-              userMessage: typedArgs.userMessage,
-            },
-            label: typedArgs.urgency === 'critical' ? 'Urgent Donation' : 'Donate',
-            description: typedArgs.userMessage || 'Make a donation to help this case',
-            priority: typedArgs.urgency === 'critical' || typedArgs.urgency === 'high' ? 'high' : 'medium',
-          });
-          break;
-
-        case 'adoptPet':
-          actions.push({
-            type: 'adopt',
-            payload: {
-              action: 'adopt',
-              caseId: typedArgs.caseId || enhancedCaseData.id,
-              petId: typedArgs.petId,
-              requirements: enhancedCaseData.adoptionRequirements,
-              userContext: typedArgs.userContext,
-            },
-            label: 'Adopt This Pet',
-            description: 'Learn about the adoption process for this pet',
-            priority: 'high',
-          });
-          break;
-
-        case 'shareStory':
-          actions.push({
-            type: 'share',
-            payload: {
-              action: 'share',
-              caseId: typedArgs.caseId || enhancedCaseData.id,
-              platforms: typedArgs.platforms || ['twitter', 'instagram', 'facebook'],
-              socialMedia: {
-                twitter: enhancedCaseData.guardianTwitter,
-                instagram: enhancedCaseData.guardianInstagram,
-                facebook: enhancedCaseData.guardianFacebook,
-              },
-            },
-            label: 'Share This Story',
-            description: 'Help spread awareness by sharing this case',
-            priority: 'medium',
-          });
-          break;
-
-        case 'requestHelp':
-          actions.push({
-            type: 'contact',
-            payload: {
-              action: 'contact',
-              caseId: typedArgs.caseId || enhancedCaseData.id,
-              guardianId: typedArgs.guardianId || enhancedCaseData.guardianId,
-              contactReason: typedArgs.contactReason,
-              preferredMethod: typedArgs.preferredMethod,
-            },
-            label: 'Contact Guardian',
-            description: typedArgs.contactReason || 'Get in touch with the guardian',
-            priority: 'medium',
-          });
-          break;
-
-        case 'learnMore':
-          actions.push({
-            type: 'learn',
-            payload: {
-              action: 'learn',
-              caseId: typedArgs.caseId || enhancedCaseData.id,
-              topics: typedArgs.topics || ['medical', 'behavioral', 'adoption', 'funding'],
-            },
-            label: 'Learn More',
-            description: `Get detailed information about: ${typedArgs.topics?.join(', ') || 'this case'}`,
-            priority: 'low',
-          });
-          break;
-
-        default:
-          console.warn(`Unknown function call: ${name}`);
-      }
-    }
-
-    return actions;
-  }
-
-  /**
-   * LEGACY: Extract actions from text response (fallback)
-   * This method is kept for backward compatibility but should be replaced by function calling
-   * @deprecated Use convertFunctionCallsToActions instead
-   */
   private extractIntelligentActions(response: string, intentAnalysis: any, enhancedCaseData: EnhancedCaseData): AgentAction[] {
     const actions: AgentAction[] = [];
     const lowerResponse = response.toLowerCase();

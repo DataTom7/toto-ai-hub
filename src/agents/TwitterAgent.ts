@@ -1,29 +1,15 @@
 import { BaseAgent } from './BaseAgent';
-import {
-  AgentConfig,
-  AgentResponse,
-  UserContext,
+import { 
+  AgentConfig, 
+  AgentResponse, 
+  UserContext, 
   AgentAction,
-  ConversationContext
+  ConversationContext 
 } from "../types";
-import { socialMediaAgentTools } from "../types/tools";
-import { FunctionDeclaration, FunctionCall } from "@google/generative-ai";
 import { TwitterService } from "../services/TwitterService";
 import { SocialMediaPostService } from "../services/SocialMediaPostService";
 import { ImageService } from "../services/ImageService";
-import { ImageAnalysisService, ImageAnalysis } from "../services/ImageAnalysisService";
 import { AgentFeedbackService } from "../services/AgentFeedbackService";
-import { PromptBuilder } from '../prompts/PromptBuilder';
-import {
-  twitterAgentPersona,
-  socialMediaUpdateTypes,
-  socialMediaAnalysisGuidelines,
-  socialMediaFiltering,
-  duplicateDetectionRules,
-  urgencyLevels,
-  communicationStyleForAnalysis,
-  safetyForSocialMedia
-} from '../prompts/components';
 
 // Twitter-specific types (scraping only, no API credentials needed)
 export interface TwitterCredentials {
@@ -113,7 +99,6 @@ export interface TweetAnalysis {
   };
   isDuplicate?: boolean;
   duplicateReason?: string;
-  imageAnalysis?: ImageAnalysis; // NEW: Multi-modal image analysis from Gemini vision
 }
 
 export interface ReviewItem {
@@ -159,7 +144,6 @@ export class TwitterAgent extends BaseAgent {
   private userCache: Map<string, string> = new Map(); // Cache username -> userID
   private socialMediaPostService!: SocialMediaPostService;
   private imageService!: ImageService;
-  private imageAnalysisService!: ImageAnalysisService;
   private feedbackService!: AgentFeedbackService;
 
   constructor(config?: Partial<TwitterAgentConfig>) {
@@ -175,7 +159,6 @@ export class TwitterAgent extends BaseAgent {
         'fundraising_filtering',
         'pattern_learning',
         'case_creation',
-        'function_calling', // NEW: Function calling capability
       ],
       isEnabled: true,
       maxRetries: 3,
@@ -208,30 +191,43 @@ export class TwitterAgent extends BaseAgent {
     };
   }
 
-  /**
-   * Override to provide function declarations for this agent
-   */
-  protected getFunctionDeclarations(): FunctionDeclaration[] {
-    return socialMediaAgentTools as FunctionDeclaration[];
-  }
-
   protected getSystemPrompt(): string {
-    // Build modular prompt using PromptBuilder
-    const { prompt, metrics } = PromptBuilder.create({ enableCache: true, version: 'v2.0' })
-      .addComponent('persona', twitterAgentPersona, 10)
-      .addComponent('analysisGuidelines', socialMediaAnalysisGuidelines, 20)
-      .addComponent('filtering', socialMediaFiltering, 30)
-      .addComponent('updateTypes', socialMediaUpdateTypes, 40)
-      .addComponent('duplicateDetection', duplicateDetectionRules, 50)
-      .addComponent('urgencyLevels', urgencyLevels, 60)
-      .addComponent('responseFormat', communicationStyleForAnalysis, 70)
-      .addComponent('safety', safetyForSocialMedia, 80)
-      .build();
+    return `You are Toto's Twitter Monitoring Agent, specialized in analyzing pet rescue tweets and creating case updates.
 
-    // Log metrics for analytics
-    console.log(`[TwitterAgent] Prompt built: ${metrics.componentCount} components, ~${metrics.estimatedTokens} tokens, cache hit: ${metrics.cacheHit}`);
+Your role:
+- Analyze tweets from guardian accounts for case relevance
+- Compare tweet content with existing case data to detect duplicates
+- Detect emergencies and urgent situations requiring immediate attention
+- Create appropriate case updates OR enrich existing case data
+- Filter out funding requests (ignore donation pleas)
+- Learn patterns to improve analysis accuracy over time
+- Provide insights about guardian activity and case progress
 
-    return prompt;
+Analysis Guidelines:
+- Case-related tweets: Medical updates, rescue progress, animal conditions, treatment plans
+- Emergency tweets: Urgent medical needs, critical situations, immediate help required
+- Non-case tweets: Personal updates, general animal content, fundraising requests (IGNORE)
+- Duplicate detection: Check if tweet information already exists in case
+- Enrichment opportunities: Add new details to existing case fields
+- Urgency levels: critical (life-threatening), high (urgent medical), medium (routine updates), low (general info)
+
+Update Types:
+- "duplicate": Information already exists in case
+- "enrichment": Adds new details to existing case fields (images, medical progress, etc.)
+- "status_change": Changes case status or priority
+- "note": General updates and progress notes
+- "milestone": Significant progress or achievements
+- "emergency": Urgent situations requiring immediate attention
+
+Response Format:
+- Always provide analysis confidence (0-1)
+- Suggest specific case update type and content
+- Extract ALL relevant information (animal, condition, location, images, progress)
+- Flag emergencies for immediate attention
+- Identify duplicate information to avoid redundant updates
+- Suggest case enrichment opportunities
+
+Be thorough but concise in your analysis.`;
   }
 
   /**
@@ -251,7 +247,6 @@ export class TwitterAgent extends BaseAgent {
     this.twitterService = new TwitterService(credentials);
     this.socialMediaPostService = new SocialMediaPostService();
     this.imageService = new ImageService();
-    this.imageAnalysisService = new ImageAnalysisService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`TwitterAgent initialized with ${guardians.length} guardians and web scraping service`);
     console.log(`   ✅ Review queue enabled: ${this.config.reviewPolicy.reviewQueueEnabled}`);
@@ -276,7 +271,6 @@ export class TwitterAgent extends BaseAgent {
     this.twitterService = new TwitterService(credentials);
     this.socialMediaPostService = new SocialMediaPostService();
     this.imageService = new ImageService();
-    this.imageAnalysisService = new ImageAnalysisService();
     this.feedbackService = new AgentFeedbackService();
     console.log(`TwitterAgent initialized with ${this.config.guardians.length} guardians from database`);
     console.log(`   ✅ Review queue enabled: ${this.config.reviewPolicy.reviewQueueEnabled}`);
@@ -780,144 +774,9 @@ Respond with JSON:
   }
 
   /**
-   * Convert function calls from Gemini to TweetAnalysis
-   * Uses structured function calling for reliable action detection
-   */
-  private convertFunctionCallsToTweetAnalysis(
-    functionCalls: FunctionCall[] | undefined,
-    tweet: TweetData,
-    caseAnalysis?: any
-  ): TweetAnalysis | null {
-    if (!functionCalls || functionCalls.length === 0) {
-      return null;
-    }
-
-    // Process the first function call (primary action)
-    const call = functionCalls[0];
-    const { name, args } = call;
-    // Type assertion for args since it's typed as object
-    const typedArgs = args as any;
-
-    switch (name) {
-      case 'flagUrgentCase':
-        return {
-          isCaseRelated: true,
-          urgency: typedArgs.urgencyLevel as 'high' | 'critical',
-          caseUpdateType: 'emergency',
-          suggestedAction: typedArgs.suggestedAction,
-          confidence: 0.9, // Function calling has high confidence
-          extractedInfo: {
-            emergency: true,
-            fundraisingRequest: false,
-          },
-        };
-
-      case 'updatePetStatus':
-        return {
-          isCaseRelated: true,
-          urgency: typedArgs.statusType === 'emergency' ? 'critical' : 'medium',
-          caseUpdateType: this.mapStatusTypeToCaseUpdateType(typedArgs.statusType),
-          suggestedAction: `Update case with: ${typedArgs.details}`,
-          confidence: typedArgs.confidence,
-          extractedInfo: {
-            statusUpdate: typedArgs.details,
-            fundraisingRequest: false,
-            emergency: typedArgs.statusType === 'emergency',
-          },
-          caseEnrichment: caseAnalysis?.existingCase ? {
-            fieldsToUpdate: ['status', 'medicalProgress'],
-            newValues: {
-              status: typedArgs.statusType,
-              medicalProgress: typedArgs.details,
-            },
-            reason: `Status update from tweet: ${typedArgs.details}`,
-          } : undefined,
-        };
-
-      case 'dismissPost':
-        return {
-          isCaseRelated: false,
-          urgency: 'low',
-          caseUpdateType: 'duplicate',
-          suggestedAction: 'No action needed',
-          confidence: 0.95,
-          extractedInfo: {
-            fundraisingRequest: typedArgs.reason === 'promotional',
-            emergency: false,
-          },
-          isDuplicate: typedArgs.reason === 'duplicate',
-          duplicateReason: typedArgs.reason,
-        };
-
-      case 'createCaseFromPost':
-        return {
-          isCaseRelated: true,
-          urgency: typedArgs.urgency as 'low' | 'medium' | 'high' | 'critical',
-          caseUpdateType: 'note',
-          suggestedAction: 'create_case',
-          confidence: typedArgs.confidence,
-          extractedInfo: {
-            animalMentioned: typedArgs.petName || typedArgs.animalType,
-            fundraisingRequest: false,
-            emergency: typedArgs.urgency === 'critical',
-          },
-        };
-
-      default:
-        console.warn(`Unknown function call: ${name}`);
-        return null;
-    }
-  }
-
-  /**
-   * Map status type to case update type
-   */
-  private mapStatusTypeToCaseUpdateType(statusType: string): TweetAnalysis['caseUpdateType'] {
-    switch (statusType) {
-      case 'medical_update':
-        return 'note';
-      case 'emergency':
-        return 'emergency';
-      case 'milestone':
-        return 'milestone';
-      case 'adoption_update':
-        return 'status_change';
-      default:
-        return 'note';
-    }
-  }
-
-  /**
    * Analyze a single tweet for case relevance
    */
   private async analyzeTweet(tweet: TweetData, caseAnalysis?: any): Promise<TweetAnalysis> {
-    // NEW: Analyze images with Gemini vision if present
-    let imageAnalysis: ImageAnalysis | undefined;
-    const tweetImages = tweet.media?.images || tweet.imageUrls || [];
-
-    if (tweetImages.length > 0) {
-      try {
-        console.log(`🖼️  Tweet has ${tweetImages.length} image(s), analyzing with Gemini vision...`);
-        imageAnalysis = await this.imageAnalysisService.analyzeMultipleImages(
-          tweetImages,
-          {
-            postText: tweet.content,
-            platform: 'twitter',
-            guardianName: tweet.author.name,
-          }
-        );
-        console.log(`✅ Image analysis complete - Urgency: ${imageAnalysis.urgencyLevel}, Confidence: ${(imageAnalysis.confidence * 100).toFixed(1)}%`);
-
-        // If image shows critical condition, log it
-        if (imageAnalysis.urgencyLevel === 'critical' || imageAnalysis.urgencyLevel === 'high') {
-          console.log(`⚠️  HIGH URGENCY detected in image: ${imageAnalysis.healthIndicators.visibleInjuries.join(', ')}`);
-        }
-      } catch (error) {
-        console.error('Error analyzing tweet images:', error);
-        // Continue without image analysis
-      }
-    }
-
     const caseContext = caseAnalysis ? `
 Existing Case Information:
 - Name: ${caseAnalysis.existingCase?.name || 'Unknown'}
@@ -990,38 +849,6 @@ Respond in JSON format:
 }`;
 
     try {
-      // Try function calling first (preferred method)
-      console.log('🔧 Attempting function calling for tweet analysis...');
-      const functionResult = await this.processMessageWithFunctions(analysisPrompt, {
-        userId: 'twitter-agent',
-        userRole: 'admin',
-        language: 'en',
-      });
-
-      // Check if we got function calls
-      if (functionResult.functionCalls && functionResult.functionCalls.length > 0) {
-        console.log(`✅ Function calling successful! Got ${functionResult.functionCalls.length} function calls`);
-        const analysis = this.convertFunctionCallsToTweetAnalysis(functionResult.functionCalls, tweet, caseAnalysis);
-        if (analysis) {
-          console.log(`✅ Converted function call to TweetAnalysis: ${JSON.stringify(analysis, null, 2)}`);
-          // Add image analysis if available
-          if (imageAnalysis) {
-            analysis.imageAnalysis = imageAnalysis;
-            // Boost urgency if image analysis shows higher urgency
-            if (imageAnalysis.urgencyLevel === 'critical' && analysis.urgency !== 'critical') {
-              console.log(`⚠️  Boosting urgency to 'critical' based on image analysis`);
-              analysis.urgency = 'critical';
-            }
-          }
-          return analysis;
-        }
-        console.log('⚠️ Function call conversion returned null, falling back to legacy parsing');
-      } else {
-        console.log('ℹ️ No function calls returned, falling back to legacy text parsing');
-      }
-
-      // Fallback to legacy text parsing (DEPRECATED)
-      console.log('⚠️ Using legacy text parsing method...');
       const result = await this.processMessage(analysisPrompt, {
         userId: 'twitter-agent',
         userRole: 'admin',
@@ -1030,31 +857,19 @@ Respond in JSON format:
 
       // Parse the JSON response (handle markdown formatting)
       let jsonString = result.message;
-
+      
       // Remove markdown code blocks if present
       if (jsonString.includes('```json')) {
         jsonString = jsonString.replace(/```json\s*/, '').replace(/```\s*$/, '');
       } else if (jsonString.includes('```')) {
         jsonString = jsonString.replace(/```\s*/, '').replace(/```\s*$/, '');
       }
-
+      
       // Clean up any extra whitespace
       jsonString = jsonString.trim();
-
-      const analysis = JSON.parse(jsonString) as TweetAnalysis;
-      // Add image analysis if available
-      if (imageAnalysis) {
-        analysis.imageAnalysis = imageAnalysis;
-        // Boost urgency if image analysis shows higher urgency
-        if (imageAnalysis.urgencyLevel === 'critical' && analysis.urgency !== 'critical') {
-          console.log(`⚠️  Boosting urgency to 'critical' based on image analysis`);
-          analysis.urgency = 'critical';
-        } else if (imageAnalysis.urgencyLevel === 'high' && (analysis.urgency === 'low' || analysis.urgency === 'medium')) {
-          console.log(`⚠️  Boosting urgency to 'high' based on image analysis`);
-          analysis.urgency = 'high';
-        }
-      }
-      return analysis;
+      
+      const analysis = JSON.parse(jsonString);
+      return analysis as TweetAnalysis;
     } catch (error) {
       console.error('Error analyzing tweet:', error);
       // Return default analysis
@@ -1068,7 +883,6 @@ Respond in JSON format:
           fundraisingRequest: false,
           emergency: false,
         },
-        imageAnalysis, // Include image analysis even on error
       };
     }
   }
@@ -1643,7 +1457,7 @@ Respond in JSON format:
         metadata: {
           analysisResult: analysis,
           caseAnalysis,
-          images: tweet.media?.images || tweet.imageUrls || []
+          images: [...(tweet.media?.images || tweet.imageUrls || []), ...(tweet.media?.videos || tweet.videoUrls || [])] // Include both images and videos
         }
       };
 
@@ -1671,11 +1485,26 @@ Respond in JSON format:
         return false;
       }
 
-      // Process images if any
-      const imageUrls = reviewItem.metadata?.images || [];
+      // Process images and videos (separate them first)
+      const allMedia = reviewItem.metadata?.images || [];
+      const imageUrls = allMedia.filter(url => {
+        // Filter out video URLs
+        const lowerUrl = url.toLowerCase();
+        return !lowerUrl.includes('.mp4') && 
+               !lowerUrl.includes('video') && 
+               !lowerUrl.includes('/o1/v/t2/f2/');
+      });
+      const videoUrls = allMedia.filter(url => {
+        const lowerUrl = url.toLowerCase();
+        return lowerUrl.includes('.mp4') || 
+               lowerUrl.includes('video') || 
+               lowerUrl.includes('/o1/v/t2/f2/');
+      });
+      
       const processedImages: string[] = [];
       const imageFileNames: string[] = [];
       
+      // Process images
       if (imageUrls.length > 0) {
         try {
           // Process each image individually to track file names
@@ -1706,6 +1535,39 @@ Respond in JSON format:
           if (processedImages.length === 0 && imageUrls.length > 0) {
             processedImages.push(...imageUrls);
           }
+        }
+      }
+      
+      // Process videos - download and store in Firebase Storage
+      if (videoUrls.length > 0) {
+        try {
+          // Start video processing after images (use imageUrls.length as starting index)
+          for (let i = 0; i < videoUrls.length; i++) {
+            try {
+              const result = await this.imageService.processAndUploadVideo(
+                videoUrls[i],
+                'twitter',
+                reviewItem.tweetId,
+                imageUrls.length + i // Continue indexing from where images left off
+              );
+              if (result) {
+                processedImages.push(result.url);
+                imageFileNames.push(result.fileName); // Store video file names too for cleanup
+              } else {
+                // Fallback: keep original URL if processing fails
+                console.warn(`Video processing failed for ${videoUrls[i]}, using original URL`);
+                processedImages.push(videoUrls[i]);
+              }
+            } catch (videoError) {
+              console.error(`Error processing video ${videoUrls[i]}:`, videoError);
+              // Fallback: keep original URL if processing fails
+              processedImages.push(videoUrls[i]);
+            }
+          }
+        } catch (error) {
+          console.error('Error processing videos:', error);
+          // Fallback: use original URLs if all processing fails
+          processedImages.push(...videoUrls);
         }
       }
 
