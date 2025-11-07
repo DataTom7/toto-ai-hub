@@ -353,12 +353,18 @@ Only include documents with score >= ${minScore}.`;
     const parts = filePath.split(path.sep);
     
     // Look for common category patterns
+    if (parts.includes('user-guides')) return 'user-guides';
     if (parts.includes('ecosystem')) return 'ecosystem';
     if (parts.includes('ai-system')) return 'ai-system';
     if (parts.includes('development')) return 'development';
     if (parts.includes('deployment')) return 'deployment';
     if (parts.includes('architecture')) return 'architecture';
-    if (parts.includes('user-guides')) return 'user-guides';
+    
+    // Check if it's from knowledge base
+    if (filePath.includes('knowledge_base')) {
+      // Extract category from metadata if available
+      return 'knowledge-base';
+    }
     
     return 'general';
   }

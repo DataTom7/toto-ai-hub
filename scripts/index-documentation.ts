@@ -18,6 +18,9 @@ import { VertexAISearchService } from '../src/services/VertexAISearchService';
 dotenv.config();
 
 async function indexDocumentation() {
+  console.log('⚠️  WARNING: This script indexes ALL documentation including tech docs');
+  console.log('💡 RECOMMENDED: Use "npm run sync-kb-to-vertex" to sync Knowledge Base instead');
+  console.log('💡 Knowledge Base is user-facing and structured - no need for external docs\n');
   console.log('🚀 Starting documentation indexing...\n');
 
   try {

@@ -11,7 +11,8 @@
     "dev:server": "nodemon server.js",
     "test": "jest",
     "clean": "rimraf dist",
-    "index-docs": "ts-node scripts/index-documentation.ts"
+    "index-docs": "ts-node scripts/index-documentation.ts",
+    "sync-kb-to-vertex": "ts-node scripts/sync-kb-to-vertex.ts"
   },
   "keywords": [
     "ai",
