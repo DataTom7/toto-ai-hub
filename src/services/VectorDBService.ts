@@ -31,6 +31,7 @@ export interface VectorDocument {
     timestamp: Date;             // When the document was added/updated
     version: string;             // Version for tracking updates
     tags?: string[];             // Optional tags for additional filtering
+    [key: string]: any;          // Allow additional metadata fields (title, agentTypes, usageCount, etc.)
   };
 }
 

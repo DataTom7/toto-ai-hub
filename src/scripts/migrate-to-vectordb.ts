@@ -179,10 +179,10 @@ async function migrateChunks(chunks: KnowledgeChunk[], options: MigrationOptions
   console.log('\n✅ Migration complete!');
 
   // Get stats
-  const stats = ragService.getMemoryStats();
+  const stats = await ragService.getMemoryStats();
   console.log(`\n📊 Final Statistics:`);
   console.log(`   Total chunks: ${stats.chunks === -1 ? 'Unlimited backend' : stats.chunks}`);
-  console.log(`   Max chunks: ${stats.maxChunks}`);
+  console.log(`   Max chunks: ${stats.maxChunks === Infinity ? 'Unlimited' : stats.maxChunks}`);
   console.log(`   Memory usage: ${stats.memoryUsage}`);
 }
 

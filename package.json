@@ -12,7 +12,8 @@
     "test": "jest",
     "clean": "rimraf dist",
     "index-docs": "ts-node scripts/index-documentation.ts",
-    "sync-kb-to-vertex": "ts-node scripts/sync-kb-to-vertex.ts"
+    "sync-kb-to-vertex": "ts-node scripts/sync-kb-to-vertex.ts",
+    "add-missing-kb-entries": "ts-node scripts/add-missing-kb-entries.ts"
   },
   "keywords": [
     "ai",

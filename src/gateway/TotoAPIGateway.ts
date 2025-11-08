@@ -275,7 +275,7 @@ export class TotoAPIGateway {
    * Note: This will reinitialize from Firestore, not from hardcoded entries
    */
   async resetKnowledgeBase(): Promise<void> {
-    this.ragService.clearKnowledgeChunks();
+    await this.ragService.clearKnowledgeChunks();
     await this.knowledgeBaseService.refreshCache();
     await this.initializeRAGService();
   }
