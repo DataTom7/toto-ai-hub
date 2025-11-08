@@ -109,6 +109,12 @@ export class TotoAPIGateway {
   async initialize(): Promise<void> {
     await this.knowledgeBaseService.initialize();
     await this.vertexAISearchService.initialize();
+    
+    // Clear deprecated technical documentation from Vertex AI Search index
+    // This ensures only KB entries (user-facing content) are indexed, not tech docs
+    this.vertexAISearchService.clearIndex();
+    console.log('[TotoAPIGateway] Cleared deprecated technical documentation from Vertex AI Search index');
+    
     await this.initializeRAGService();
     
     // Automatically sync KB to Vertex AI Search on startup (non-blocking)
