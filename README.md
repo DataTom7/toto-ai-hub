@@ -182,12 +182,12 @@ export async function GET() {
 
 ## 📚 Documentation
 
-**All documentation has been moved to the centralized [toto-docs](https://github.com/your-org/toto-docs) repository:**
+**All documentation is available at [docs.betoto.pet](https://docs.betoto.pet):**
 
-- **📖 [Main Documentation](https://github.com/your-org/toto-docs)** - Complete ecosystem overview
-- **🤖 [AI System Guide](https://github.com/your-org/toto-docs/tree/main/ai-system)** - Current AI system documentation
-- **🚀 [Deployment Guide](https://github.com/your-org/toto-docs/tree/main/deployment)** - Setup and deployment instructions
-- **📋 [API Reference](https://github.com/your-org/toto-docs/tree/main/api-reference)** - Complete API documentation
+- **📖 [Main Documentation](https://docs.betoto.pet)** - Complete ecosystem overview
+- **🤖 [AI System Guide](https://docs.betoto.pet/ai-system)** - Current AI system documentation
+- **🚀 [Deployment Guide](https://docs.betoto.pet/deployment)** - Setup and deployment instructions
+- **📋 [API Reference](https://docs.betoto.pet/api-reference)** - Complete API documentation
 
 ## License
 

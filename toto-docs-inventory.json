@@ -1,0 +1,938 @@
+[
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ai-system\\ai-hub-overview.md",
+    "relativePath": "ai-system\\ai-hub-overview.md",
+    "category": "ai-system",
+    "title": "TotoAI Hub - Project Overview",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "AI system operational info - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ai-system\\enhanced-deployment.md",
+    "relativePath": "ai-system\\enhanced-deployment.md",
+    "category": "ai-system",
+    "title": "enhanced-deployment",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "AI system operational info - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ai-system\\knowledge-base\\AUDIENCE-TYPES.md",
+    "relativePath": "ai-system\\knowledge-base\\AUDIENCE-TYPES.md",
+    "category": "ai-system",
+    "title": "AUDIENCE-TYPES",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "AI system operational info - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ai-system\\knowledge-base\\README.md",
+    "relativePath": "ai-system\\knowledge-base\\README.md",
+    "category": "ai-system",
+    "title": "README",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "AI system operational info - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ai-system\\legacy-enhanced-system-guide.md",
+    "relativePath": "ai-system\\legacy-enhanced-system-guide.md",
+    "category": "ai-system",
+    "title": "legacy-enhanced-system-guide",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "AI system operational info - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ai-system\\legacy-orchestrator-examples.md",
+    "relativePath": "ai-system\\legacy-orchestrator-examples.md",
+    "category": "ai-system",
+    "title": "legacy-orchestrator-examples",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "AI system operational info - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ai-system\\legacy-owner-insights-agent.md",
+    "relativePath": "ai-system\\legacy-owner-insights-agent.md",
+    "category": "ai-system",
+    "title": "legacy-owner-insights-agent",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "AI system operational info - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ai-system\\legacy-transformation-summary.md",
+    "relativePath": "ai-system\\legacy-transformation-summary.md",
+    "category": "ai-system",
+    "title": "legacy-transformation-summary",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "AI system operational info - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ai-system\\README.md",
+    "relativePath": "ai-system\\README.md",
+    "category": "ai-system",
+    "title": "README",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "AI system operational info - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\architecture\\backoffice-architecture.md",
+    "relativePath": "architecture\\backoffice-architecture.md",
+    "category": "architecture",
+    "title": "Clean Architecture Implementation",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current architecture - extract facts to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\architecture\\data-migration-guide.md",
+    "relativePath": "architecture\\data-migration-guide.md",
+    "category": "architecture",
+    "title": "data-migration-guide",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current architecture - extract facts to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\architecture\\data-models-quick-reference.md",
+    "relativePath": "architecture\\data-models-quick-reference.md",
+    "category": "architecture",
+    "title": "data-models-quick-reference",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current architecture - extract facts to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\architecture\\data-models.md",
+    "relativePath": "architecture\\data-models.md",
+    "category": "architecture",
+    "title": "data-models",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current architecture - extract facts to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\architecture\\environment-management.md",
+    "relativePath": "architecture\\environment-management.md",
+    "category": "architecture",
+    "title": "🌍 Environment Management",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current architecture - extract facts to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\architecture\\README.md",
+    "relativePath": "architecture\\README.md",
+    "category": "architecture",
+    "title": "README",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current architecture - extract facts to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\architecture\\security-rules.md",
+    "relativePath": "architecture\\security-rules.md",
+    "category": "architecture",
+    "title": "security-rules",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current architecture - extract facts to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\deployment\\APP_HOSTING_DEBUG_GUIDE.md",
+    "relativePath": "deployment\\APP_HOSTING_DEBUG_GUIDE.md",
+    "category": "deployment",
+    "title": "APP_HOSTING_DEBUG_GUIDE",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\deployment\\backoffice-deployment.md",
+    "relativePath": "deployment\\backoffice-deployment.md",
+    "category": "deployment",
+    "title": "backoffice-deployment",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\deployment\\backoffice-launch-checklist.md",
+    "relativePath": "deployment\\backoffice-launch-checklist.md",
+    "category": "deployment",
+    "title": "backoffice-launch-checklist",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\deployment\\backoffice-post-launch.md",
+    "relativePath": "deployment\\backoffice-post-launch.md",
+    "category": "deployment",
+    "title": "backoffice-post-launch",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\deployment\\comprehensive-deployment-guide.md",
+    "relativePath": "deployment\\comprehensive-deployment-guide.md",
+    "category": "deployment",
+    "title": "comprehensive-deployment-guide",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\deployment\\DEVELOPMENT_WORKFLOW.md",
+    "relativePath": "deployment\\DEVELOPMENT_WORKFLOW.md",
+    "category": "deployment",
+    "title": "DEVELOPMENT_WORKFLOW",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\deployment\\README.md",
+    "relativePath": "deployment\\README.md",
+    "category": "deployment",
+    "title": "README",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\app-hosting-debugging-guide.md",
+    "relativePath": "development\\app-hosting-debugging-guide.md",
+    "category": "development",
+    "title": "app-hosting-debugging-guide",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\database-management-scripts.md",
+    "relativePath": "development\\database-management-scripts.md",
+    "category": "development",
+    "title": "database-management-scripts",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\development-setup.md",
+    "relativePath": "development\\development-setup.md",
+    "category": "development",
+    "title": "development-setup",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\firebase-phone-auth-setup.md",
+    "relativePath": "development\\firebase-phone-auth-setup.md",
+    "category": "development",
+    "title": "firebase-phone-auth-setup",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\monitoring-implementation-summary.md",
+    "relativePath": "development\\monitoring-implementation-summary.md",
+    "category": "development",
+    "title": "monitoring-implementation-summary",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\project-requirements.md",
+    "relativePath": "development\\project-requirements.md",
+    "category": "development",
+    "title": "project-requirements",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\pwa-screenshot-guide.md",
+    "relativePath": "development\\pwa-screenshot-guide.md",
+    "category": "development",
+    "title": "pwa-screenshot-guide",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\README.md",
+    "relativePath": "development\\README.md",
+    "category": "development",
+    "title": "README",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\seeding-system.md",
+    "relativePath": "development\\seeding-system.md",
+    "category": "development",
+    "title": "seeding-system",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\staging-database-setup.md",
+    "relativePath": "development\\staging-database-setup.md",
+    "category": "development",
+    "title": "staging-database-setup",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\styling-standards.md",
+    "relativePath": "development\\styling-standards.md",
+    "category": "development",
+    "title": "styling-standards",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\testing-guide.md",
+    "relativePath": "development\\testing-guide.md",
+    "category": "development",
+    "title": "testing-guide",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\toto-app-setup.md",
+    "relativePath": "development\\toto-app-setup.md",
+    "category": "development",
+    "title": "🐾 Toto App Setup Guide",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\development\\toto-bo-setup.md",
+    "relativePath": "development\\toto-bo-setup.md",
+    "category": "development",
+    "title": "toto-bo-setup",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Operational procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\getting-started\\documentation-structure.md",
+    "relativePath": "getting-started\\documentation-structure.md",
+    "category": "getting-started",
+    "title": "documentation-structure",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Setup procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\getting-started\\quick-setup.md",
+    "relativePath": "getting-started\\quick-setup.md",
+    "category": "getting-started",
+    "title": "quick-setup",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Setup procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\getting-started\\tldr.md",
+    "relativePath": "getting-started\\tldr.md",
+    "category": "getting-started",
+    "title": "tldr",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Setup procedures - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\100_PERCENT_PRODUCTION_READY.md",
+    "relativePath": "production-readiness\\100_PERCENT_PRODUCTION_READY.md",
+    "category": "production-readiness",
+    "title": "100_PERCENT_PRODUCTION_READY",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\BLUE_GREEN_DEPLOYMENT_PLAN.md",
+    "relativePath": "production-readiness\\BLUE_GREEN_DEPLOYMENT_PLAN.md",
+    "category": "production-readiness",
+    "title": "BLUE_GREEN_DEPLOYMENT_PLAN",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\COMPLIANCE_AND_DOCUMENTATION.md",
+    "relativePath": "production-readiness\\COMPLIANCE_AND_DOCUMENTATION.md",
+    "category": "production-readiness",
+    "title": "COMPLIANCE_AND_DOCUMENTATION",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\DEPLOYMENT_STRATEGY.md",
+    "relativePath": "production-readiness\\DEPLOYMENT_STRATEGY.md",
+    "category": "production-readiness",
+    "title": "DEPLOYMENT_STRATEGY",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\DISASTER_RECOVERY_PLAN.md",
+    "relativePath": "production-readiness\\DISASTER_RECOVERY_PLAN.md",
+    "category": "production-readiness",
+    "title": "DISASTER_RECOVERY_PLAN",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\DISASTER_RECOVERY_PROCEDURES.md",
+    "relativePath": "production-readiness\\DISASTER_RECOVERY_PROCEDURES.md",
+    "category": "production-readiness",
+    "title": "DISASTER_RECOVERY_PROCEDURES",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\FINAL_COMPLIANCE_AUDIT.md",
+    "relativePath": "production-readiness\\FINAL_COMPLIANCE_AUDIT.md",
+    "category": "production-readiness",
+    "title": "FINAL_COMPLIANCE_AUDIT",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\FINAL_DOCUMENTATION_REVIEW.md",
+    "relativePath": "production-readiness\\FINAL_DOCUMENTATION_REVIEW.md",
+    "category": "production-readiness",
+    "title": "FINAL_DOCUMENTATION_REVIEW",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\FINAL_PERFORMANCE_BENCHMARKS.md",
+    "relativePath": "production-readiness\\FINAL_PERFORMANCE_BENCHMARKS.md",
+    "category": "production-readiness",
+    "title": "FINAL_PERFORMANCE_BENCHMARKS",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\FINAL_SECURITY_TESTING.md",
+    "relativePath": "production-readiness\\FINAL_SECURITY_TESTING.md",
+    "category": "production-readiness",
+    "title": "FINAL_SECURITY_TESTING",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\PERFORMANCE_OPTIMIZATION_GUIDE.md",
+    "relativePath": "production-readiness\\PERFORMANCE_OPTIMIZATION_GUIDE.md",
+    "category": "production-readiness",
+    "title": "PERFORMANCE_OPTIMIZATION_GUIDE",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\PRODUCTION_DEPLOYMENT_GUIDE.md",
+    "relativePath": "production-readiness\\PRODUCTION_DEPLOYMENT_GUIDE.md",
+    "category": "production-readiness",
+    "title": "PRODUCTION_DEPLOYMENT_GUIDE",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\PRODUCTION_READINESS_AUDIT.md",
+    "relativePath": "production-readiness\\PRODUCTION_READINESS_AUDIT.md",
+    "category": "production-readiness",
+    "title": "PRODUCTION_READINESS_AUDIT",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\PRODUCTION_READINESS_PLAN.md",
+    "relativePath": "production-readiness\\PRODUCTION_READINESS_PLAN.md",
+    "category": "production-readiness",
+    "title": "PRODUCTION_READINESS_PLAN",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\PRODUCTION_READINESS_SUMMARY.md",
+    "relativePath": "production-readiness\\PRODUCTION_READINESS_SUMMARY.md",
+    "category": "production-readiness",
+    "title": "PRODUCTION_READINESS_SUMMARY",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\README.md",
+    "relativePath": "production-readiness\\README.md",
+    "category": "production-readiness",
+    "title": "README",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\SECURITY_IMPLEMENTATION_GUIDE.md",
+    "relativePath": "production-readiness\\SECURITY_IMPLEMENTATION_GUIDE.md",
+    "category": "production-readiness",
+    "title": "SECURITY_IMPLEMENTATION_GUIDE",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\TESTING_STRATEGY.md",
+    "relativePath": "production-readiness\\TESTING_STRATEGY.md",
+    "category": "production-readiness",
+    "title": "TESTING_STRATEGY",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\WEEK1_IMPLEMENTATION_STATUS.md",
+    "relativePath": "production-readiness\\WEEK1_IMPLEMENTATION_STATUS.md",
+    "category": "production-readiness",
+    "title": "WEEK1_IMPLEMENTATION_STATUS",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\WEEK2_IMPLEMENTATION_STATUS.md",
+    "relativePath": "production-readiness\\WEEK2_IMPLEMENTATION_STATUS.md",
+    "category": "production-readiness",
+    "title": "WEEK2_IMPLEMENTATION_STATUS",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\production-readiness\\WEEK3_IMPLEMENTATION_STATUS.md",
+    "relativePath": "production-readiness\\WEEK3_IMPLEMENTATION_STATUS.md",
+    "category": "production-readiness",
+    "title": "WEEK3_IMPLEMENTATION_STATUS",
+    "suggestedAction": "extract",
+    "priority": "high",
+    "notes": "Current production practices - extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\DOCUMENTATION_AUDIT_REPORT.md",
+    "relativePath": "DOCUMENTATION_AUDIT_REPORT.md",
+    "category": ".",
+    "title": "DOCUMENTATION_AUDIT_REPORT",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\DOCUMENTATION_CONSOLIDATION_SUMMARY.md",
+    "relativePath": "DOCUMENTATION_CONSOLIDATION_SUMMARY.md",
+    "category": ".",
+    "title": "DOCUMENTATION_CONSOLIDATION_SUMMARY",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\FINAL_DOCUMENTATION_AUDIT_SUMMARY.md",
+    "relativePath": "FINAL_DOCUMENTATION_AUDIT_SUMMARY.md",
+    "category": ".",
+    "title": "FINAL_DOCUMENTATION_AUDIT_SUMMARY",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\FINAL_DOCUMENTATION_CONSOLIDATION_COMPLETE.md",
+    "relativePath": "FINAL_DOCUMENTATION_CONSOLIDATION_COMPLETE.md",
+    "category": ".",
+    "title": "FINAL_DOCUMENTATION_CONSOLIDATION_COMPLETE",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\intro.md",
+    "relativePath": "intro.md",
+    "category": ".",
+    "title": "intro",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\README.md",
+    "relativePath": "README.md",
+    "category": ".",
+    "title": "📚 Toto Ecosystem Documentation",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\analytics\\analytics-setup.md",
+    "relativePath": "analytics\\analytics-setup.md",
+    "category": "analytics",
+    "title": "analytics-setup",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\analytics\\monitoring-integration-setup.md",
+    "relativePath": "analytics\\monitoring-integration-setup.md",
+    "category": "analytics",
+    "title": "monitoring-integration-setup",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\cost-projections\\AI_COSTS_DETAILED.md",
+    "relativePath": "cost-projections\\AI_COSTS_DETAILED.md",
+    "category": "cost-projections",
+    "title": "AI_COSTS_DETAILED",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\cost-projections\\CLOUD_BILLING_SETUP.md",
+    "relativePath": "cost-projections\\CLOUD_BILLING_SETUP.md",
+    "category": "cost-projections",
+    "title": "CLOUD_BILLING_SETUP",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\cost-projections\\COST_MONITORING_IMPLEMENTATION.md",
+    "relativePath": "cost-projections\\COST_MONITORING_IMPLEMENTATION.md",
+    "category": "cost-projections",
+    "title": "COST_MONITORING_IMPLEMENTATION",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\cost-projections\\COST_MONITORING_IMPROVEMENTS.md",
+    "relativePath": "cost-projections\\COST_MONITORING_IMPROVEMENTS.md",
+    "category": "cost-projections",
+    "title": "COST_MONITORING_IMPROVEMENTS",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\cost-projections\\COST_SUMMARY.md",
+    "relativePath": "cost-projections\\COST_SUMMARY.md",
+    "category": "cost-projections",
+    "title": "COST_SUMMARY",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\cost-projections\\TECH_COST_PROJECTIONS.md",
+    "relativePath": "cost-projections\\TECH_COST_PROJECTIONS.md",
+    "category": "cost-projections",
+    "title": "TECH_COST_PROJECTIONS",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ecosystem\\ecosystem-integration.md",
+    "relativePath": "ecosystem\\ecosystem-integration.md",
+    "category": "ecosystem",
+    "title": "ecosystem-integration",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ecosystem\\fundraising-quickstart.md",
+    "relativePath": "ecosystem\\fundraising-quickstart.md",
+    "category": "ecosystem",
+    "title": "fundraising-quickstart",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ecosystem\\fundraising-system.md",
+    "relativePath": "ecosystem\\fundraising-system.md",
+    "category": "ecosystem",
+    "title": "fundraising-system",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ecosystem\\notification-system.md",
+    "relativePath": "ecosystem\\notification-system.md",
+    "category": "ecosystem",
+    "title": "notification-system",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ecosystem\\README.md",
+    "relativePath": "ecosystem\\README.md",
+    "category": "ecosystem",
+    "title": "README",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\quick-reference\\environment-commands.md",
+    "relativePath": "quick-reference\\environment-commands.md",
+    "category": "quick-reference",
+    "title": "environment-commands",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\security\\firestore-rules-changes.md",
+    "relativePath": "security\\firestore-rules-changes.md",
+    "category": "security",
+    "title": "firestore-rules-changes",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\user-guides\\ai-assistant.md",
+    "relativePath": "user-guides\\ai-assistant.md",
+    "category": "user-guides",
+    "title": "ai-assistant",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": "Check if already in KB with user audience"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\user-guides\\backoffice-advanced.md",
+    "relativePath": "user-guides\\backoffice-advanced.md",
+    "category": "user-guides",
+    "title": "backoffice-advanced",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": "Check if already in KB with user audience"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\user-guides\\backoffice-user-guide.md",
+    "relativePath": "user-guides\\backoffice-user-guide.md",
+    "category": "user-guides",
+    "title": "backoffice-user-guide",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": "Check if already in KB with user audience"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\user-guides\\backoffice.md",
+    "relativePath": "user-guides\\backoffice.md",
+    "category": "user-guides",
+    "title": "backoffice",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": "Check if already in KB with user audience"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\user-guides\\main-app-enhanced.md",
+    "relativePath": "user-guides\\main-app-enhanced.md",
+    "category": "user-guides",
+    "title": "main-app-enhanced",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": "Check if already in KB with user audience"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\user-guides\\main-app.md",
+    "relativePath": "user-guides\\main-app.md",
+    "category": "user-guides",
+    "title": "main-app",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": "Check if already in KB with user audience"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\user-guides\\notification-system-guide.md",
+    "relativePath": "user-guides\\notification-system-guide.md",
+    "category": "user-guides",
+    "title": "notification-system-guide",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": "Check if already in KB with user audience"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\user-guides\\README.md",
+    "relativePath": "user-guides\\README.md",
+    "category": "user-guides",
+    "title": "README",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": "Check if already in KB with user audience"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\user-guides\\wallet.md",
+    "relativePath": "user-guides\\wallet.md",
+    "category": "user-guides",
+    "title": "wallet",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": "Check if already in KB with user audience"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\wallet\\api-reference.md",
+    "relativePath": "wallet\\api-reference.md",
+    "category": "wallet",
+    "title": "api-reference",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\wallet\\client-integration-checklist.md",
+    "relativePath": "wallet\\client-integration-checklist.md",
+    "category": "wallet",
+    "title": "client-integration-checklist",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\wallet\\integration-guide.md",
+    "relativePath": "wallet\\integration-guide.md",
+    "category": "wallet",
+    "title": "integration-guide",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\wallet\\migration-guide.md",
+    "relativePath": "wallet\\migration-guide.md",
+    "category": "wallet",
+    "title": "migration-guide",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\wallet\\README.md",
+    "relativePath": "wallet\\README.md",
+    "category": "wallet",
+    "title": "README",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\wallet\\testnet_report_2025-05-12.md",
+    "relativePath": "wallet\\testnet_report_2025-05-12.md",
+    "category": "wallet",
+    "title": "testnet_report_2025-05-12",
+    "suggestedAction": "review",
+    "priority": "medium",
+    "notes": ""
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\api-reference\\ai-hub-api-reference.md",
+    "relativePath": "api-reference\\ai-hub-api-reference.md",
+    "category": "api-reference",
+    "title": "ai-hub-api-reference",
+    "suggestedAction": "keep-only",
+    "priority": "low",
+    "notes": "External-facing API docs - keep in toto-docs only"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\api-reference\\backoffice-api-reference.md",
+    "relativePath": "api-reference\\backoffice-api-reference.md",
+    "category": "api-reference",
+    "title": "backoffice-api-reference",
+    "suggestedAction": "keep-only",
+    "priority": "low",
+    "notes": "External-facing API docs - keep in toto-docs only"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\api-reference\\internal-apis.md",
+    "relativePath": "api-reference\\internal-apis.md",
+    "category": "api-reference",
+    "title": "internal-apis",
+    "suggestedAction": "keep-only",
+    "priority": "low",
+    "notes": "External-facing API docs - keep in toto-docs only"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\api-reference\\README.md",
+    "relativePath": "api-reference\\README.md",
+    "category": "api-reference",
+    "title": "README",
+    "suggestedAction": "keep-only",
+    "priority": "low",
+    "notes": "External-facing API docs - keep in toto-docs only"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\ecosystem\\payment-integration-roadmap.md",
+    "relativePath": "ecosystem\\payment-integration-roadmap.md",
+    "category": "ecosystem",
+    "title": "payment-integration-roadmap",
+    "suggestedAction": "roadmap",
+    "priority": "low",
+    "notes": "Future plans - do not extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\roadmap\\README.md",
+    "relativePath": "roadmap\\README.md",
+    "category": "roadmap",
+    "title": "README",
+    "suggestedAction": "roadmap",
+    "priority": "low",
+    "notes": "Future plans - do not extract to KB"
+  },
+  {
+    "path": "C:\\Users\\tcost\\VS\\toto\\toto-docs\\app\\docs\\todo\\README.md",
+    "relativePath": "todo\\README.md",
+    "category": "todo",
+    "title": "README",
+    "suggestedAction": "roadmap",
+    "priority": "low",
+    "notes": "Future plans - do not extract to KB"
+  }
+]
