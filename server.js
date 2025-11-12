@@ -193,6 +193,36 @@ global.getTotoBoStorage = getTotoBoStorage;
 const app = express();
 const port = process.env.PORT || 8080;
 
+// CORS middleware - allow requests from mobile app and web
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  // Allow requests from:
+  // - localhost (any port) for local development
+  // - app.betoto.pet and stg.app.betoto.pet for production/staging
+  // - toto-ai-hub itself
+  const allowedOrigins = [
+    /^http:\/\/localhost:\d+$/,  // Any localhost port
+    /^https:\/\/(app|stg\.app)\.betoto\.pet$/,  // Production/staging web
+    /^https:\/\/toto-ai-hub.*$/,  // toto-ai-hub itself
+  ];
+
+  const isAllowed = !origin || allowedOrigins.some(pattern => pattern.test(origin));
+  
+  if (isAllowed) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
