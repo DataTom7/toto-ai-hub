@@ -17,27 +17,67 @@ let totoAppStgApp = null;
 let totoBoApp = null;
 const fs = require('fs');
 
-// Initialize toto-app-stg Firebase Admin
-  try {
-    let serviceAccount = null;
+// Initialize production Firebase Admin for auth token verification
+// This is needed because we use production auth but save to staging Firestore
+let totoAppProdApp = null;
+try {
+  let prodServiceAccount = null;
+  
+  // Try environment variable first (for production)
+  const prodServiceAccountJson = process.env.TOTO_APP_PROD_SERVICE_ACCOUNT_KEY;
+  if (prodServiceAccountJson) {
+    prodServiceAccount = JSON.parse(prodServiceAccountJson);
+    console.log('✅ Using toto-app-prod service account from environment variable');
+  } else {
+    // Try local file (for development)
+    const prodServiceAccountPath = path.join(__dirname, 'toto-f9d2f-firebase-adminsdk-fbsvc-d5db968b23.json');
     
-    // Try environment variable first (for production)
-    const serviceAccountJson = process.env.TOTO_APP_STG_SERVICE_ACCOUNT_KEY;
-    if (serviceAccountJson) {
-      serviceAccount = JSON.parse(serviceAccountJson);
-    console.log('✅ Using toto-app-stg service account from environment variable');
-    } else {
-      // Try local file (for development)
-      const serviceAccountPath = path.join(__dirname, 'toto-f9d2f-stg-firebase-adminsdk-fbsvc-d4bdd9b852.json');
-      
-      if (fs.existsSync(serviceAccountPath)) {
-        const serviceAccountFile = fs.readFileSync(serviceAccountPath, 'utf8');
-        serviceAccount = JSON.parse(serviceAccountFile);
-      console.log('✅ Using local toto-app-stg service account file');
-      }
+    if (fs.existsSync(prodServiceAccountPath)) {
+      const prodServiceAccountFile = fs.readFileSync(prodServiceAccountPath, 'utf8');
+      prodServiceAccount = JSON.parse(prodServiceAccountFile);
+      console.log('✅ Using local toto-app-prod service account file');
     }
+  }
+  
+  if (prodServiceAccount) {
+    try {
+      totoAppProdApp = admin.app('toto-app-prod');
+      console.log('✅ toto-app-prod Firebase Admin already initialized');
+    } catch {
+      totoAppProdApp = admin.initializeApp({
+        credential: admin.credential.cert(prodServiceAccount),
+        projectId: 'toto-f9d2f'
+      }, 'toto-app-prod');
+      console.log('✅ Firebase Admin SDK initialized for toto-app-prod (auth verification)');
+    }
+  } else {
+    console.log('⚠️ No toto-app-prod service account credentials found, auth verification may fail');
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize toto-app-prod Firebase Admin SDK:', error.message);
+}
+
+// Initialize toto-app-stg Firebase Admin (for Firestore operations)
+try {
+  let serviceAccount = null;
+  
+  // Try environment variable first (for production)
+  const serviceAccountJson = process.env.TOTO_APP_STG_SERVICE_ACCOUNT_KEY;
+  if (serviceAccountJson) {
+    serviceAccount = JSON.parse(serviceAccountJson);
+    console.log('✅ Using toto-app-stg service account from environment variable');
+  } else {
+    // Try local file (for development)
+    const serviceAccountPath = path.join(__dirname, 'toto-f9d2f-stg-firebase-adminsdk-fbsvc-d4bdd9b852.json');
     
-    if (serviceAccount) {
+    if (fs.existsSync(serviceAccountPath)) {
+      const serviceAccountFile = fs.readFileSync(serviceAccountPath, 'utf8');
+      serviceAccount = JSON.parse(serviceAccountFile);
+      console.log('✅ Using local toto-app-stg service account file');
+    }
+  }
+  
+  if (serviceAccount) {
     // Check if app already exists
     try {
       totoAppStgApp = admin.app(); // Get default app
@@ -50,10 +90,10 @@ const fs = require('fs');
       });
       console.log('✅ Firebase Admin SDK initialized for toto-app-stg as DEFAULT app');
     }
-    } else {
+  } else {
     console.log('⚠️ No toto-app-stg service account credentials found, skipping connection');
-    }
-  } catch (error) {
+  }
+} catch (error) {
   console.error('❌ Failed to initialize toto-app-stg Firebase Admin SDK:', error.message);
 }
 
@@ -1346,6 +1386,93 @@ app.post('/api/chat', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: error.message 
+    });
+  }
+});
+
+// Save conversation endpoint
+app.post('/api/conversations', async (req, res) => {
+  try {
+    const { userId, conversationData } = req.body;
+    
+    if (!userId || !conversationData) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing userId or conversationData' 
+      });
+    }
+
+    // Verify user authentication via Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Missing or invalid authorization token' 
+      });
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    
+    // Verify token using production Firebase Auth
+    // We use production auth but save to staging Firestore
+    let decodedToken;
+    try {
+      // Use production Firebase Admin for token verification
+      const authVerifier = totoAppProdApp ? admin.auth(totoAppProdApp) : admin.auth();
+      decodedToken = await authVerifier.verifyIdToken(token);
+      
+      // Verify userId matches token
+      if (decodedToken.uid !== userId) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'User ID mismatch' 
+        });
+      }
+    } catch (authError) {
+      console.error('Token verification failed:', authError);
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Invalid or expired token' 
+      });
+    }
+
+    // Get staging Firestore (where conversations are stored)
+    const db = admin.firestore();
+    
+    // Create conversation document
+    const conversationDoc = {
+      userId,
+      caseId: conversationData.caseId,
+      caseName: conversationData.caseName,
+      ...(conversationData.caseImageUrl && { caseImageUrl: conversationData.caseImageUrl }),
+      messages: conversationData.messages.map(msg => ({
+        type: msg.type,
+        message: msg.message,
+        timestamp: admin.firestore.Timestamp.fromDate(new Date(msg.timestamp || Date.now())),
+        platform: 'casecard',
+      })),
+      actionTaken: conversationData.actionTaken || 'chat',
+      createdAt: admin.firestore.Timestamp.fromDate(new Date(conversationData.createdAt || Date.now())),
+      lastMessageAt: admin.firestore.Timestamp.fromDate(new Date(conversationData.lastMessageAt || conversationData.createdAt || Date.now())),
+      platform: ['casecard'],
+      isArchived: false,
+    };
+
+    // Save to Firestore
+    const docRef = await db.collection('conversations').add(conversationDoc);
+
+    res.status(200).json({ 
+      success: true, 
+      conversationId: docRef.id,
+      message: 'Conversation saved successfully' 
+    });
+
+  } catch (error) {
+    console.error('Error saving conversation:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      details: error.message 
     });
   }
 });
