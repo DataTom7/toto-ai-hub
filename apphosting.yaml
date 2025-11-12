@@ -52,35 +52,12 @@ env:
       - BUILD
       - RUNTIME
 
-  # Instagram Basic Display API (for accessing guardian Instagram accounts)
-  # Access token and user ID for Instagram Basic Display API
-  # These are used when guardian-specific tokens are not available in Firestore
-  - variable: INSTAGRAM_ACCESS_TOKEN
-    secret: toto-ai-hub-instagram-access-token
-    availability:
-      - BUILD
-      - RUNTIME
-
-  - variable: INSTAGRAM_USER_ID
-    secret: toto-ai-hub-instagram-user-id
-    availability:
-      - BUILD
-      - RUNTIME
-
-  # Instagram Web Scraping Credentials (fallback method)
-  # Used for web scraping when Basic Display API is not available
-  # Note: These are less secure and may be rate-limited by Instagram
-  - variable: INSTAGRAM_USERNAME
-    secret: toto-ai-hub-instagram-username
-    availability:
-      - BUILD
-      - RUNTIME
-
-  - variable: INSTAGRAM_PASSWORD
-    secret: toto-ai-hub-instagram-password
-    availability:
-      - BUILD
-      - RUNTIME
+  # Instagram credentials are NOT needed here
+  # The system uses:
+  # 1. Guardian-specific tokens from Firestore (primary method)
+  # 2. Web scraping as fallback (works without credentials, may have limited access)
+  # 3. Basic Display API tokens can be set per-guardian in Firestore
+  # If you need global fallback credentials, you can add them here as RUNTIME-only secrets
 
 outputFiles:
   serverApp:
