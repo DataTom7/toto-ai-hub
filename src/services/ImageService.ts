@@ -65,6 +65,7 @@ export class ImageService {
       // Log bucket name for debugging
       const bucketName = bucket.name;
       console.log(`📦 Attempting to upload to bucket: ${bucketName}`);
+      console.log(`   📥 Processing image [${index}]: ${imageUrl.substring(0, 100)}${imageUrl.length > 100 ? '...' : ''}`);
 
       // Download image
       console.log(`3. Image processing: downloading...`);
@@ -86,6 +87,7 @@ export class ImageService {
       const timestamp = Date.now();
       const fileExtension = IMAGE_CONFIG.OUTPUT_FORMAT === 'webp' ? 'webp' : 'jpg';
       const fileName = `social-media-posts/${platform}/${postId}/${timestamp}_${index}.${fileExtension}`;
+      console.log(`   📝 Generated filename: ${fileName}`);
 
       // Upload to Firebase Storage
       // getTotoBoStorage() returns a bucket instance directly
@@ -128,6 +130,8 @@ export class ImageService {
       const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedFileName}?alt=media&token=${downloadToken}`;
 
       console.log(`5. Image processing: uploaded`);
+      console.log(`   ✅ Uploaded: ${fileName} (${originalSize} → ${optimizedSize} bytes, ${((1 - optimizedSize/originalSize) * 100).toFixed(1)}% reduction)`);
+      console.log(`   🔗 Public URL: ${publicUrl.substring(0, 100)}...`);
 
       return {
         url: publicUrl,

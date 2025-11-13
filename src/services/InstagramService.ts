@@ -433,27 +433,24 @@ export class InstagramService {
             const childrenResponse = await fetch(`https://graph.instagram.com/${item.id}/children?fields=id,media_type,media_url,thumbnail_url&access_token=${accessToken}`);
             if (childrenResponse.ok) {
               const childrenData = await childrenResponse.json();
+              // For carousel posts, ONLY add to carousel array to avoid duplicates
               for (const child of childrenData.data || []) {
-                if (child.media_type === 'IMAGE' && child.media_url) {
-                  images.push(child.media_url);
-                  carousel.push(child.media_url);
-                } else if (child.media_type === 'VIDEO' && child.media_url) {
-                  videos.push(child.media_url);
+                if ((child.media_type === 'IMAGE' || child.media_type === 'VIDEO') && child.media_url) {
                   carousel.push(child.media_url);
                 }
               }
             } else {
               // Fallback: use the main media_url if children fetch fails
+              // For carousel posts, ONLY add to carousel array
               if (item.media_url) {
-                images.push(item.media_url);
                 carousel.push(item.media_url);
               }
             }
           } catch (childrenError) {
             console.warn(`Failed to fetch carousel children for ${item.id}:`, childrenError);
             // Fallback: use the main media_url
+            // For carousel posts, ONLY add to carousel array
             if (item.media_url) {
-              images.push(item.media_url);
               carousel.push(item.media_url);
             }
           }
@@ -728,6 +725,7 @@ export class InstagramService {
           };
           
           const seenUrls = new Set<string>(); // Track normalized URLs to avoid duplicates
+          const duplicateCount = { count: 0, urls: [] as Array<{ original: string; normalized: string }> };
           let extractedFromSidecar = false;
           
           // First, try to extract from edge_sidecar_to_children if available
@@ -737,30 +735,45 @@ export class InstagramService {
             console.log(`  📦 Extracting ${carouselEdges.length} items from edge_sidecar_to_children`);
             for (const carouselEdge of carouselEdges) {
               const carouselNode = carouselEdge.node || carouselEdge;
-              // Prefer display_url over thumbnail_src, and check for duplicates using normalized URLs
+              // For carousel posts, ONLY add to carousel array to avoid duplicates
+              // Don't add to images/videos arrays - they'll be extracted from carousel later
               if (carouselNode.is_video && carouselNode.video_url) {
                 const normalizedUrl = normalizeUrl(carouselNode.video_url);
                 if (!seenUrls.has(normalizedUrl)) {
-                  videos.push(carouselNode.video_url);
                   carousel.push(carouselNode.video_url);
                   seenUrls.add(normalizedUrl);
+                } else {
+                  duplicateCount.count++;
+                  duplicateCount.urls.push({ original: carouselNode.video_url, normalized: normalizedUrl });
                 }
               } else if (carouselNode.display_url) {
                 const normalizedUrl = normalizeUrl(carouselNode.display_url);
                 if (!seenUrls.has(normalizedUrl)) {
-                  images.push(carouselNode.display_url);
                   carousel.push(carouselNode.display_url);
                   seenUrls.add(normalizedUrl);
+                } else {
+                  duplicateCount.count++;
+                  duplicateCount.urls.push({ original: carouselNode.display_url, normalized: normalizedUrl });
                 }
               } else if (carouselNode.thumbnail_src) {
                 const normalizedUrl = normalizeUrl(carouselNode.thumbnail_src);
                 if (!seenUrls.has(normalizedUrl)) {
-                  images.push(carouselNode.thumbnail_src);
                   carousel.push(carouselNode.thumbnail_src);
                   seenUrls.add(normalizedUrl);
+                } else {
+                  duplicateCount.count++;
+                  duplicateCount.urls.push({ original: carouselNode.thumbnail_src, normalized: normalizedUrl });
                 }
               }
             }
+            if (duplicateCount.count > 0) {
+              console.log(`  ⚠️  Found ${duplicateCount.count} duplicate URL(s) during carousel extraction from edge_sidecar_to_children`);
+              duplicateCount.urls.slice(0, 3).forEach((dup, idx) => {
+                console.log(`     ${idx + 1}. Original: ${dup.original.substring(0, 80)}...`);
+                console.log(`        Normalized: ${dup.normalized.substring(0, 80)}...`);
+              });
+            }
+            console.log(`  ✅ Extracted ${carousel.length} unique items from edge_sidecar_to_children`);
             extractedFromSidecar = true; // Mark that we successfully extracted from sidecar
           } else {
             // Fallback: fetch carousel data via individual post API call
@@ -768,42 +781,52 @@ export class InstagramService {
             try {
               const carouselData = await fetchCarouselChildren(node.shortcode);
               
+              // For carousel posts, ONLY add to carousel array to avoid duplicates
               // Add images with duplicate check using normalized URLs (reuse seenUrls from above)
+              let imageDupCount = 0;
               for (const imgUrl of carouselData.images) {
                 const normalizedUrl = normalizeUrl(imgUrl);
                 if (!seenUrls.has(normalizedUrl)) {
-                  images.push(imgUrl);
                   carousel.push(imgUrl);
                   seenUrls.add(normalizedUrl);
+                } else {
+                  imageDupCount++;
                 }
               }
               
               // Add videos with duplicate check using normalized URLs
+              let videoDupCount = 0;
               for (const vidUrl of carouselData.videos) {
                 const normalizedUrl = normalizeUrl(vidUrl);
                 if (!seenUrls.has(normalizedUrl)) {
-                  videos.push(vidUrl);
                   carousel.push(vidUrl);
                   seenUrls.add(normalizedUrl);
+                } else {
+                  videoDupCount++;
                 }
               }
               
+              if (imageDupCount > 0 || videoDupCount > 0) {
+                console.log(`  ⚠️  Found ${imageDupCount} duplicate image(s) and ${videoDupCount} duplicate video(s) during carousel fetch`);
+              }
+              
               if (carouselData.images.length > 0 || carouselData.videos.length > 0) {
-                console.log(`  ✅ Fetched ${images.length} unique images and ${videos.length} unique videos from carousel`);
+                console.log(`  ✅ Fetched ${carousel.length} unique media items from carousel (${carouselData.images.length} images, ${carouselData.videos.length} videos)`);
                 extractedFromSidecar = true; // Mark that we successfully extracted from carousel
               } else {
                 console.log(`  ⚠️ No carousel data found, falling back to single media`);
                 // Fallback to single media if carousel fetch fails (only if not already in seenUrls)
+                // For carousel posts, add to carousel only
                 if (node.is_video && node.video_url) {
                   const normalizedUrl = normalizeUrl(node.video_url);
                   if (!seenUrls.has(normalizedUrl)) {
-                    videos.push(node.video_url);
+                    carousel.push(node.video_url);
                     seenUrls.add(normalizedUrl);
                   }
                 } else if (node.display_url) {
                   const normalizedUrl = normalizeUrl(node.display_url);
                   if (!seenUrls.has(normalizedUrl)) {
-                    images.push(node.display_url);
+                    carousel.push(node.display_url);
                     seenUrls.add(normalizedUrl);
                   }
                 }
@@ -811,16 +834,17 @@ export class InstagramService {
             } catch (error) {
               console.log(`  ⚠️ Error fetching carousel data: ${error instanceof Error ? error.message : 'Unknown error'}, falling back to single media`);
               // Fallback to single media if carousel fetch fails (only if not already in seenUrls)
+              // For carousel posts, add to carousel only
               if (node.is_video && node.video_url) {
                 const normalizedUrl = normalizeUrl(node.video_url);
                 if (!seenUrls.has(normalizedUrl)) {
-                  videos.push(node.video_url);
+                  carousel.push(node.video_url);
                   seenUrls.add(normalizedUrl);
                 }
               } else if (node.display_url) {
                 const normalizedUrl = normalizeUrl(node.display_url);
                 if (!seenUrls.has(normalizedUrl)) {
-                  images.push(node.display_url);
+                  carousel.push(node.display_url);
                   seenUrls.add(normalizedUrl);
                 }
               }
@@ -829,22 +853,8 @@ export class InstagramService {
           
           // IMPORTANT: If we successfully extracted from carousel, DON'T add the main node's media
           // because it's already included in the carousel items (usually as the first item)
-          if (!extractedFromSidecar) {
-            // Only add main node media if we didn't extract from carousel
-            if (node.is_video && node.video_url) {
-              const normalizedUrl = normalizeUrl(node.video_url);
-              if (!seenUrls.has(normalizedUrl)) {
-                videos.push(node.video_url);
-                seenUrls.add(normalizedUrl);
-              }
-            } else if (node.display_url) {
-              const normalizedUrl = normalizeUrl(node.display_url);
-              if (!seenUrls.has(normalizedUrl)) {
-                images.push(node.display_url);
-                seenUrls.add(normalizedUrl);
-              }
-            }
-          }
+          // For carousel posts, we only add to carousel array, not to images/videos
+          // This prevents duplicates when combining arrays later
         } else {
           // Single media post
           if (node.is_video && node.video_url) {
@@ -1318,6 +1328,7 @@ export class InstagramService {
     }
   }
 }
+
 
 
 

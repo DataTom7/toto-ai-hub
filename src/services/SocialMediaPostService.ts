@@ -138,6 +138,21 @@ export class SocialMediaPostService {
   async savePost(post: Omit<SocialMediaPost, 'id' | 'createdAt'>): Promise<string | null> {
     try {
       console.log(`6. Saving post: ${post.postId} (${post.platform})`);
+      console.log(`   📊 Post data summary:`);
+      console.log(`      - images array length: ${post.images?.length || 0}`);
+      console.log(`      - imageFileNames array length: ${post.imageFileNames?.length || 0}`);
+      if (post.imageFileNames && post.imageFileNames.length > 0) {
+        console.log(`      - imageFileNames:`, post.imageFileNames);
+      }
+      if (post.images && post.images.length > 0) {
+        console.log(`      - images URLs (first 3):`);
+        post.images.slice(0, 3).forEach((url, idx) => {
+          console.log(`         ${idx + 1}. ${url.substring(0, 100)}${url.length > 100 ? '...' : ''}`);
+        });
+        if (post.images.length > 3) {
+          console.log(`         ... and ${post.images.length - 3} more`);
+        }
+      }
       const db = this.getFirestore();
       if (!db) {
         return await this.savePostViaAPI(post);

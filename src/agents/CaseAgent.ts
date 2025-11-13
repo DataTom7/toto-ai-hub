@@ -359,21 +359,29 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       // Update analytics
       this.updateAnalytics(processingTime, result.success, actions);
 
+      // Add guardian banking alias to metadata if donation intent detected and alias is available
+      const metadata: any = {
+        agentType: this.config.name,
+        confidence: this.calculateConfidence(intentAnalysis, emotionalState),
+        processingTime,
+        sessionId,
+        intent: intentAnalysis.intent,
+        emotionalState,
+        userEngagement: userProfile.engagementLevel,
+      };
+      
+      // Include banking alias in metadata when donation intent is detected
+      if (intentAnalysis.intent === 'donate' && enhancedCaseData.guardianBankingAlias) {
+        metadata.guardianBankingAlias = enhancedCaseData.guardianBankingAlias;
+      }
+
       return {
         success: result.success,
         message: result.message,
         caseData: enhancedCaseData,
         actions,
         suggestions,
-        metadata: {
-          agentType: this.config.name,
-          confidence: this.calculateConfidence(intentAnalysis, emotionalState),
-          processingTime,
-          sessionId,
-          intent: intentAnalysis.intent,
-          emotionalState,
-          userEngagement: userProfile.engagementLevel,
-        },
+        metadata,
         error: result.error,
       };
 

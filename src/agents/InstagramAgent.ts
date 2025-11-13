@@ -857,12 +857,8 @@ Respond with JSON:
           jsonString = jsonString.trim();
           const caseData = JSON.parse(jsonString);
           
-          // Combine all media URLs
-          const allMedia = [
-            ...post.media.images,
-            ...post.media.videos,
-            ...post.media.carousel
-          ];
+          // Combine all media URLs (deduplicated)
+          const allMedia = this.getAllMediaDeduplicated(post);
           
           return {
             ...caseData,
@@ -1011,12 +1007,8 @@ Respond in JSON format:
       jsonString = jsonString.trim();
       const analysis = JSON.parse(jsonString);
       
-      // Add media URLs to extractedInfo
-      const allMedia = [
-        ...post.media.images,
-        ...post.media.videos,
-        ...post.media.carousel
-      ];
+      // Add media URLs to extractedInfo (deduplicated)
+      const allMedia = this.getAllMediaDeduplicated(post);
       if (allMedia.length > 0 && !analysis.extractedInfo.newImages) {
         analysis.extractedInfo.newImages = allMedia;
       }
@@ -1042,6 +1034,74 @@ Respond in JSON format:
   /**
    * Create a review item for manual approval
    */
+  /**
+   * Combine all media from a post, deduplicating URLs to avoid processing the same image twice
+   * (carousel items are included in both images/videos arrays AND carousel array)
+   */
+  private getAllMediaDeduplicated(post: InstagramPost): string[] {
+    const seenUrls = new Set<string>();
+    const allMedia: string[] = [];
+    const duplicateUrls: Array<{ original: string; normalized: string; source: string }> = [];
+    
+    // Normalize URL using the same logic as InstagramService
+    // This removes Instagram-specific query parameters that don't change the actual image
+    const normalizeUrl = (url: string): string => {
+      try {
+        const urlObj = new URL(url);
+        // Remove query parameters that don't change the actual image
+        urlObj.searchParams.delete('_nc_cat');
+        urlObj.searchParams.delete('_nc_sid');
+        urlObj.searchParams.delete('_nc_ohc');
+        urlObj.searchParams.delete('_nc_ht');
+        urlObj.searchParams.delete('ccb');
+        urlObj.searchParams.delete('oe');
+        urlObj.searchParams.delete('oh');
+        urlObj.searchParams.delete('stp');
+        urlObj.searchParams.delete('se');
+        urlObj.searchParams.delete('_nc_cb');
+        return urlObj.toString();
+      } catch {
+        // If URL parsing fails, fall back to simple normalization
+        return url.split('?')[0].split('#')[0];
+      }
+    };
+    
+    // Helper to normalize and add URL if not seen
+    const addUniqueUrl = (url: string, source: string) => {
+      const normalized = normalizeUrl(url);
+      if (!seenUrls.has(normalized)) {
+        seenUrls.add(normalized);
+        allMedia.push(url);
+      } else {
+        duplicateUrls.push({ original: url, normalized, source });
+      }
+    };
+    
+    // Log initial counts
+    console.log(`  🔍 Deduplicating media for post ${post.id}:`);
+    console.log(`     - ${post.media.images.length} images, ${post.media.videos.length} videos, ${post.media.carousel.length} carousel items`);
+    
+    // Add images
+    post.media.images.forEach(url => addUniqueUrl(url, 'images'));
+    // Add videos
+    post.media.videos.forEach(url => addUniqueUrl(url, 'videos'));
+    // Add carousel items (may overlap with images/videos, but deduplication handles it)
+    post.media.carousel.forEach(url => addUniqueUrl(url, 'carousel'));
+    
+    // Log duplicates if any
+    if (duplicateUrls.length > 0) {
+      console.log(`  ⚠️  Found ${duplicateUrls.length} duplicate URL(s) (normalized):`);
+      duplicateUrls.forEach((dup, idx) => {
+        console.log(`     ${idx + 1}. Source: ${dup.source}, URL: ${dup.original.substring(0, 80)}...`);
+        console.log(`        Normalized: ${dup.normalized.substring(0, 80)}...`);
+      });
+    }
+    
+    console.log(`  ✅ After deduplication: ${allMedia.length} unique media items`);
+    
+    return allMedia;
+  }
+
   private async createReviewItem(
     type: 'case_creation' | 'case_update' | 'case_enrichment',
     post: InstagramPost,
@@ -1060,11 +1120,7 @@ Respond in JSON format:
       const shouldAutoApprove = !this.config.reviewPolicy.requireManualReview && 
                                analysis.confidence >= this.config.reviewPolicy.autoApproveThreshold;
 
-      const allMedia = [
-        ...post.media.images,
-        ...post.media.videos,
-        ...post.media.carousel
-      ];
+      const allMedia = this.getAllMediaDeduplicated(post);
 
       const reviewItem: ReviewItem = {
         id: `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -1114,14 +1170,46 @@ Respond in JSON format:
       // Process images if any (separate videos from images)
       const allMedia = reviewItem.metadata?.images || [];
       console.log(`📸 Processing media for post ${reviewItem.postId}: ${allMedia.length} total media items`);
-      const imageUrls = allMedia.filter(url => {
+      
+      // Deduplicate allMedia again before processing (in case duplicates slipped through)
+      const normalizeUrl = (url: string): string => {
+        try {
+          const urlObj = new URL(url);
+          // Remove query parameters that don't change the actual image
+          urlObj.searchParams.delete('_nc_cat');
+          urlObj.searchParams.delete('_nc_sid');
+          urlObj.searchParams.delete('_nc_ohc');
+          urlObj.searchParams.delete('_nc_ht');
+          urlObj.searchParams.delete('ccb');
+          urlObj.searchParams.delete('oe');
+          urlObj.searchParams.delete('oh');
+          urlObj.searchParams.delete('stp');
+          urlObj.searchParams.delete('se');
+          urlObj.searchParams.delete('_nc_cb');
+          return urlObj.toString();
+        } catch {
+          return url.split('?')[0].split('#')[0];
+        }
+      };
+      
+      const seenMedia = new Set<string>();
+      const uniqueMedia = allMedia.filter(url => {
+        const normalized = normalizeUrl(url);
+        if (seenMedia.has(normalized)) {
+          return false; // Duplicate, skip it
+        }
+        seenMedia.add(normalized);
+        return true;
+      });
+      
+      const imageUrls = uniqueMedia.filter(url => {
         // Filter out video URLs - they typically contain .mp4 or video-related paths
         const lowerUrl = url.toLowerCase();
         return !lowerUrl.includes('.mp4') && 
                !lowerUrl.includes('video') && 
                !lowerUrl.includes('/o1/v/t2/f2/'); // Instagram video CDN pattern
       });
-      const videoUrls = allMedia.filter(url => {
+      const videoUrls = uniqueMedia.filter(url => {
         const lowerUrl = url.toLowerCase();
         return lowerUrl.includes('.mp4') || 
                lowerUrl.includes('video') || 
@@ -1130,8 +1218,19 @@ Respond in JSON format:
       
       const processedImages: string[] = [];
       const imageFileNames: string[] = [];
+      const processedUrls = new Set<string>(); // Track processed URLs to prevent duplicates
       
-      console.log(`🖼️ Found ${imageUrls.length} images and ${videoUrls.length} videos to process`);
+      console.log(`🖼️ Found ${imageUrls.length} images and ${videoUrls.length} videos to process (after deduplication)`);
+      console.log(`   📋 Image URLs (${imageUrls.length}):`);
+      imageUrls.forEach((url, idx) => {
+        console.log(`      ${idx + 1}. ${url.substring(0, 100)}${url.length > 100 ? '...' : ''}`);
+      });
+      if (videoUrls.length > 0) {
+        console.log(`   📋 Video URLs (${videoUrls.length}):`);
+        videoUrls.forEach((url, idx) => {
+          console.log(`      ${idx + 1}. ${url.substring(0, 100)}${url.length > 100 ? '...' : ''}`);
+        });
+      }
       
       // Process images
       if (imageUrls.length > 0) {
@@ -1139,30 +1238,63 @@ Respond in JSON format:
           // Process each image individually to track file names
           for (let i = 0; i < imageUrls.length; i++) {
             try {
+              const imageUrl = imageUrls[i];
+              const normalizedImageUrl = normalizeUrl(imageUrl);
+              
+              // Skip if we've already processed this URL
+              if (processedUrls.has(normalizedImageUrl)) {
+                console.log(`  ⚠️ Skipping duplicate image [${i}]: ${imageUrl.substring(0, 80)}...`);
+                console.log(`     Normalized: ${normalizedImageUrl.substring(0, 80)}...`);
+                continue;
+              }
+              
+              console.log(`  📸 Processing image [${i}/${imageUrls.length}]: ${imageUrl.substring(0, 80)}...`);
               const result = await this.imageService.processAndUploadImage(
-                imageUrls[i],
+                imageUrl,
                 'instagram',
                 reviewItem.postId,
                 i
               );
               if (result) {
-                processedImages.push(result.url);
-                imageFileNames.push(result.fileName);
+                const normalizedResultUrl = normalizeUrl(result.url);
+                if (!processedUrls.has(normalizedResultUrl)) {
+                  processedImages.push(result.url);
+                  imageFileNames.push(result.fileName);
+                  processedUrls.add(normalizedResultUrl);
+                  processedUrls.add(normalizedImageUrl); // Also mark original as processed
+                  console.log(`     ✅ Added to processedImages: ${result.fileName}`);
+                } else {
+                  console.log(`     ⚠️ Skipping duplicate processed URL: ${result.url.substring(0, 80)}...`);
+                }
               } else {
-                // Fallback: keep original URL if processing fails
-                processedImages.push(imageUrls[i]);
+                // Fallback: keep original URL if processing fails (only if not already added)
+                if (!processedUrls.has(normalizedImageUrl)) {
+                  processedImages.push(imageUrl);
+                  processedUrls.add(normalizedImageUrl);
+                }
               }
             } catch (imgError) {
               console.error(`Error processing image ${imageUrls[i]}:`, imgError);
-              // Fallback: keep original URL if processing fails
-              processedImages.push(imageUrls[i]);
+              // Fallback: keep original URL if processing fails (only if not already added)
+              const imageUrl = imageUrls[i];
+              const normalizedImageUrl = normalizeUrl(imageUrl);
+              if (!processedUrls.has(normalizedImageUrl)) {
+                processedImages.push(imageUrl);
+                processedUrls.add(normalizedImageUrl);
+              }
             }
           }
         } catch (error) {
           console.error('Error processing images:', error);
-          // Fallback: use original URLs if all processing fails
+          // Fallback: use original URLs if all processing fails (only unique ones)
           if (processedImages.length === 0 && imageUrls.length > 0) {
-            processedImages.push(...imageUrls);
+            for (const imageUrl of imageUrls) {
+              const normalized = normalizeUrl(imageUrl);
+              if (!processedUrls.has(normalized)) {
+                processedImages.push(imageUrl);
+                processedUrls.add(normalized);
+              }
+            }
           }
         }
       }
@@ -1173,30 +1305,58 @@ Respond in JSON format:
           // Start video processing after images (use imageUrls.length as starting index)
           for (let i = 0; i < videoUrls.length; i++) {
             try {
+              const videoUrl = videoUrls[i];
+              const normalizedVideoUrl = normalizeUrl(videoUrl);
+              
+              // Skip if we've already processed this URL
+              if (processedUrls.has(normalizedVideoUrl)) {
+                console.log(`  ⚠️ Skipping duplicate video: ${videoUrl.substring(0, 50)}...`);
+                continue;
+              }
+              
               const result = await this.imageService.processAndUploadVideo(
-                videoUrls[i],
+                videoUrl,
                 'instagram',
                 reviewItem.postId,
                 imageUrls.length + i // Continue indexing from where images left off
               );
               if (result) {
-                processedImages.push(result.url);
-                imageFileNames.push(result.fileName); // Store video file names too for cleanup
+                const normalizedResultUrl = normalizeUrl(result.url);
+                if (!processedUrls.has(normalizedResultUrl)) {
+                  processedImages.push(result.url);
+                  imageFileNames.push(result.fileName); // Store video file names too for cleanup
+                  processedUrls.add(normalizedResultUrl);
+                  processedUrls.add(normalizedVideoUrl); // Also mark original as processed
+                }
               } else {
-                // Fallback: keep original URL if processing fails
-                console.warn(`Video processing failed for ${videoUrls[i]}, using original URL`);
-                processedImages.push(videoUrls[i]);
+                // Fallback: keep original URL if processing fails (only if not already added)
+                console.warn(`Video processing failed for ${videoUrl}, using original URL`);
+                if (!processedUrls.has(normalizedVideoUrl)) {
+                  processedImages.push(videoUrl);
+                  processedUrls.add(normalizedVideoUrl);
+                }
               }
             } catch (videoError) {
               console.error(`Error processing video ${videoUrls[i]}:`, videoError);
-              // Fallback: keep original URL if processing fails
-              processedImages.push(videoUrls[i]);
+              // Fallback: keep original URL if processing fails (only if not already added)
+              const videoUrl = videoUrls[i];
+              const normalizedVideoUrl = normalizeUrl(videoUrl);
+              if (!processedUrls.has(normalizedVideoUrl)) {
+                processedImages.push(videoUrl);
+                processedUrls.add(normalizedVideoUrl);
+              }
             }
           }
         } catch (error) {
           console.error('Error processing videos:', error);
-          // Fallback: use original URLs if all processing fails
-          processedImages.push(...videoUrls);
+          // Fallback: use original URLs if all processing fails (only unique ones)
+          for (const videoUrl of videoUrls) {
+            const normalized = normalizeUrl(videoUrl);
+            if (!processedUrls.has(normalized)) {
+              processedImages.push(videoUrl);
+              processedUrls.add(normalized);
+            }
+          }
         }
       }
 
@@ -1210,6 +1370,11 @@ Respond in JSON format:
 
       // Save to Firestore via SocialMediaPostService
       console.log(`💾 Saving post ${reviewItem.postId} with ${processedImages.length} processed images`);
+      console.log(`   📁 imageFileNames (${imageFileNames.length}):`, imageFileNames);
+      console.log(`   🖼️  processedImages URLs (${processedImages.length}):`);
+      processedImages.forEach((url, idx) => {
+        console.log(`      ${idx + 1}. ${url.substring(0, 100)}${url.length > 100 ? '...' : ''}`);
+      });
       const postData: any = {
         platform: 'instagram' as const,
         guardianId: reviewItem.guardianId,
@@ -1273,11 +1438,7 @@ Respond in JSON format:
     analysis: PostAnalysis,
     caseAnalysis?: any
   ): any {
-    const allMedia = [
-      ...post.media.images,
-      ...post.media.videos,
-      ...post.media.carousel
-    ];
+    const allMedia = this.getAllMediaDeduplicated(post);
 
     switch (type) {
       case 'case_creation':
@@ -1351,11 +1512,7 @@ Respond in JSON format:
       content += `Location: ${analysis.extractedInfo.location}\n`;
     }
     
-    const allMedia = [
-      ...post.media.images,
-      ...post.media.videos,
-      ...post.media.carousel
-    ];
+    const allMedia = this.getAllMediaDeduplicated(post);
     if (allMedia.length > 0) {
       content += `\nMedia: ${allMedia.length} image(s)/video(s) attached\n`;
     }

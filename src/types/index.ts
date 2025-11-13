@@ -44,6 +44,7 @@ export interface AgentResponse {
     intent?: string;
     emotionalState?: string;
     userEngagement?: 'low' | 'medium' | 'high';
+    guardianBankingAlias?: string; // Banking alias for quick action button (when donation intent detected)
   };
   error?: string;
 }
