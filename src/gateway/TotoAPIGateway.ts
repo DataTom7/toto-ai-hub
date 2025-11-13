@@ -1228,6 +1228,109 @@ COMMUNICATION
         usageCount: 0,
         agentTypes: ['TwitterAgent', 'SharingAgent'],
         audience: ['donors']
+      },
+      
+      // Conversation Management Knowledge Base
+      {
+        id: 'kb-conversation-001',
+        title: 'Conversation Progression and Avoiding Repetition',
+        content: `GENERAL PRINCIPLE: Each message should advance the conversation forward. Never repeat information you've already provided.
+
+WHEN TO REPEAT:
+- Only if user explicitly asks "can you repeat that?" or "what was that again?"
+- If user seems confused and asks for clarification
+- Never repeat just because user says "Si" or "Ok" after you've explained something
+
+WHEN TO MOVE FORWARD:
+- After explaining donation process: Ask about verification or sharing
+- After explaining totitos: Ask if they want to verify donation or share case
+- After explaining verification: Confirm understanding and suggest next action
+- If user says "Si" after you've explained something: Acknowledge and move to next step
+
+CONVERSATION FLOW:
+1. Welcome → Case intro (brief)
+2. Donation intent → Explain donation process (once)
+3. Totitos question → Explain totitos
+4. Verification interest → Explain verification process
+5. Ready to verify → Provide step-by-step instructions
+6. Confirmation → Move forward (suggest sharing, other cases, or close)
+
+AVOID:
+- Repeating donation instructions multiple times
+- Repeating case information after welcome
+- Asking the same question multiple times
+- Going in circles with the same information`,
+        category: 'conversation',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-conversation-002',
+        title: 'Handling Affirmative Responses',
+        content: `When user says "Si", "Sí", "Ok", "Dale", "Claro", etc.:
+
+CONTEXT MATTERS:
+- If you just explained something: Acknowledge and move to next step
+- If you asked a question: Treat as "yes" to that question
+- If you offered to explain: Proceed with explanation
+- If you already explained: Don't repeat, move forward
+
+EXAMPLES:
+- "¿Te gustaría saber cómo verificar?" → User: "Si" → Explain verification
+- "Puedes hacer una transferencia..." → User: "Si" → Ask about verification or sharing
+- After explaining totitos → User: "Si" → Ask if they want to verify donation
+
+NEVER:
+- Repeat the same explanation you just gave
+- Ask the same question again
+- Assume "Si" means "repeat everything"`,
+        category: 'conversation',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
+      },
+      {
+        id: 'kb-donations-015',
+        title: 'Donation Verification Step-by-Step Guide',
+        content: `STEP-BY-STEP VERIFICATION PROCESS:
+
+STEP 1: Make the donation
+- User transfers money to guardian's banking alias
+- No minimum amount required
+- Transfer happens directly (not through platform)
+
+STEP 2: Upload receipt (optional but recommended)
+- User uploads receipt/comprobante in the chat dialog
+- Can be: bank document, wallet receipt, screenshot
+- Upload happens in same chat where they're talking to agent
+
+STEP 3: Wait for verification
+- Verification happens weekly with guardian
+- Guardian reviews and approves donations
+- Cross-checks with their records
+
+STEP 4: Receive notification
+- User gets automatic notification when verified
+- Can also be verified by guardian independently
+
+STEP 5: Earn totitos
+- Once verified, totitos are automatically added
+- Amount multiplied by user's rating (1-5 stars)
+- Can see totitos in profile (bottom navbar)
+
+IMPORTANT:
+- Verification is optional but recommended
+- No penalties for unverified donations
+- Donations still help the cause even if not verified
+- Guardian can verify independently if user forgets to upload`,
+        category: 'donations',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent', 'DonationAgent'],
+        audience: ['donors']
       }
     ];
   }
