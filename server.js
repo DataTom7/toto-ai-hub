@@ -19,6 +19,7 @@ const fs = require('fs');
 
 // Initialize production Firebase Admin for auth token verification
 // This is needed because we use production auth but save to staging Firestore
+// The TOTO_APP_PROD_SERVICE_ACCOUNT_KEY secret must be accessible by the Cloud Run service account
 let totoAppProdApp = null;
 try {
   let prodServiceAccount = null;
