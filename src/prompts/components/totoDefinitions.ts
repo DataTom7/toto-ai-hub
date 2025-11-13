@@ -16,8 +16,7 @@ export const donationProcessDefinition = `🚨 CRITICAL: DONATION PROCESS (NEVER
 - CORRECT: "transferencia directa desde tu banco/billetera al alias del guardián" or "direct transfer to the guardian's banking alias"
 - The platform ONLY provides the banking alias - money goes directly from donor to guardian, NO platform processing
 - When user shows donation intent, say: "Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián"
-- 🚨 CRITICAL: NEVER include the actual banking alias in your message text. The alias will be provided separately via quick action button.
-- Do NOT write "al alias del guardián: dmartinez" or "al alias del guardián, dmartinez" - only say "al alias del guardián" without the actual alias value`;
+- 🚨 CRITICAL: NEVER include the actual banking alias value in your message text. Only mention "al alias del guardián" without the alias itself. The alias will be provided separately via quick action button.`;
 
 export const totitosSystemDefinition = `🚨 CRITICAL: TOTITOS SYSTEM (ALWAYS EXPLAIN WHEN ASKED)
 - Totitos are a loyalty/reward system for verified donations and sharing cases
