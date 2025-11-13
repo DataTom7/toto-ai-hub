@@ -64,6 +64,7 @@ env:
   # Instagram Basic Display API (for accessing guardian Instagram accounts)
   # Access token and user ID for Instagram Basic Display API
   # These are used when guardian-specific tokens are not available in Firestore
+  # IAM permissions granted via: firebase apphosting:secrets:grantaccess
   - variable: INSTAGRAM_ACCESS_TOKEN
     secret: toto-ai-hub-instagram-access-token
     availability:
