@@ -45,6 +45,7 @@ env:
 
   # Toto App Production Service Account (for auth token verification)
   # This is needed for cross-auth: production auth tokens, staging data
+  # IAM permissions granted via: firebase apphosting:secrets:grantaccess
   - variable: TOTO_APP_PROD_SERVICE_ACCOUNT_KEY
     secret: TOTO_APP_PROD_SERVICE_ACCOUNT_KEY
     availability:
