@@ -43,6 +43,14 @@ env:
       - BUILD
       - RUNTIME
 
+  # Toto App Production Service Account (for auth token verification)
+  # This is needed for cross-auth: production auth tokens, staging data
+  - variable: TOTO_APP_PROD_SERVICE_ACCOUNT_KEY
+    secret: TOTO_APP_PROD_SERVICE_ACCOUNT_KEY
+    availability:
+      - BUILD
+      - RUNTIME
+
   # Toto BO Service Account (entire JSON as secret) - for shared KB access
   # This allows toto-ai-hub to access the shared KB in toto-bo Firestore
   # Both staging and production instances will use this to access the same KB
@@ -52,12 +60,35 @@ env:
       - BUILD
       - RUNTIME
 
-  # Instagram credentials are NOT needed here
-  # The system uses:
-  # 1. Guardian-specific tokens from Firestore (primary method)
-  # 2. Web scraping as fallback (works without credentials, may have limited access)
-  # 3. Basic Display API tokens can be set per-guardian in Firestore
-  # If you need global fallback credentials, you can add them here as RUNTIME-only secrets
+  # Instagram Basic Display API (for accessing guardian Instagram accounts)
+  # Access token and user ID for Instagram Basic Display API
+  # These are used when guardian-specific tokens are not available in Firestore
+  - variable: INSTAGRAM_ACCESS_TOKEN
+    secret: toto-ai-hub-instagram-access-token
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: INSTAGRAM_USER_ID
+    secret: toto-ai-hub-instagram-user-id
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Instagram Web Scraping Credentials (fallback method)
+  # Used for web scraping when Basic Display API is not available
+  # Note: These are less secure and may be rate-limited by Instagram
+  - variable: INSTAGRAM_USERNAME
+    secret: toto-ai-hub-instagram-username
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: INSTAGRAM_PASSWORD
+    secret: toto-ai-hub-instagram-password
+    availability:
+      - BUILD
+      - RUNTIME
 
 outputFiles:
   serverApp:
