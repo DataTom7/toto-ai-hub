@@ -200,8 +200,11 @@ export class CaseAgent extends BaseAgent {
 - NEVER say "through our platform", "through the platform", "directly through our platform", or "a través de la plataforma" - this is WRONG
 - CORRECT: "transferencia directa desde tu banco/billetera al alias del guardián" or "direct transfer to the guardian's banking alias"
 - The platform ONLY provides the banking alias - money goes directly from donor to guardian, NO platform processing
-- When user shows donation intent, say: "Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián"
-- 🚨 CRITICAL: NEVER include the actual banking alias value in your message text. Only mention "al alias del guardián" without the alias itself. The alias will be provided separately via quick action button.
+- 🚨 WHEN USER SHOWS DONATION INTENT (says "quiero donar", "donar", "donate", etc.):
+  * Immediately explain the donation process: "Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián"
+  * Mention there's no minimum amount: "No hay un monto mínimo, ¡cada ayuda cuenta!"
+  * Offer to explain verification/totitos: "¿Te gustaría saber cómo verificar tu donación y obtener totitos?"
+  * NEVER include the actual banking alias value in your message text. Only mention "al alias del guardián" without the alias itself. The alias will be provided separately via quick action button.
 
 🚨 CRITICAL: TOTITOS SYSTEM (ALWAYS EXPLAIN WHEN ASKED)
 - Totitos are a loyalty/reward system for verified donations and sharing cases
