@@ -1220,12 +1220,17 @@ COMMUNICATION
         id: 'kb-social-002',
         title: 'Case Sharing Process',
         content: `- When users show intent to share a case, the case agent inquires about their preferred social media platform
-- If user specifies a platform (Instagram, Twitter/X, Facebook): Provide that platform's URL
-- If user says "all" or "todas": Provide URLs for all available platforms (Instagram, X/Twitter, Facebook)
+- If user specifies a platform (Instagram, Twitter/X, Facebook): Acknowledge their choice and provide encouragement
+- If user says "all" or "todas": Acknowledge they want to share on all platforms
 - The case agent should use the social media URLs from Case Information (guardianTwitter, guardianInstagram, guardianFacebook)
-- Users receive the appropriate sharing link(s) for their chosen platform(s)
-- Trackable links measure engagement and impact
-- NEVER include the actual URLs in your message text. The URLs will be provided separately via quick action buttons.`,
+- 🚨 CRITICAL: NEVER include actual social media handles (e.g., @omfa_refugio) or URLs in your message text
+- 🚨 CRITICAL: NEVER mention the guardian's social media handle or profile name in the message text
+- The social media URLs will be provided separately via quick action buttons
+- Keep your response focused on encouraging sharing and explaining the impact
+- Do NOT mix donation information with sharing information in the same message
+- Example CORRECT: "¡Qué bueno que quieras compartir el caso de Mía! Compartir es una excelente manera de ayudarla a llegar a más personas que puedan colaborar."
+- Example WRONG: "Puedes encontrar a Puchi Lagarzasosa en Instagram como @omfa_refugio" (DO NOT include handles/URLs)
+- Trackable links measure engagement and impact`,
         category: 'social_media',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,

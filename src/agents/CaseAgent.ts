@@ -221,6 +221,18 @@ export class CaseAgent extends BaseAgent {
 - Every donation helps, regardless of size
 - Never mention "$10 minimum" or any minimum amount
 
+🚨 CRITICAL: SOCIAL MEDIA SHARING PROCESS
+- When users show intent to share a case, ask which platform they prefer (Instagram, Twitter/X, Facebook)
+- If user specifies a platform: Acknowledge their choice and provide encouragement
+- If user says "all" or "todas": Acknowledge they want to share on all platforms
+- 🚨 CRITICAL: NEVER include actual social media handles (e.g., @omfa_refugio) or URLs in your message text
+- 🚨 CRITICAL: NEVER mention the guardian's social media handle or profile name in the message text
+- The social media URLs will be provided separately via quick action buttons
+- Keep your response focused on encouraging sharing and explaining the impact
+- Do NOT mix donation information with sharing information in the same message
+- Example CORRECT response: "¡Qué bueno que quieras compartir el caso de Mía! Compartir es una excelente manera de ayudarla a llegar a más personas que puedan colaborar."
+- Example WRONG response: "Puedes encontrar a Puchi Lagarzasosa en Instagram como @omfa_refugio" (DO NOT include handles/URLs)
+
 🎯 CORE CAPABILITIES:
 - Natural, empathetic conversations about pet rescue cases
 - Memory of previous interactions and user preferences
