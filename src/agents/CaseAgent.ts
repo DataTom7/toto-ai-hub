@@ -378,6 +378,39 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       if (intentAnalysis.intent === 'donate' && enhancedCaseData.guardianBankingAlias) {
         metadata.guardianBankingAlias = enhancedCaseData.guardianBankingAlias;
       }
+      
+      // Include social media URLs in metadata when sharing intent is detected
+      if (intentAnalysis.intent === 'share') {
+        const lowerMessage = message.toLowerCase();
+        const wantsAll = lowerMessage.includes('all') || lowerMessage.includes('todas') || lowerMessage.includes('todos');
+        
+        const socialUrls: any = {};
+        
+        // If user says "all", include all available platforms
+        // Otherwise, include all available platforms (frontend will show all buttons)
+        // The agent should ask which platform, but if user says "all", provide all
+        if (enhancedCaseData.guardianInstagram) {
+          // If it's already a URL, use it; otherwise construct from handle
+          socialUrls.instagram = enhancedCaseData.guardianInstagram.startsWith('http') 
+            ? enhancedCaseData.guardianInstagram 
+            : `https://instagram.com/${enhancedCaseData.guardianInstagram.replace('@', '')}`;
+        }
+        if (enhancedCaseData.guardianTwitter) {
+          socialUrls.twitter = enhancedCaseData.guardianTwitter.startsWith('http')
+            ? enhancedCaseData.guardianTwitter
+            : `https://twitter.com/${enhancedCaseData.guardianTwitter.replace('@', '')}`;
+        }
+        if (enhancedCaseData.guardianFacebook) {
+          socialUrls.facebook = enhancedCaseData.guardianFacebook.startsWith('http')
+            ? enhancedCaseData.guardianFacebook
+            : `https://facebook.com/${enhancedCaseData.guardianFacebook}`;
+        }
+        
+        // Only add if at least one URL exists
+        if (Object.keys(socialUrls).length > 0) {
+          metadata.socialMediaUrls = socialUrls;
+        }
+      }
 
       return {
         success: result.success,

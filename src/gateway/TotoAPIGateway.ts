@@ -1220,13 +1220,16 @@ COMMUNICATION
         id: 'kb-social-002',
         title: 'Case Sharing Process',
         content: `- When users show intent to share a case, the case agent inquires about their preferred social media platform
-- The case agent should go to that specific case document in Firestore and share the URL corresponding to the social media app the user requested (Twitter, Instagram, Threads, Facebook, WhatsApp)
-- Users receive the appropriate sharing link for their chosen platform
-- Trackable links measure engagement and impact`,
+- If user specifies a platform (Instagram, Twitter/X, Facebook): Provide that platform's URL
+- If user says "all" or "todas": Provide URLs for all available platforms (Instagram, X/Twitter, Facebook)
+- The case agent should use the social media URLs from Case Information (guardianTwitter, guardianInstagram, guardianFacebook)
+- Users receive the appropriate sharing link(s) for their chosen platform(s)
+- Trackable links measure engagement and impact
+- NEVER include the actual URLs in your message text. The URLs will be provided separately via quick action buttons.`,
         category: 'social_media',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
-        agentTypes: ['TwitterAgent', 'SharingAgent'],
+        agentTypes: ['CaseAgent', 'TwitterAgent', 'SharingAgent'],
         audience: ['donors']
       },
       
