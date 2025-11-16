@@ -1,24 +1,53 @@
 // Core types for toto-ai
 
+/**
+ * Base Case Data Interface
+ * 
+ * This extends the BaseCase model from toto-docs with AI-specific fields.
+ * Guardian information (name, banking alias, social links) is fetched from
+ * users collection and added to context when processing case messages.
+ */
 export interface CaseData {
+  // Core fields from BaseCase
   id: string;
   name: string;
   description: string;
-  status: 'active' | 'urgent' | 'completed' | 'paused';
-  animalType: string;
-  location: string;
+  status: 'draft' | 'active' | 'urgent' | 'completed';
+  priority: 'urgent' | 'normal';
+  category: 'rescue' | 'surgery' | 'treatment' | 'transit' | 'foster';
   guardianId: string;
-  guardianName: string;
-  targetAmount?: number;
-  currentAmount?: number;
+  donationsReceived: number;
   imageUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  // Guardian information for donations and social media
-  guardianBankingAlias?: string;
-  guardianTwitter?: string;
-  guardianInstagram?: string;
-  guardianFacebook?: string;
+  additionalImages?: string[];
+  location?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  publishedAt?: string;
+  completedAt?: string;
+  assignedTo?: string;
+  tags?: string[];
+  medicalNeeds?: string[];
+  specialNeeds?: string[];
+  adoptionStatus?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+  facebookUrl?: string;
+  
+  // AI-specific: Guardian info fetched from users collection (not stored in case)
+  guardianName?: string;           // Fetched from users.name
+  guardianImageUrl?: string;        // Fetched from users.imageUrl
+  guardianBankingAlias?: string;    // Fetched from users.bankingAccountAlias
+  guardianTwitter?: string;         // Fetched from users.contactInfo.socialLinks.twitter
+  guardianInstagram?: string;       // Fetched from users.contactInfo.socialLinks.instagram
+  guardianFacebook?: string;        // Fetched from users.contactInfo.socialLinks.facebook
+  
+  // Legacy compatibility aliases (deprecated, for migration only)
+  /** @deprecated Use donationsReceived instead */
+  targetAmount?: number;
+  /** @deprecated Use donationsReceived instead */
+  currentAmount?: number;
+  /** @deprecated Removed - cases only work with dogs */
+  animalType?: string;
 }
 
 export interface UserContext {
