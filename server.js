@@ -1413,14 +1413,38 @@ app.post('/api/case', async (req, res) => {
         
         if (caseDoc.exists) {
           const firestoreCaseData = caseDoc.data();
-          // Enrich caseData with Firestore data
+          // Enrich caseData with ALL Firestore data (merge, with provided caseData taking precedence for name/description)
           normalizedCaseData = {
             ...normalizedCaseData,
+            // Core fields
+            id: normalizedCaseData.id || caseDoc.id,
+            name: normalizedCaseData.name || firestoreCaseData.name || 'Unknown Case',
+            description: normalizedCaseData.description || firestoreCaseData.description || '',
+            status: firestoreCaseData.status || normalizedCaseData.status || 'active',
+            priority: firestoreCaseData.priority || normalizedCaseData.priority || 'normal',
+            category: firestoreCaseData.category || normalizedCaseData.category || 'rescue',
             guardianId: firestoreCaseData.guardianId || normalizedCaseData.guardianId,
             guardianName: firestoreCaseData.guardianName || normalizedCaseData.guardianName,
+            donationsReceived: firestoreCaseData.donationsReceived || normalizedCaseData.donationsReceived || 0,
+            // Optional fields
+            imageUrl: normalizedCaseData.imageUrl || firestoreCaseData.imageUrl,
+            additionalImages: firestoreCaseData.additionalImages || normalizedCaseData.additionalImages,
             location: firestoreCaseData.location || normalizedCaseData.location,
+            createdAt: firestoreCaseData.createdAt || normalizedCaseData.createdAt,
+            updatedAt: firestoreCaseData.updatedAt || normalizedCaseData.updatedAt,
+            publishedAt: firestoreCaseData.publishedAt || normalizedCaseData.publishedAt,
+            completedAt: firestoreCaseData.completedAt || normalizedCaseData.completedAt,
+            assignedTo: firestoreCaseData.assignedTo || normalizedCaseData.assignedTo,
+            tags: firestoreCaseData.tags || normalizedCaseData.tags,
+            medicalNeeds: firestoreCaseData.medicalNeeds || normalizedCaseData.medicalNeeds,
+            specialNeeds: firestoreCaseData.specialNeeds || normalizedCaseData.specialNeeds,
+            adoptionStatus: firestoreCaseData.adoptionStatus || normalizedCaseData.adoptionStatus,
+            // Case-specific social media URLs (for sharing)
+            instagramUrl: firestoreCaseData.instagramUrl || normalizedCaseData.instagramUrl,
+            twitterUrl: firestoreCaseData.twitterUrl || normalizedCaseData.twitterUrl,
+            facebookUrl: firestoreCaseData.facebookUrl || normalizedCaseData.facebookUrl,
+            // Legacy fields (for backward compatibility)
             animalType: firestoreCaseData.animalType || normalizedCaseData.animalType,
-            status: firestoreCaseData.status || normalizedCaseData.status,
             targetAmount: firestoreCaseData.targetAmount || normalizedCaseData.targetAmount,
             currentAmount: firestoreCaseData.currentAmount || normalizedCaseData.currentAmount
           };

@@ -2,7 +2,9 @@
 # toto-ai project configuration
 
 runConfig:
-  minInstances: 2
+  # Set to 0 for pre-launch phase - scale to zero when idle to save costs
+  # Service will scale up automatically when accessed (mobile app calls this service)
+  minInstances: 0
   maxInstances: 20
   concurrency: 100
   cpu: 2
