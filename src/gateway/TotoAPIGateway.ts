@@ -389,10 +389,10 @@ export class TotoAPIGateway {
       },
       'case-002': {
         id: 'case-002',
-        name: 'Max - Injured Cat',
-        description: 'Cat with broken leg needs surgery',
+        name: 'Max - Injured Dog',
+        description: 'Dog with broken leg needs surgery',
         status: 'urgent' as const,
-        animalType: 'Cat',
+        animalType: 'Dog',
         location: 'Downtown Shelter',
         guardianId: 'guardian-002',
         guardianName: 'Carlos Mendez',
@@ -413,11 +413,11 @@ export class TotoAPIGateway {
       },
       'case-004': {
         id: 'case-004',
-        name: 'Charlie - Rescued Bird',
-        description: 'Parrot found in abandoned building',
+        name: 'Rocky - Rescued Dog',
+        description: 'Dog found abandoned on the street',
         status: 'active' as const,
-        animalType: 'Bird',
-        location: 'Wildlife Rescue',
+        animalType: 'Dog',
+        location: 'Rescue Center',
         guardianId: 'guardian-004',
         guardianName: 'Diego Lopez',
         createdAt: new Date(),
@@ -1137,6 +1137,52 @@ CRITICAL: If you don't know something, say you don't know. Do NOT make it up.`,
         audience: ['donors']
       },
       {
+        id: 'kb-cases-010',
+        title: 'Ways to Help - Donation, Sharing, and Adoption Options',
+        content: `WAYS TO HELP WITH A CASE
+
+There are three main ways users can help with a pet rescue case:
+
+1. DONATION
+- Users can make a direct bank transfer to the guardian's banking alias
+- Donations are direct transfers from donor's bank account or wallet to guardian's banking alias
+- There is NO minimum donation amount - every donation helps
+- The platform provides the banking alias, but the transfer happens outside the platform
+- Donors can verify their donation by uploading a receipt to earn totitos
+- If guardian's banking alias is not available, users can donate to Toto Rescue Fund (TRF) which automatically allocates to urgent cases
+
+2. SHARING ON SOCIAL MEDIA
+- Users can share cases on Instagram, Twitter/X, or Facebook
+- Sharing helps reach more potential supporters and donors
+- Social media links are provided via quick action buttons in the conversation
+- Sharing cases also earns totitos for the user
+- Users should choose which platform they prefer to share on
+
+3. ADOPTION
+- Users interested in adopting can learn about adoption requirements
+- Adoption process and requirements vary by case and guardian
+- Users should express interest in adoption to learn specific requirements
+- Not all cases are available for adoption - depends on case status and guardian's plans
+
+WHEN TO REFERENCE THIS INFORMATION:
+- When users ask "Cómo puedo ayudar?" / "How can I help?"
+- When users ask "¿Qué puedo hacer?" / "What can I do?"
+- When users want to know their options for helping
+- Always provide all three options with brief explanations, then ask which they'd like to explore further
+
+COMMUNICATION APPROACH:
+- Start with gratitude: "¡Gracias por querer ayudar!" or "Thank you for wanting to help!"
+- List all three options clearly
+- Provide brief explanation for each option
+- Ask follow-up: "¿Cuál te gustaría conocer más?" or "Which would you like to know more about?"
+- Do NOT just describe the case - focus on actionable ways to help`,
+        category: 'case_management',
+        lastUpdated: new Date().toISOString(),
+        usageCount: 0,
+        agentTypes: ['CaseAgent'],
+        audience: ['donors']
+      },
+      {
         id: 'kb-donations-017',
         title: 'How to Explain Donation Process - Direct Transfer Only',
         content: `CRITICAL: DONATIONS ARE NOT "THROUGH THE PLATFORM"
@@ -1218,9 +1264,22 @@ COMMUNICATION
       },
       {
         id: 'kb-social-002',
-        title: 'Case Sharing Process',
-        content: `- When users show intent to share a case, the case agent inquires about their preferred social media platform
-- If user specifies a platform (Instagram, Twitter/X, Facebook): Acknowledge their choice and provide encouragement
+        title: 'Case Sharing Process - How to Share',
+        content: `WHEN USERS ASK "CÓMO COMPARTO?" OR "HOW DO I SHARE?"
+- Users asking "Cómo comparto?", "Como comparto?", "How do I share?", "¿Cómo puedo compartir?" want to know HOW to share
+- Your response MUST include ALL of these in one message:
+  1. Brief acknowledgment: "¡Qué bueno que quieras compartir!" or similar
+  2. IMMEDIATELY explain the process: "Puedes compartir el caso en Instagram, Twitter/X, o Facebook"
+  3. Ask which platform: "¿En qué plataforma te gustaría compartir?" or "¿Cuál prefieres?"
+  4. Mention buttons: "Las opciones aparecerán como botones para que puedas compartir fácilmente"
+- Do NOT just acknowledge without explaining HOW - the user wants to know the process
+- Example CORRECT: "¡Qué bueno que quieras compartir! Puedes compartir el caso en Instagram, Twitter/X, o Facebook. ¿Cuál prefieres? Las opciones aparecerán como botones para que puedas compartir fácilmente."
+- Example WRONG: "¡Hola! Qué bueno que quieras compartir el caso de Rocky." (This only acknowledges, doesn't explain HOW)
+
+SHARING PROCESS DETAILS
+- When users show intent to share a case, the case agent inquires about their preferred social media platform
+- Available platforms: Instagram, Twitter/X, Facebook
+- If user specifies a platform: Acknowledge their choice and provide encouragement
 - If user says "all" or "todas": Acknowledge they want to share on all platforms
 - The case agent should use the social media URLs from Case Information (guardianTwitter, guardianInstagram, guardianFacebook)
 - 🚨 CRITICAL: NEVER include actual social media handles (e.g., @omfa_refugio) or URLs in your message text
@@ -1228,8 +1287,6 @@ COMMUNICATION
 - The social media URLs will be provided separately via quick action buttons
 - Keep your response focused on encouraging sharing and explaining the impact
 - Do NOT mix donation information with sharing information in the same message
-- Example CORRECT: "¡Qué bueno que quieras compartir el caso de Mía! Compartir es una excelente manera de ayudarla a llegar a más personas que puedan colaborar."
-- Example WRONG: "Puedes encontrar a Puchi Lagarzasosa en Instagram como @omfa_refugio" (DO NOT include handles/URLs)
 - Trackable links measure engagement and impact`,
         category: 'social_media',
         lastUpdated: new Date().toISOString(),

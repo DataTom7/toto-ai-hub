@@ -13,6 +13,9 @@ import {
   AgentAnalytics
 } from "../types";
 import { RAGService } from '../services/RAGService';
+import { generateFormattingHints } from '../utils/responseFormatting';
+import { normalizeCaseResponse } from '../utils/responseValidation';
+import { createErrorResponse, getUserErrorMessage } from '../utils/errorResponses';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -222,6 +225,19 @@ export class CaseAgent extends BaseAgent {
 - Never mention "$10 minimum" or any minimum amount
 
 🚨 CRITICAL: SOCIAL MEDIA SHARING PROCESS
+- When users ask "Cómo comparto?", "Como comparto?", "How do I share?", "¿Cómo puedo compartir?", or show sharing intent:
+  * 🚨 IMMEDIATELY acknowledge AND explain the process in the SAME response - do NOT just acknowledge
+  * 🚨 The user is asking HOW to share - you MUST explain the process, not just say "qué bueno que quieras compartir"
+  * Response structure MUST include ALL of these in one message:
+    1. Brief acknowledgment: "¡Qué bueno que quieras compartir!" or similar
+    2. IMMEDIATELY explain the process: "Puedes compartir el caso en Instagram, Twitter/X, o Facebook"
+    3. Ask which platform: "¿En qué plataforma te gustaría compartir?" or "¿Cuál prefieres?"
+    4. Mention buttons: "Las opciones aparecerán como botones para que puedas compartir fácilmente"
+  * Explain the impact: "Compartir el caso ayuda a que llegue a más personas que puedan colaborar"
+  * Do NOT just acknowledge without explaining HOW - the user wants to know the process
+  * Example CORRECT response: "¡Qué bueno que quieras compartir! Puedes compartir el caso en Instagram, Twitter/X, o Facebook. ¿Cuál prefieres? Las opciones aparecerán como botones para que puedas compartir fácilmente."
+  * Example WRONG response: "¡Hola! Qué bueno que quieras compartir el caso de Rocky." (This only acknowledges, doesn't explain HOW)
+  * Example WRONG response: "Pepe es un perrito..." (just describing the case without addressing the sharing question)
 - When users show intent to share a case, ask which platform they prefer (Instagram, Twitter/X, Facebook)
 - If user specifies a platform: Acknowledge their choice and provide encouragement
 - If user says "all" or "todas": Acknowledge they want to share on all platforms
@@ -232,6 +248,24 @@ export class CaseAgent extends BaseAgent {
 - Do NOT mix donation information with sharing information in the same message
 - Example CORRECT response: "¡Qué bueno que quieras compartir el caso de Mía! Compartir es una excelente manera de ayudarla a llegar a más personas que puedan colaborar."
 - Example WRONG response: "Puedes encontrar a Puchi Lagarzasosa en Instagram como @omfa_refugio" (DO NOT include handles/URLs)
+
+🚨 CRITICAL: HELP-SEEKING INTENT DETECTION AND RESPONSE
+- This is a CRITICAL pattern that must be recognized and handled correctly
+- When user asks "Cómo puedo ayudar?", "How can I help?", "¿Qué puedo hacer?", "What can I do?", "¿Cómo ayudo?", "How do I help?", or any variation asking HOW to help:
+  * 🚨 IMMEDIATELY STOP - do NOT describe the case again
+  * 🚨 IMMEDIATELY provide actionable ways to help - this is what the user is asking for
+  * 🚨 The user already knows about the case - they want to know WHAT ACTIONS they can take
+  * List concrete options with brief explanations:
+    - Donation: "haciendo una donación directa al guardián" (direct transfer to guardian's banking alias)
+    - Sharing: "compartiendo el caso en redes sociales para que llegue a más personas"
+    - Adoption: "si estás interesado en adoptar, puedo contarte los requisitos"
+  * Ask follow-up: "¿Cuál te gustaría conocer más?" or "Which would you like to know more about?"
+  * Example CORRECT response: "¡Gracias por querer ayudar! Puedes colaborar de varias maneras: haciendo una donación directa al guardián, compartiendo el caso en redes sociales para que llegue a más personas, o si estás interesado en adoptar, puedo contarte los requisitos. ¿Cuál te gustaría conocer más?"
+  * Example WRONG response: "Pepe es un perrito con necesidades especiales y problemas de movilidad que necesita un hogar temporal especializado." (This is case description, NOT how to help)
+  * 🚨 NEVER just repeat case information when user asks how to help - they want ACTIONABLE STEPS, not case details
+  * 🚨 If you've already introduced the case in a previous message, the user remembers it - focus on answering HOW to help
+- Pattern recognition: Questions containing "ayudar/help", "puedo/can I", "qué puedo/what can I", "cómo ayudar/how to help" = HELP-SEEKING INTENT
+- Response structure: Always start with gratitude, then list options, then ask which they want to explore
 
 🎯 CORE CAPABILITIES:
 - Natural, empathetic conversations about pet rescue cases
@@ -245,6 +279,7 @@ export class CaseAgent extends BaseAgent {
 🧠 INTELLIGENT CONVERSATION:
 - FIRST MESSAGE: Brief, warm case summary (2-3 sentences) with animal's name, main issue, and current status. NO thanks for asking (automatic welcome).
 - SUBSEQUENT MESSAGES: Context-aware responses based on conversation history and user intent.
+- 🚨 HELP-SEEKING INTENT: See CRITICAL section above for detailed instructions. When user asks how to help, IMMEDIATELY provide actionable options (donation, sharing, adoption) - NEVER repeat case description.
 - AFFIRMATIVE RESPONSES: When user says "Si", "Yes", "Ok" after you've already introduced the case:
   * If you've provided case info already: Progress to explaining HOW to help (donation steps, sharing options, adoption info)
   * Ask specific follow-up questions: "¿Cómo te gustaría ayudar?" or "¿Qué te gustaría saber más?"
@@ -375,34 +410,17 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       // Update analytics
       this.updateAnalytics(processingTime, result.success, actions);
 
-      // Add guardian banking alias to metadata if donation intent detected and alias is available
-      const metadata: any = {
-        agentType: this.config.name,
-        confidence: this.calculateConfidence(intentAnalysis, emotionalState),
-        processingTime,
-        sessionId,
-        intent: intentAnalysis.intent,
-        emotionalState,
-        userEngagement: userProfile.engagementLevel,
-      };
+      // Generate formatting hints for better UI rendering
+      const formattingHints = generateFormattingHints(result.message || '');
       
-      // Include banking alias in metadata when donation intent is detected
-      if (intentAnalysis.intent === 'donate' && enhancedCaseData.guardianBankingAlias) {
-        metadata.guardianBankingAlias = enhancedCaseData.guardianBankingAlias;
-      }
+      // Determine quick action triggers explicitly
+      const shouldShowBankingAlias = intentAnalysis.intent === 'donate' && !!enhancedCaseData.guardianBankingAlias;
+      const shouldShowSocialMedia = intentAnalysis.intent === 'share';
       
-      // Include social media URLs in metadata when sharing intent is detected
-      if (intentAnalysis.intent === 'share') {
-        const lowerMessage = message.toLowerCase();
-        const wantsAll = lowerMessage.includes('all') || lowerMessage.includes('todas') || lowerMessage.includes('todos');
-        
-        const socialUrls: any = {};
-        
-        // If user says "all", include all available platforms
-        // Otherwise, include all available platforms (frontend will show all buttons)
-        // The agent should ask which platform, but if user says "all", provide all
+      // Build social media URLs if sharing intent detected
+      let socialUrls: any = {};
+      if (shouldShowSocialMedia) {
         if (enhancedCaseData.guardianInstagram) {
-          // If it's already a URL, use it; otherwise construct from handle
           socialUrls.instagram = enhancedCaseData.guardianInstagram.startsWith('http') 
             ? enhancedCaseData.guardianInstagram 
             : `https://instagram.com/${enhancedCaseData.guardianInstagram.replace('@', '')}`;
@@ -417,14 +435,51 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
             ? enhancedCaseData.guardianFacebook
             : `https://facebook.com/${enhancedCaseData.guardianFacebook}`;
         }
+      }
+      
+      // Enhanced metadata with explicit quick action triggers
+      const metadata: any = {
+        agentType: this.config.name,
+        confidence: this.calculateConfidence(intentAnalysis, emotionalState),
+        processingTime,
+        sessionId,
+        intent: intentAnalysis.intent,
+        emotionalState,
+        userEngagement: userProfile.engagementLevel,
+        formattingHints, // Include formatting hints for UI rendering
         
-        // Only add if at least one URL exists
-        if (Object.keys(socialUrls).length > 0) {
-          metadata.socialMediaUrls = socialUrls;
+        // Explicit quick action triggers
+        quickActions: {
+          showBankingAlias: shouldShowBankingAlias,
+          showSocialMedia: shouldShowSocialMedia && Object.keys(socialUrls).length > 0,
+          showAdoptionInfo: intentAnalysis.intent === 'adopt',
+          actionTriggers: intentAnalysis.intent ? [intentAnalysis.intent] : []
+        },
+        
+        // Conversation flow hints
+        flowHints: {
+          shouldSaveConversation: true, // Always save after AI response
+          shouldShowTyping: true, // Always show typing animation
+          isFirstMessage: memory.conversationHistory.length === 0,
+          conversationStage: memory.conversationHistory.length === 0 ? 'introduction' : 
+                            intentAnalysis.intent === 'donate' ? 'donation_flow' :
+                            intentAnalysis.intent === 'share' ? 'sharing_flow' :
+                            intentAnalysis.intent === 'adopt' ? 'adoption_flow' : 'general'
         }
+      };
+      
+      // Include banking alias if trigger is true (for backward compatibility and quick access)
+      if (shouldShowBankingAlias) {
+        metadata.guardianBankingAlias = enhancedCaseData.guardianBankingAlias;
+      }
+      
+      // Include social media URLs if trigger is true (for backward compatibility and quick access)
+      if (shouldShowSocialMedia && Object.keys(socialUrls).length > 0) {
+        metadata.socialMediaUrls = socialUrls;
       }
 
-      return {
+      // Build response and normalize structure
+      const response = {
         success: result.success,
         message: result.message,
         caseData: enhancedCaseData,
@@ -434,24 +489,48 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
         error: result.error,
       };
 
+      // Normalize response to ensure consistent structure
+      return normalizeCaseResponse(response);
+
     } catch (error) {
       console.error('Error in enhanced CaseAgent:', error);
       
       const processingTime = Date.now() - startTime;
       this.analytics.successfulInteractions--; // Decrement on error
       
-      return {
+      // Use standardized error response
+      const standardizedError = createErrorResponse('PROCESSING_ERROR', {
+        originalError: error instanceof Error ? error.message : 'Unknown error',
+        agentType: this.config.name
+      });
+      
+      const userLanguage = context.language || 'es';
+      const userMessage = getUserErrorMessage(standardizedError, userLanguage);
+      
+      return normalizeCaseResponse({
         success: false,
-        message: this.getErrorMessage(),
+        message: userMessage,
         caseData,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: standardizedError,
         metadata: {
           agentType: this.config.name,
           confidence: 0,
           processingTime,
           sessionId,
+          quickActions: {
+            showBankingAlias: false,
+            showSocialMedia: false,
+            showAdoptionInfo: false,
+            actionTriggers: []
+          },
+          flowHints: {
+            shouldSaveConversation: false,
+            shouldShowTyping: false,
+            isFirstMessage: false,
+            conversationStage: 'error'
+          }
         },
-      };
+      });
     }
   }
 

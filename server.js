@@ -277,6 +277,7 @@ const schedulerService = new SchedulerService(totoAI);
 // Initialize API Gateway with shared KB Firestore
 // Use toto-bo Firestore for shared KB to ensure cross-environment access
 const { TotoAPIGateway } = require('./dist/gateway/TotoAPIGateway');
+const { detectUserIntent } = require('./dist/utils/intentDetection');
 const sharedKbFirestore = getTotoBoFirestore(); // Get toto-bo Firestore for shared KB
 const apiGateway = new TotoAPIGateway(sharedKbFirestore);
 
@@ -1391,6 +1392,34 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// Intent detection endpoint - lightweight check for user intent
+// This allows toto-app to check intent without hardcoding logic
+app.post('/api/intent/detect', (req, res) => {
+  try {
+    const { message } = req.body;
+    
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing or invalid message field' 
+      });
+    }
+
+    const result = detectUserIntent(message);
+    
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    console.error('Error detecting intent:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 // Process case message
 app.post('/api/case', async (req, res) => {
   try {
@@ -1493,9 +1522,20 @@ app.post('/api/case', async (req, res) => {
     res.json(response);
   } catch (error) {
     console.error('Error processing case message:', error);
+    
+    // Use standardized error response
+    const { createErrorResponse, getUserErrorMessage } = require('./dist/utils/errorResponses');
+    const standardizedError = createErrorResponse('PROCESSING_ERROR', {
+      originalError: error.message
+    });
+    
+    const userLanguage = req.body?.userContext?.language || 'es';
+    const userMessage = getUserErrorMessage(standardizedError, userLanguage);
+    
     res.status(500).json({ 
-      success: false, 
-      error: error.message 
+      success: false,
+      message: userMessage,
+      error: standardizedError
     });
   }
 });
