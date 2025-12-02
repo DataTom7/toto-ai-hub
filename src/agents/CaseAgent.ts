@@ -16,6 +16,7 @@ import { RAGService } from '../services/RAGService';
 import { generateFormattingHints } from '../utils/responseFormatting';
 import { normalizeCaseResponse } from '../utils/responseValidation';
 import { createErrorResponse, getUserErrorMessage } from '../utils/errorResponses';
+import { getActionMessageTemplate, getShareMessageConfig } from '../utils/actionConfig';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -184,12 +185,28 @@ export class CaseAgent extends BaseAgent {
 
 🚨 CRITICAL RULE: USE ONLY PROVIDED CASE DATA
 - You receive case information in the "Case Information" section below
-- ONLY use the exact case details provided: name, description, status, animal type, location, guardian name, banking alias
+- ONLY use the exact case details provided: name, description, status, animal type, location, guardian name, banking alias, adoptionStatus
 - NEVER make up, invent, or assume case details that are not explicitly provided
-- If something is not in the case data, say "no tengo esa información disponible" or "esa información no está disponible"
 - NEVER confuse one case with another or mix up case details
 - If banking alias is missing from Case Information, say "el alias no está disponible" and immediately offer TRF
 - CRITICAL: If you don't know something, say you don't know. Do NOT make it up.
+
+🚨 ADOPTION AND FOSTER CARE STATUS HANDLING:
+- If Case Information shows "adoptionStatus: [value]" - use that exact value (e.g., "available", "pending", "not available")
+- If adoptionStatus is NOT provided, check the case description for adoption-related keywords:
+  * Keywords indicating adoption available: "adopción", "adoptar", "hogar permanente", "buscando hogar", "disponible para adoptar"
+  * Keywords indicating NOT available: "hogar temporal", "foster", "tránsito", "no disponible para adopción"
+- If description contains adoption keywords, infer the status from context
+- If NO adoption or foster care information is found in case data or description:
+  * DO NOT just say "no tengo esa información disponible" or "no tengo información disponible"
+  * Instead, provide helpful guidance: "No tengo información específica sobre [adopción/tránsito] de [animal name] en este momento. Para saber más, te recomiendo contactar directamente a [guardian name], el guardián del caso. ¿Te gustaría que te ayude a contactarlo?"
+  * Always suggest contacting the guardian for more information about adoption or foster care
+- When user asks about foster care ("tránsito", "hogar temporal") or adoption ("adoptar", "adopción"):
+  * Acknowledge their interest positively
+  * Explain that you don't have specific information about availability
+  * Suggest contacting the guardian directly
+  * Offer to help them contact the guardian (contact information will be provided via quick actions)
+- Always offer alternatives: contact guardian, learn about adoption/foster care process, or other ways to help
 
 🚨 CRITICAL: TRF DEFINITION (NEVER INVENT TRANSLATIONS)
 - TRF = "Toto Rescue Fund" (English) or "Fondo de Rescate de Toto" (Spanish)
@@ -223,6 +240,17 @@ export class CaseAgent extends BaseAgent {
 - Say: "No hay un monto mínimo para donar, ¡cada ayuda cuenta!" or "You can donate any amount - every donation helps!"
 - Every donation helps, regardless of size
 - Never mention "$10 minimum" or any minimum amount
+
+🚨 CRITICAL: DONATION AMOUNT QUESTIONS
+- When users ask "Qué montos puedo donar?", "What amounts can I donate?", "Cuánto puedo donar?", "Qué cantidad puedo donar?", or similar questions about donation amounts:
+  * FIRST: Confirm there's no minimum: "No hay un monto mínimo, ¡cada ayuda cuenta!"
+  * THEN: Provide helpful guidance with typical ranges: "Las donaciones típicas suelen ser entre $500 y $5,000 pesos, pero puedes donar cualquier monto que desees"
+  * OPTIONAL: Give examples: "Por ejemplo, donaciones de $500, $1,000, $2,500 o $5,000 pesos son muy útiles"
+  * ALWAYS: Emphasize that any amount helps: "Cualquier monto que puedas aportar será de gran ayuda"
+  * END: Ask follow-up: "¿Cuánto te gustaría donar?"
+  * Example CORRECT response: "No hay un monto mínimo, ¡cada ayuda cuenta! Las donaciones típicas suelen ser entre $500 y $5,000 pesos, pero puedes donar cualquier monto que desees. Por ejemplo, donaciones de $500, $1,000, $2,500 o $5,000 pesos son muy útiles. ¿Cuánto te gustaría donar?"
+  * Example WRONG response: "Puedes hacer una transferencia directa desde tu cuenta bancaria..." (only explains process, doesn't address amounts question)
+  * 🚨 The user is asking about AMOUNTS, not the donation process - address the amounts question directly
 
 🚨 CRITICAL: SOCIAL MEDIA SHARING PROCESS
 - When users ask "Cómo comparto?", "Como comparto?", "How do I share?", "¿Cómo puedo compartir?", or show sharing intent:
@@ -417,6 +445,16 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       const shouldShowBankingAlias = intentAnalysis.intent === 'donate' && !!enhancedCaseData.guardianBankingAlias;
       const shouldShowSocialMedia = intentAnalysis.intent === 'share';
       
+      // Check if user is asking about foster care or adoption
+      const isFosterCareOrAdoptionQuestion = this.isFosterCareOrAdoptionQuestion(message);
+      const shouldShowGuardianContact = isFosterCareOrAdoptionQuestion && !!enhancedCaseData.guardianId;
+      
+      // Fetch guardian contact info if needed for foster care/adoption questions
+      let guardianContactInfo: { email?: string; phone?: string; whatsapp?: string } = {};
+      if (shouldShowGuardianContact && enhancedCaseData.guardianId) {
+        guardianContactInfo = await this.fetchGuardianContactInfo(enhancedCaseData.guardianId);
+      }
+      
       // Build social media URLs if sharing intent detected
       let socialUrls: any = {};
       if (shouldShowSocialMedia) {
@@ -432,6 +470,38 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
         }
         if (enhancedCaseData.guardianFacebook) {
           socialUrls.facebook = enhancedCaseData.guardianFacebook.startsWith('http')
+            ? enhancedCaseData.guardianFacebook
+            : `https://facebook.com/${enhancedCaseData.guardianFacebook}`;
+        }
+      }
+      
+      // Build guardian contact URLs for quick actions
+      let guardianContactUrls: any = {};
+      if (shouldShowGuardianContact) {
+        if (guardianContactInfo.email) {
+          guardianContactUrls.email = `mailto:${guardianContactInfo.email}`;
+        }
+        if (guardianContactInfo.phone) {
+          guardianContactUrls.phone = `tel:${guardianContactInfo.phone}`;
+        }
+        if (guardianContactInfo.whatsapp) {
+          // Format WhatsApp URL (remove + and spaces, add country code if needed)
+          const whatsappNumber = guardianContactInfo.whatsapp.replace(/[+\s-]/g, '');
+          guardianContactUrls.whatsapp = `https://wa.me/${whatsappNumber}`;
+        }
+        // Add social media links if available (for contact, not sharing)
+        if (enhancedCaseData.guardianInstagram) {
+          guardianContactUrls.instagram = enhancedCaseData.guardianInstagram.startsWith('http') 
+            ? enhancedCaseData.guardianInstagram 
+            : `https://instagram.com/${enhancedCaseData.guardianInstagram.replace('@', '')}`;
+        }
+        if (enhancedCaseData.guardianTwitter) {
+          guardianContactUrls.twitter = enhancedCaseData.guardianTwitter.startsWith('http')
+            ? enhancedCaseData.guardianTwitter
+            : `https://twitter.com/${enhancedCaseData.guardianTwitter.replace('@', '')}`;
+        }
+        if (enhancedCaseData.guardianFacebook) {
+          guardianContactUrls.facebook = enhancedCaseData.guardianFacebook.startsWith('http')
             ? enhancedCaseData.guardianFacebook
             : `https://facebook.com/${enhancedCaseData.guardianFacebook}`;
         }
@@ -453,6 +523,9 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
           showBankingAlias: shouldShowBankingAlias,
           showSocialMedia: shouldShowSocialMedia && Object.keys(socialUrls).length > 0,
           showAdoptionInfo: intentAnalysis.intent === 'adopt',
+          showGuardianContact: shouldShowGuardianContact && Object.keys(guardianContactUrls).length > 0,
+          showDonationIntent: intentAnalysis.intent === 'donate', // Show donation intent buttons with suggested amounts
+          suggestedDonationAmounts: intentAnalysis.intent === 'donate' ? [500, 1000, 2500, 5000] : undefined, // Suggested amounts in ARS
           actionTriggers: intentAnalysis.intent ? [intentAnalysis.intent] : []
         },
         
@@ -477,6 +550,22 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       if (shouldShowSocialMedia && Object.keys(socialUrls).length > 0) {
           metadata.socialMediaUrls = socialUrls;
         }
+      
+      // Include guardian contact info if trigger is true (for foster care/adoption questions)
+      if (shouldShowGuardianContact && Object.keys(guardianContactUrls).length > 0) {
+        metadata.guardianContactInfo = guardianContactUrls;
+      }
+      
+      // Include action configuration hints for toto-app
+      // This centralizes action message templates and share message formatting
+      metadata.actionConfig = {
+        shareMessageTemplate: getShareMessageConfig().template,
+        actionTemplates: {
+          copy_alias: getActionMessageTemplate('copy_alias', 'banking_alias'),
+          share: getActionMessageTemplate('share', 'social_media', { platform: 'social' }),
+          contact: getActionMessageTemplate('contact', 'guardian'),
+        },
+      };
 
       // Build response and normalize structure
       const response = {
@@ -641,6 +730,40 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
     }
   }
 
+  /**
+   * Fetch guardian contact information from Firestore
+   */
+  private async fetchGuardianContactInfo(guardianId: string): Promise<{
+    email?: string;
+    phone?: string;
+    whatsapp?: string;
+  }> {
+    if (!guardianId || guardianId === 'unknown') {
+      return {};
+    }
+
+    try {
+      const admin = (await import('firebase-admin')).default;
+      const db = admin.firestore(); // Uses default app (toto-app-stg)
+      
+      const guardianDoc = await db.collection('users').doc(guardianId).get();
+      
+      if (guardianDoc.exists) {
+        const guardianData = guardianDoc.data();
+        return {
+          email: guardianData?.email,
+          phone: guardianData?.phone || guardianData?.contactInfo?.phone,
+          whatsapp: guardianData?.contactInfo?.whatsapp || guardianData?.phone, // Use phone as WhatsApp if no specific WhatsApp field
+        };
+      }
+      
+      return {};
+    } catch (error) {
+      console.warn(`Could not fetch guardian contact info for guardian ${guardianId}:`, error);
+      return {};
+    }
+  }
+
   private async enhanceCaseData(caseData: CaseData): Promise<EnhancedCaseData> {
     // Fetch guardian banking alias from Firestore if not provided
     let guardianBankingAlias = caseData.guardianBankingAlias;
@@ -665,6 +788,18 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
     };
 
     return enhanced;
+  }
+
+  /**
+   * Check if message is asking about foster care or adoption
+   */
+  private isFosterCareOrAdoptionQuestion(message: string): boolean {
+    const lowerMessage = message.toLowerCase().trim();
+    const fosterCareKeywords = ['tránsito', 'transito', 'foster', 'hogar temporal', 'hogar de tránsito'];
+    const adoptionKeywords = ['adoptar', 'adopt', 'adopción', 'adoption', 'hogar permanente'];
+    
+    return fosterCareKeywords.some(keyword => lowerMessage.includes(keyword)) ||
+           adoptionKeywords.some(keyword => lowerMessage.includes(keyword));
   }
 
   // ===== INTENT ANALYSIS =====
@@ -1163,6 +1298,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
 - Description: ${enhancedCaseData.description}
 - Urgency Level: ${enhancedCaseData.urgencyLevel}
 - Funding Progress: ${enhancedCaseData.fundingProgress ? `${enhancedCaseData.fundingProgress.percentage.toFixed(1)}%` : 'N/A'}
+${enhancedCaseData.adoptionStatus ? `- Adoption Status: ${enhancedCaseData.adoptionStatus}` : ''}
 ${enhancedCaseData.guardianBankingAlias ? `- Banking Alias: ${enhancedCaseData.guardianBankingAlias}` : ''}
 ${enhancedCaseData.guardianTwitter ? `- Guardian Twitter: @${enhancedCaseData.guardianTwitter}` : ''}
 ${enhancedCaseData.guardianInstagram ? `- Guardian Instagram: @${enhancedCaseData.guardianInstagram}` : ''}

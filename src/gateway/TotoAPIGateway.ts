@@ -687,7 +687,19 @@ INTERNATIONAL SUPPORT
 - Donors can donate any amount they wish
 - Every donation helps, regardless of size
 - No maximum donation limit
-- When showing donation intent, agents should emphasize that every donation helps, no matter the amount`,
+- When showing donation intent, agents should emphasize that every donation helps, no matter the amount
+
+SUGGESTED DONATION AMOUNTS (for guidance only, not requirements):
+- Typical donation amounts range from $500 to $5,000 ARS (or equivalent in other currencies)
+- Common donation amounts: $500, $1,000, $2,500, $5,000, $10,000 ARS
+- Smaller amounts ($500-$1,000) are very helpful and always welcome
+- Larger amounts ($5,000+) make a significant impact
+- When users ask "Qué montos puedo donar?" or "What amounts can I donate?", provide:
+  1. Confirmation that there's no minimum: "No hay un monto mínimo, ¡cada ayuda cuenta!"
+  2. Suggested typical ranges: "Las donaciones típicas suelen ser entre $500 y $5,000 pesos, pero puedes donar cualquier monto que desees"
+  3. Examples: "Por ejemplo, donaciones de $500, $1,000, $2,500 o $5,000 pesos son muy útiles"
+  4. Emphasis: "Cualquier monto que puedas aportar será de gran ayuda"
+  5. Follow-up question: "¿Cuánto te gustaría donar?"`,
         category: 'donations',
         lastUpdated: new Date().toISOString(),
         usageCount: 0,
