@@ -53,7 +53,7 @@ export function getActionMessageTemplate(
     },
     contact: {
       actionType: 'contact',
-      analyticsTemplate: `User contacted guardian via ${channel}`,
+      analyticsTemplate: 'User contacted guardian via {channel}',
     },
   };
 
