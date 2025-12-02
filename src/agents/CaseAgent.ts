@@ -475,8 +475,8 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       
       // Include social media URLs if trigger is true (for backward compatibility and quick access)
       if (shouldShowSocialMedia && Object.keys(socialUrls).length > 0) {
-        metadata.socialMediaUrls = socialUrls;
-      }
+          metadata.socialMediaUrls = socialUrls;
+        }
 
       // Build response and normalize structure
       const response = {

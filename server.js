@@ -1533,7 +1533,7 @@ app.post('/api/case', async (req, res) => {
     const userMessage = getUserErrorMessage(standardizedError, userLanguage);
     
     res.status(500).json({ 
-      success: false,
+      success: false, 
       message: userMessage,
       error: standardizedError
     });
