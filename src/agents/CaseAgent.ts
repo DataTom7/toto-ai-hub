@@ -476,34 +476,93 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       }
       
       // Build guardian contact URLs for quick actions
+      // All URL formatting is centralized here - clients just open these URLs
       let guardianContactUrls: any = {};
       if (shouldShowGuardianContact) {
+        // Email: ensure mailto: prefix
         if (guardianContactInfo.email) {
-          guardianContactUrls.email = `mailto:${guardianContactInfo.email}`;
+          const email = guardianContactInfo.email.trim();
+          if (email && email.includes('@')) {
+            guardianContactUrls.email = email.startsWith('mailto:') ? email : `mailto:${email}`;
+          }
         }
+        
+        // Phone: ensure tel: prefix and clean number
         if (guardianContactInfo.phone) {
-          guardianContactUrls.phone = `tel:${guardianContactInfo.phone}`;
+          const phone = guardianContactInfo.phone.trim();
+          if (phone) {
+            // Remove tel: if already present, then clean and re-add
+            const cleanPhone = phone.replace(/^tel:/, '').replace(/[^\d+]/g, '');
+            if (cleanPhone) {
+              guardianContactUrls.phone = `tel:${cleanPhone}`;
+            }
+          }
         }
+        
+        // WhatsApp: format as https://wa.me/ (remove + prefix for wa.me)
         if (guardianContactInfo.whatsapp) {
-          // Format WhatsApp URL (remove + and spaces, add country code if needed)
-          const whatsappNumber = guardianContactInfo.whatsapp.replace(/[+\s-]/g, '');
-          guardianContactUrls.whatsapp = `https://wa.me/${whatsappNumber}`;
+          const whatsapp = guardianContactInfo.whatsapp.trim();
+          if (whatsapp) {
+            // If already a wa.me URL, use as-is
+            if (whatsapp.startsWith('https://wa.me/') || whatsapp.startsWith('http://wa.me/')) {
+              guardianContactUrls.whatsapp = whatsapp.replace('http://', 'https://');
+            } else {
+              // Clean phone number: remove +, spaces, dashes, parentheses
+              const cleanNumber = whatsapp.replace(/[+\s\-()]/g, '');
+              if (cleanNumber) {
+                guardianContactUrls.whatsapp = `https://wa.me/${cleanNumber}`;
+              }
+            }
+          }
         }
-        // Add social media links if available (for contact, not sharing)
+        
+        // Instagram: ensure proper URL format
         if (enhancedCaseData.guardianInstagram) {
-          guardianContactUrls.instagram = enhancedCaseData.guardianInstagram.startsWith('http') 
-            ? enhancedCaseData.guardianInstagram 
-            : `https://instagram.com/${enhancedCaseData.guardianInstagram.replace('@', '')}`;
+          const instagram = enhancedCaseData.guardianInstagram.trim();
+          if (instagram) {
+            if (instagram.startsWith('http://') || instagram.startsWith('https://')) {
+              guardianContactUrls.instagram = instagram.replace('http://', 'https://');
+            } else {
+              // Remove @ and format as URL
+              const username = instagram.replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '');
+              if (username) {
+                guardianContactUrls.instagram = `https://instagram.com/${username}`;
+              }
+            }
+          }
         }
+        
+        // Twitter: ensure proper URL format
         if (enhancedCaseData.guardianTwitter) {
-          guardianContactUrls.twitter = enhancedCaseData.guardianTwitter.startsWith('http')
-            ? enhancedCaseData.guardianTwitter
-            : `https://twitter.com/${enhancedCaseData.guardianTwitter.replace('@', '')}`;
+          const twitter = enhancedCaseData.guardianTwitter.trim();
+          if (twitter) {
+            if (twitter.startsWith('http://') || twitter.startsWith('https://')) {
+              // Normalize to twitter.com (not x.com) for consistency
+              guardianContactUrls.twitter = twitter.replace('http://', 'https://').replace('x.com', 'twitter.com');
+            } else {
+              // Remove @ and format as URL
+              const username = twitter.replace(/^@/, '').replace(/^https?:\/\/(www\.)?(twitter\.com|x\.com)\//, '');
+              if (username) {
+                guardianContactUrls.twitter = `https://twitter.com/${username}`;
+              }
+            }
+          }
         }
+        
+        // Facebook: ensure proper URL format
         if (enhancedCaseData.guardianFacebook) {
-          guardianContactUrls.facebook = enhancedCaseData.guardianFacebook.startsWith('http')
-            ? enhancedCaseData.guardianFacebook
-            : `https://facebook.com/${enhancedCaseData.guardianFacebook}`;
+          const facebook = enhancedCaseData.guardianFacebook.trim();
+          if (facebook) {
+            if (facebook.startsWith('http://') || facebook.startsWith('https://')) {
+              guardianContactUrls.facebook = facebook.replace('http://', 'https://');
+            } else {
+              // Remove facebook.com if present, then format
+              const username = facebook.replace(/^https?:\/\/(www\.)?facebook\.com\//, '');
+              if (username) {
+                guardianContactUrls.facebook = `https://facebook.com/${username}`;
+              }
+            }
+          }
         }
       }
       
