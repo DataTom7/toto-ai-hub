@@ -611,6 +611,29 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
         }
       }
       
+      // Determine what quick actions are actually being shown (for tracking)
+      const shownActions: string[] = [];
+      if (shouldShowBankingAlias && enhancedCaseData.guardianBankingAlias) {
+        shownActions.push('banking_alias');
+      }
+      if (shouldShowSocialMedia && Object.keys(socialUrls).length > 0) {
+        const socialPlatforms = Object.keys(socialUrls).filter(key => socialUrls[key]);
+        if (socialPlatforms.length > 0) {
+          shownActions.push(`social_media: ${socialPlatforms.join(', ')}`);
+        }
+      }
+      if (shouldShowGuardianContact && Object.keys(guardianContactUrls).length > 0) {
+        const contactChannels = Object.keys(guardianContactUrls).filter(key => guardianContactUrls[key]);
+        if (contactChannels.length > 0) {
+          shownActions.push(`guardian_contact: ${contactChannels.join(', ')}`);
+        }
+      }
+      if (intentAnalysis.intent === 'donate' && isAskingAboutAmount && !hasSelectedAmount) {
+        const suggestedAmounts = [500, 1000, 2500, 5000];
+        const amounts = suggestedAmounts.map((a: number) => `$${a.toLocaleString('es-AR')}`).join(', ');
+        shownActions.push(`donation_amounts: ${amounts}`);
+      }
+      
       // Enhanced metadata with explicit quick action triggers
       const metadata: any = {
         agentType: this.config.name,
@@ -635,6 +658,12 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
             : undefined, // Suggested amounts in ARS
           actionTriggers: intentAnalysis.intent ? [intentAnalysis.intent] : []
         },
+        
+        // Centralized tracking: what quick actions are being shown (for troubleshooting)
+        quickActionsShown: shownActions.length > 0 ? {
+          actions: shownActions,
+          message: `Quick actions shown: ${shownActions.join('; ')}`
+        } : undefined,
         
         // Conversation flow hints
         flowHints: {
