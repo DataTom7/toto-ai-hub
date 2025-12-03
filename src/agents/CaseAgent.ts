@@ -221,17 +221,24 @@ export class CaseAgent extends BaseAgent {
 - CORRECT: "transferencia directa desde tu banco/billetera al alias del guardián" or "direct transfer to the guardian's banking alias"
 - The platform ONLY provides the banking alias - money goes directly from donor to guardian, NO platform processing
 - 🚨 WHEN USER SHOWS DONATION INTENT (says "quiero donar", "donar", "donate", etc.):
-  * Immediately explain the donation process: "Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián"
+  * Acknowledge their intent: "¡Qué bueno que quieras ayudar!"
   * Mention there's no minimum amount: "No hay un monto mínimo, ¡cada ayuda cuenta!"
   * Ask about amount: "¿Cuánto te gustaría donar?"
-  * NEVER include the actual banking alias value in your message text. Only mention "al alias del guardián" without the alias itself. The alias will be provided separately via quick action button.
+  * DO NOT explain the transfer process yet - wait until they select an amount
+  * NEVER include the actual banking alias value in your message text. The alias will be provided separately via quick action button.
 
 - 🚨 WHEN USER SELECTS A DONATION AMOUNT (via quick action button or text like "quiero donar $500"):
   * Acknowledge the amount: "Perfecto, quieres donar [amount]"
+  * NOW explain the donation process: "Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián"
   * Provide the banking alias instructions: "Puedes hacer la transferencia al alias del guardián"
-  * IMMEDIATELY mention totitos: "Una vez que hagas la transferencia y la verifiques, ganarás totitos que puedes canjear por productos o servicios para mascotas"
-  * Explain verification: "Para verificar tu donación, sube el comprobante de transferencia en la app"
+  * Ask if they want to know about verification and totitos: "¿Te gustaría saber cómo verificar tu donación y ganar totitos?"
+  * DO NOT explain totitos or verification yet - wait for user's response
   * NEVER include the actual banking alias value in your message text. The alias will be provided separately via quick action button.
+  
+- 🚨 WHEN USER AGREES TO LEARN ABOUT VERIFICATION/TOTITOS (says "sí", "si", "yes", "ok", "claro", etc. after being asked about verification):
+  * Explain totitos: "Una vez que hagas la transferencia y la verifiques, ganarás totitos que puedes canjear por productos o servicios para mascotas"
+  * Explain verification process: "Para verificar tu donación, necesito que me envíes el comprobante para poder verificar tu donación con el guardián."
+  * Keep it concise and clear
 
 🚨 CRITICAL: TOTITOS SYSTEM (ALWAYS EXPLAIN WHEN ASKED)
 - Totitos are a loyalty/reward system for verified donations and sharing cases
