@@ -223,8 +223,15 @@ export class CaseAgent extends BaseAgent {
 - 🚨 WHEN USER SHOWS DONATION INTENT (says "quiero donar", "donar", "donate", etc.):
   * Immediately explain the donation process: "Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián"
   * Mention there's no minimum amount: "No hay un monto mínimo, ¡cada ayuda cuenta!"
-  * Offer to explain verification/totitos: "¿Te gustaría saber cómo verificar tu donación y obtener totitos?"
+  * Ask about amount: "¿Cuánto te gustaría donar?"
   * NEVER include the actual banking alias value in your message text. Only mention "al alias del guardián" without the alias itself. The alias will be provided separately via quick action button.
+
+- 🚨 WHEN USER SELECTS A DONATION AMOUNT (via quick action button or text like "quiero donar $500"):
+  * Acknowledge the amount: "Perfecto, quieres donar [amount]"
+  * Provide the banking alias instructions: "Puedes hacer la transferencia al alias del guardián"
+  * IMMEDIATELY mention totitos: "Una vez que hagas la transferencia y la verifiques, ganarás totitos que puedes canjear por productos o servicios para mascotas"
+  * Explain verification: "Para verificar tu donación, sube el comprobante de transferencia en la app"
+  * NEVER include the actual banking alias value in your message text. The alias will be provided separately via quick action button.
 
 🚨 CRITICAL: TOTITOS SYSTEM (ALWAYS EXPLAIN WHEN ASKED)
 - Totitos are a loyalty/reward system for verified donations and sharing cases
@@ -459,7 +466,28 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
       const formattingHints = generateFormattingHints(result.message || '');
       
       // Determine quick action triggers explicitly
-      const shouldShowBankingAlias = intentAnalysis.intent === 'donate' && !!enhancedCaseData.guardianBankingAlias;
+      // Check if user has already selected a donation amount (from conversation history or current message)
+      const currentMessageHasAmount = /\$\d+/.test(message) || /\d+\s*(pesos|ars)/i.test(message);
+      const hasSelectedAmount = currentMessageHasAmount || memory.conversationHistory.some((entry: any) => 
+        (entry.user?.toLowerCase().includes('quiero donar') && /\$\d+/.test(entry.user)) ||
+        (entry.user?.toLowerCase().includes('donar') && /\$\d+/.test(entry.user))
+      );
+      
+      // Check if message is asking about amount (not providing alias)
+      const isAskingAboutAmount = message.toLowerCase().includes('cuánto') || 
+                                   message.toLowerCase().includes('cuanto') ||
+                                   message.toLowerCase().includes('monto') ||
+                                   message.toLowerCase().includes('cantidad') ||
+                                   message.toLowerCase().includes('how much') ||
+                                   message.toLowerCase().includes('amount') ||
+                                   (result.message?.toLowerCase().includes('cuánto') || 
+                                    result.message?.toLowerCase().includes('cuanto'));
+      
+      // Show banking alias only when providing donation instructions (not when asking about amount)
+      const shouldShowBankingAlias = intentAnalysis.intent === 'donate' && 
+                                    !!enhancedCaseData.guardianBankingAlias &&
+                                    !isAskingAboutAmount; // Don't show alias when asking about amount
+      
       const shouldShowSocialMedia = intentAnalysis.intent === 'share';
       
       // Check if user is asking about foster care or adoption
@@ -600,8 +628,11 @@ Use this knowledge base information to provide accurate, up-to-date responses ab
           showSocialMedia: shouldShowSocialMedia && Object.keys(socialUrls).length > 0,
           showAdoptionInfo: intentAnalysis.intent === 'adopt',
           showGuardianContact: shouldShowGuardianContact && Object.keys(guardianContactUrls).length > 0,
-          showDonationIntent: intentAnalysis.intent === 'donate', // Show donation intent buttons with suggested amounts
-          suggestedDonationAmounts: intentAnalysis.intent === 'donate' ? [500, 1000, 2500, 5000] : undefined, // Suggested amounts in ARS
+          // Only show donation amounts when asking about amount (not when showing alias)
+          showDonationIntent: intentAnalysis.intent === 'donate' && isAskingAboutAmount && !hasSelectedAmount,
+          suggestedDonationAmounts: (intentAnalysis.intent === 'donate' && isAskingAboutAmount && !hasSelectedAmount) 
+            ? [500, 1000, 2500, 5000] 
+            : undefined, // Suggested amounts in ARS
           actionTriggers: intentAnalysis.intent ? [intentAnalysis.intent] : []
         },
         
