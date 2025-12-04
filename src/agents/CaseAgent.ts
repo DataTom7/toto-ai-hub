@@ -263,7 +263,7 @@ export class CaseAgent extends BaseAgent {
       this.updateUserProfile(userProfile, caseData.id, intentAnalysis);
 
       // Extract intelligent actions
-      const actions = this.extractIntelligentActions(result.message || '', intentAnalysis, enhancedCaseData);
+      const actions = await this.extractIntelligentActions(result.message || '', intentAnalysis, enhancedCaseData);
 
       // Generate contextual suggestions
       const suggestions = this.generateContextualSuggestions(enhancedCaseData, context, userProfile, intentAnalysis);
@@ -819,7 +819,7 @@ export class CaseAgent extends BaseAgent {
     // Language-agnostic intent detection using semantic patterns
     // Translate message to English first for consistent matching, then use English keywords
     // This approach scales to any language
-    const normalizedMessage = await this.normalizeMessageForIntentDetection(lowerMessage);
+    // normalizedMessage is already computed at line 745, reuse it here
     
     // Use English-only keywords for intent detection (language-agnostic)
     const intents = {
@@ -931,7 +931,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
 
   // ===== INTELLIGENT ACTION EXTRACTION =====
 
-  private extractIntelligentActions(response: string, intentAnalysis: any, enhancedCaseData: EnhancedCaseData): AgentAction[] {
+  private async extractIntelligentActions(response: string, intentAnalysis: any, enhancedCaseData: EnhancedCaseData): Promise<AgentAction[]> {
     const actions: AgentAction[] = [];
     const lowerResponse = response.toLowerCase();
 
