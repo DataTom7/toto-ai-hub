@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-015",
+  "title": "Donation Transparency and Verification Details",
+  "content": "VERIFICATION PROCESS FOR DONORS\n- After making a transfer, donors can verify their donation by sending the receipt/comprobante\n- Donors upload the bank transfer receipt through the conversation\n- Verification happens weekly: guardian verifies donations with the platform\n- Once verified, donor receives notification and earns Totitos\n\nVERIFICATION OUTCOMES\n- If donor verifies: They earn Totitos and get confirmation notification\n- If donor doesn't verify BUT guardian verifies (with user-specific data): Donor is notified to claim their Totitos\n- If verification fails: Platform contacts donor for further verification instructions\n- If donor doesn't verify at all: No Totitos earned, but donation still reaches the pet\n\nTRANSPARENCY FEATURES\n- All donations are registered and tracked\n- Donations are used exclusively for the pet's care (case-specific)\n- Donors receive automatic notifications when case gets updates\n- Case updates show progress: medical treatment, milestones, recovery status\n- Donors can see their donation history in their profile\n\nCOMMUNICATION\n- Emphasize that 100% of donations go directly to the guardian (no fees)\n- Explain that verification helps track donations and reward donors with Totitos\n- Mention that donors will receive updates automatically after donating\n- Clarify that even unverified donations reach the pets, but verification enables Totitos rewards",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:18.318Z"
+}

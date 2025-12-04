@@ -1,0 +1,21 @@
+{
+  "id": "kb-business-donation-amounts",
+  "title": "Donation Amount Guidelines and Quick Actions",
+  "language": "en",
+  "content": "DONATION AMOUNT OPTIONS\n\nSUGGESTED QUICK AMOUNTS:\n- $500 (approx $0.50 USD)\n- $1,000 (approx $1 USD)\n- $2,000 (approx $2 USD)\n- $5,000 (approx $5 USD)\n- $10,000 (approx $10 USD)\n- Custom amount (user enters their own)\n\nWHEN TO PRESENT THESE:\n- When user expresses donation intent\n- After user asks about donation amounts\n- As quick action buttons for easy selection\n\nKEY MESSAGING:\n- NO MINIMUM DONATION required\n- Every amount helps, no matter how small\n- Amounts are suggestions, not requirements\n- Users can enter any custom amount they wish\n\nCRITICAL RULES:\n- Never pressure for larger amounts\n- Emphasize accessibility and inclusivity\n- Make it clear any amount is welcome and valued\n- Present options as convenient choices, not obligations",
+  "category": "business_rules",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["donors"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "pesos",
+          "monto"
+        ],
+        "tone": "Inclusive and non-pressuring",
+        "note": "Emphasize that all donations are valuable regardless of amount"
+      }
+    }
+  }
+}

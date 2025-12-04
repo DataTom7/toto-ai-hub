@@ -13,7 +13,12 @@
     "clean": "rimraf dist",
     "index-docs": "ts-node scripts/index-documentation.ts",
     "sync-kb-to-vertex": "ts-node scripts/sync-kb-to-vertex.ts",
-    "add-missing-kb-entries": "ts-node scripts/add-missing-kb-entries.ts"
+    "add-missing-kb-entries": "ts-node scripts/add-missing-kb-entries.ts",
+    "migrate-prompts-to-kb": "ts-node src/scripts/migrate-prompts-to-kb.ts",
+    "audit-kb-languages": "ts-node src/scripts/audit-kb-languages.ts",
+    "backup-kb": "ts-node src/scripts/backup-kb-entries.ts",
+    "convert-kb-to-english": "ts-node src/scripts/convert-kb-to-english.ts",
+    "convert-kb-dry-run": "ts-node src/scripts/convert-kb-to-english.ts --dry-run"
   },
   "keywords": [
     "ai",

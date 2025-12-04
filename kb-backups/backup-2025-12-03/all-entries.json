@@ -1,0 +1,509 @@
+{
+  "timestamp": "2025-12-03T22:23:09.723Z",
+  "totalEntries": 32,
+  "entries": [
+    {
+      "id": "kb-1762552808869",
+      "title": "How to Share Cases on Social Media",
+      "content": "### How to Share Cases on Social Media\r\n\r\nWhen a user expresses interest in sharing a case on social media, follow these steps:\r\n\r\n#### Step 1: Identify User's Platform Preference\r\n\r\nAsk the user which platform they want to share on:\r\n- **Twitter**\r\n- **Instagram**\r\n- **Facebook**\r\n- **WhatsApp**\r\n\r\nExample: \"¿En qué plataforma te gustaría compartir? Tenemos enlaces para Twitter, Instagram, Facebook y WhatsApp.\"\r\n\r\n#### Step 2: Provide Platform-Specific URL\r\n\r\nEach case should have platform-specific URLs stored in the case data:\r\n- `guardianTwitter` - Twitter URL/link\r\n- `guardianInstagram` - Instagram URL/link\r\n- `guardianFacebook` - Facebook URL/link\r\n- `guardianWhatsApp` - WhatsApp URL/link\r\n\r\n**Important:**\r\n- If the platform-specific URL exists in the case data, provide it directly\r\n- If the URL doesn't exist, inform the user that you'll need to create it\r\n- URLs should include tracking metadata to verify shares for Totitos\r\n\r\n#### Step 3: Explain Sharing Process\r\n\r\nExplain to the user:\r\n1. They can share the case using the provided URL\r\n2. The URL contains tracking metadata to verify their share\r\n3. Sharing helps the case reach more potential supporters\r\n4. Sharing can lead to more donations and even adoptions\r\n\r\n#### Step 4: Explain Totitos for Sharing\r\n\r\n**Totitos Rewards:**\r\n- Each shared post has a specific value (determined by the case/platform)\r\n- This value is multiplied by the user's star rating multiplier:\r\n  - 1 star = 1x multiplier\r\n  - 2 stars = 2x multiplier\r\n  - 3 stars = 3x multiplier\r\n  - 4 stars = 4x multiplier\r\n  - 5 stars = 5x multiplier\r\n\r\n**Important Limitation:**\r\n- Users can share multiple times\r\n- However, **only one share per week** will earn Totitos\r\n- Additional shares in the same week will not earn additional Totitos\r\n- The week resets, so users can earn Totitos again the following week\r\n\r\n**Example Response:**\r\n\"Al compartir el caso de [Animal Name], ganarás Totitos. El valor de cada compartido se multiplica por tu calificación de estrellas. Recuerda que solo un compartido por semana genera Totitos, pero puedes compartir las veces que quieras para ayudar a difundir el caso.\"\r\n\r\n#### Step 5: Provide the URL\r\n\r\nOnce you have the platform-specific URL, provide it clearly:\r\n\r\n**For Twitter:**\r\n\"Puedes compartir el caso de [Animal Name] en Twitter usando este enlace: [Twitter URL]\"\r\n\r\n**For Instagram:**\r\n\"Puedes compartir el caso de [Animal Name] en Instagram usando este enlace: [Instagram URL]\"\r\n\r\n**For Facebook:**\r\n\"Puedes compartir el caso de [Animal Name] en Facebook usando este enlace: [Facebook URL]\"\r\n\r\n**For WhatsApp:**\r\n\"Puedes compartir el caso de [Animal Name] en WhatsApp usando este enlace: [WhatsApp URL]\"\r\n\r\n#### Step 6: Offer Additional Help\r\n\r\nAfter providing the URL, offer to:\r\n- Help with sharing on another platform\r\n- Explain how Totitos work in more detail\r\n- Provide information about the case if needed\r\n- Answer any other questions\r\n\r\n### Key Points to Remember\r\n\r\n1. **Always ask which platform first** - Don't assume which platform the user wants\r\n2. **Check case data for platform URLs** - Look for `guardianTwitter`, `guardianInstagram`, `guardianFacebook`, `guardianWhatsApp`\r\n3. **If URL doesn't exist** - Inform user that it needs to be created\r\n4. **Explain Totitos clearly** - Value × multiplier, one share per week limit\r\n5. **Encourage sharing** - Explain how sharing helps the case\r\n6. **Be helpful** - Offer to help with other platforms or answer questions\r\n\r\n### Example Full Conversation Flow\r\n\r\n**User:** \"Quiero compartir el caso de Nina en redes sociales\"\r\n\r\n**Agent:** \"¡Excelente! Compartir ayuda mucho a que más personas conozcan el caso de Nina. ¿En qué plataforma te gustaría compartir? Tenemos enlaces para Twitter, Instagram, Facebook y WhatsApp.\"\r\n\r\n**User:** \"Twitter\"\r\n\r\n**Agent:** \"Perfecto. Puedes compartir el caso de Nina en Twitter usando este enlace: [Twitter URL con metadata de tracking]\r\n\r\nAl compartir, ganarás Totitos. El valor del compartido se multiplica por tu calificación de estrellas. Recuerda que solo un compartido por semana genera Totitos, pero puedes compartir las veces que quieras para ayudar a difundir el caso.\r\n\r\n¿Te gustaría también compartir en otra plataforma o tienes alguna otra pregunta?\"\r\n\r\n### Common User Questions\r\n\r\n**Q: \"¿Puedo compartir en múltiples plataformas?\"**\r\nA: \"¡Sí! Puedes compartir en todas las plataformas que quieras. Sin embargo, solo un compartido por semana (en cualquier plataforma) generará Totitos.\"\r\n\r\n**Q: \"¿Cuántos Totitos gano por compartir?\"**\r\nA: \"Cada compartido tiene un valor específico que se multiplica por tu calificación de estrellas. Por ejemplo, si el valor es 10 Totitos y tienes 3 estrellas, ganarás 30 Totitos.\"\r\n\r\n**Q: \"¿Cómo verifico que compartí?\"**\r\nA: \"El enlace que te proporcionamos incluye metadata de tracking que permite verificar tu compartido automáticamente. No necesitas hacer nada adicional.\"\r\n\r\n**Q: \"¿Puedo compartir más de una vez por semana?\"**\r\nA: \"Sí, puedes compartir las veces que quieras. Sin embargo, solo el primer compartido de cada semana generará Totitos. Los compartidos adicionales en la misma semana no generarán Totitos adicionales, pero seguirán ayudando a difundir el caso.\"",
+      "category": "social-media",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "lastUpdated": "2025-11-07T22:00:08.870Z",
+      "usageCount": 0,
+      "createdAt": "2025-11-07T22:00:08.870Z"
+    },
+    {
+      "id": "kb-1762552813861",
+      "title": "How to Verify Donations",
+      "content": "### How to Verify Donations\r\n\r\nAfter a user makes a donation, they can verify it to earn Totitos. Here's how the verification process works:\r\n\r\n#### Step 1: Upload Receipt\r\n\r\nAfter making a donation, users can upload their donation receipt directly in the dialog box where they're interacting with the case agent.\r\n\r\n**What to Upload:**\r\n- Screenshot or photo of the bank transfer receipt\r\n- The receipt should show:\r\n  - Amount transferred\r\n  - Date of transfer\r\n  - Guardian's banking alias used\r\n  - Transaction reference number (if available)\r\n\r\n**How to Upload:**\r\n- Users can upload the receipt directly in the case dialog box\r\n- The agent should guide users to upload their receipt after they mention they've made a donation\r\n\r\n#### Step 2: Verification Process\r\n\r\n**Verification Timeline:**\r\n- Donations are verified **weekly** with the guardian\r\n- This is a manual review process to ensure accuracy\r\n- Users should expect verification to take up to one week\r\n\r\n**What Happens During Verification:**\r\n- The platform team reviews the uploaded receipt\r\n- The receipt is cross-referenced with the guardian's records\r\n- Once verified, the user receives Totitos\r\n\r\n#### Step 3: Totitos Reward\r\n\r\n**Totitos for Verified Donations:**\r\n- Users receive a **fixed amount** of Totitos for each verified donation\r\n- The amount is the same regardless of donation size\r\n- Every donation counts - there's no minimum donation amount required\r\n- The Totitos value is multiplied by the user's star rating multiplier:\r\n  - 1 star = 1x multiplier\r\n  - 2 stars = 2x multiplier\r\n  - 3 stars = 3x multiplier\r\n  - 4 stars = 4x multiplier\r\n  - 5 stars = 5x multiplier\r\n\r\n**Example:**\r\n\"If the base Totitos value is 10 and you have a 3-star rating, you'll receive 30 Totitos (10 × 3) for your verified donation.\"\r\n\r\n#### Step 4: Notification\r\n\r\nAfter verification is complete:\r\n- Users will be notified that their donation has been verified\r\n- Totitos will be automatically added to their account\r\n- Users can see their Totitos balance in their profile (bottom navbar)\r\n\r\n### Key Points to Remember\r\n\r\n1. **Upload in Dialog Box** - Users upload receipts directly where they're chatting with the agent\r\n2. **Weekly Verification** - Donations are verified weekly with guardians (manual review)\r\n3. **Fixed Totitos Amount** - Same amount regardless of donation size\r\n4. **Multiplier Applies** - User's star rating multiplies the Totitos value\r\n5. **Every Donation Counts** - No minimum amount required to earn Totitos\r\n6. **Be Patient** - Verification takes up to one week\r\n\r\n### Example Conversation Flow\r\n\r\n**User:** \"Ya hice la transferencia de $50 a diego.martinez.rescate\"\r\n\r\n**Agent:** \"¡Excelente! Para verificar tu donación y ganar Totitos, por favor sube el comprobante de la transferencia aquí en este chat. El comprobante debe mostrar el monto, la fecha y el alias utilizado.\r\n\r\nUna vez que subas el comprobante, lo verificaremos con el guardián semanalmente. Una vez verificado, recibirás Totitos que se multiplicarán por tu calificación de estrellas.\r\n\r\n¿Ya tienes el comprobante listo para subir?\"\r\n\r\n**User:** [Uploads receipt]\r\n\r\n**Agent:** \"Perfecto, he recibido tu comprobante. Lo verificaremos con el guardián esta semana. Te notificaremos cuando esté verificado y recibirás tus Totitos automáticamente.\r\n\r\nMientras tanto, ¿hay algo más en lo que pueda ayudarte con el caso de Nina?\"\r\n\r\n### Common User Questions\r\n\r\n**Q: \"¿Cuánto tiempo tarda la verificación?\"**\r\nA: \"Las donaciones se verifican semanalmente con el guardián. Deberías recibir una notificación en aproximadamente una semana una vez que tu donación sea verificada.\"\r\n\r\n**Q: \"¿Cuántos Totitos gano por donar?\"**\r\nA: \"Recibirás una cantidad fija de Totitos por cada donación verificada, independientemente del monto. Esta cantidad se multiplica por tu calificación de estrellas. Por ejemplo, si el valor base es 10 Totitos y tienes 3 estrellas, ganarás 30 Totitos.\"\r\n\r\n**Q: \"¿Hay un monto mínimo para ganar Totitos?\"**\r\nA: \"No, no hay un monto mínimo. Cada donación verificada, sin importar el tamaño, te da la misma cantidad de Totitos base (que luego se multiplica por tu calificación).\"\r\n\r\n**Q: \"¿Qué pasa si mi donación no se verifica?\"**\r\nA: \"Si hay algún problema con la verificación, te contactaremos para aclarar cualquier duda. Puede ser que necesitemos información adicional o que haya una discrepancia con los registros del guardián.\"\r\n\r\n**Q: \"¿Puedo verificar múltiples donaciones?\"**\r\nA: \"Sí, cada donación verificada te da Totitos. Puedes hacer múltiples donaciones y verificar cada una para ganar Totitos por cada una.\"\r\n\r\n### Important Notes for Agents\r\n\r\n- **Always encourage verification** - Remind users they can earn Totitos\r\n- **Explain the process clearly** - Weekly verification, fixed amount, multiplier\r\n- **Be helpful** - Guide users on what information the receipt should contain\r\n- **Set expectations** - Let users know verification takes up to a week\r\n- **Follow up** - If user mentions they've donated, proactively offer to help with verification",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "lastUpdated": "2025-11-07T22:00:13.861Z",
+      "usageCount": 0,
+      "createdAt": "2025-11-07T22:00:13.861Z"
+    },
+    {
+      "id": "kb-1762552824068",
+      "title": "TRF (Toto Rescue Fund) - How to Donate",
+      "content": "### TRF (Toto Rescue Fund) - How to Donate\r\n\r\nTRF stands for **Toto Rescue Fund** (English) or **Fondo de Rescate de Toto** (Spanish). It is a general fund that supports the most urgent cases on the platform.\r\n\r\n#### What is TRF?\r\n\r\nTRF is a centralized fund that:\r\n- Supports the most urgent cases on the platform\r\n- Automatically distributes funds to cases that need immediate help\r\n- Provides an alternative way to help when guardian banking aliases are not available\r\n- Allows users to contribute to the overall rescue mission\r\n\r\n**Important:** Always explain TRF as \"Toto Rescue Fund\" or \"Fondo de Rescate de Toto\" - NEVER invent other translations.\r\n\r\n#### When to Use TRF vs Guardian Alias\r\n\r\n**Primary Option: Donate to Specific Case**\r\n- The **first and preferred option** is always to donate directly to the specific case using the guardian's banking alias\r\n- This ensures the donation goes directly to the case the user is interested in\r\n- Users should be encouraged to donate to the case first\r\n\r\n**Alternative Option: TRF**\r\n- TRF should be offered as an **alternative** when:\r\n  - The user is interested in helping in other ways beyond a specific case\r\n  - The user wants to support multiple urgent cases\r\n  - The guardian's banking alias is not available for a specific case\r\n  - The user asks about general ways to help\r\n\r\n**Example Flow:**\r\n1. User asks about helping a specific case → Offer guardian alias first\r\n2. User asks \"other ways to help\" or \"help multiple cases\" → Offer TRF as alternative\r\n3. Guardian alias is missing → Offer TRF as alternative\r\n\r\n#### How to Donate to TRF\r\n\r\n**TRF Banking Alias:**\r\n- **Alias:** `betoto.pet`\r\n- Users can make a direct bank transfer to this alias\r\n- The transfer is made directly from the user's bank account or wallet to the TRF alias\r\n\r\n**Donation Process:**\r\n1. User makes a direct bank transfer to `betoto.pet`\r\n2. User can verify the donation (same process as case donations)\r\n3. User earns Totitos for verified TRF donations\r\n4. Funds are automatically distributed to the most urgent cases\r\n\r\n#### How TRF Funds Are Used\r\n\r\n**Automatic Distribution:**\r\n- TRF funds are **automatically assigned** to the most urgent cases on the platform\r\n- The system prioritizes cases based on urgency and need\r\n- Funds help ensure urgent cases receive immediate support\r\n\r\n**Benefits:**\r\n- Supports multiple cases at once\r\n- Helps cases that may not have individual fundraising\r\n- Provides emergency funding for critical situations\r\n\r\n#### Totitos for TRF Donations\r\n\r\n**Verification:**\r\n- TRF donations can be verified for Totitos, just like case-specific donations\r\n- Users should upload their receipt following the same verification process\r\n- Verification happens weekly, same as case donations\r\n\r\n**Totitos Reward:**\r\n- Users receive the same fixed amount of Totitos for verified TRF donations\r\n- The amount is multiplied by the user's star rating multiplier\r\n- Same Totitos structure as case donations\r\n\r\n### Key Points to Remember\r\n\r\n1. **TRF Definition:** Always say \"Toto Rescue Fund\" or \"Fondo de Rescate de Toto\" - NEVER invent translations\r\n2. **Primary Option:** Always offer case-specific donation (guardian alias) first\r\n3. **Alternative Option:** Offer TRF when user wants other ways to help or when alias is missing\r\n4. **TRF Alias:** `betoto.pet`\r\n5. **Automatic Distribution:** Funds go to most urgent cases automatically\r\n6. **Totitos:** TRF donations can be verified for Totitos\r\n\r\n### Example Conversation Flows\r\n\r\n#### Scenario 1: User Asks About Other Ways to Help\r\n\r\n**User:** \"Quiero ayudar pero no solo a este caso, ¿hay otras formas?\"\r\n\r\n**Agent:** \"¡Por supuesto! Además de donar directamente a [Case Name], puedes donar al TRF (Fondo de Rescate de Toto). \r\n\r\nEl TRF es un fondo general que se distribuye automáticamente a los casos más urgentes de la plataforma. Puedes hacer una transferencia directa al alias `betoto.pet`.\r\n\r\nLas donaciones al TRF también pueden ser verificadas para ganar Totitos, igual que las donaciones a casos específicos.\r\n\r\n¿Te gustaría saber más sobre cómo donar al TRF o prefieres donar directamente a [Case Name]?\"\r\n\r\n#### Scenario 2: Guardian Alias Missing\r\n\r\n**User:** \"¿Cómo dono si no hay alias del guardián?\"\r\n\r\n**Agent:** \"Como no hay un alias disponible para este caso específico, puedes donar al TRF (Fondo de Rescate de Toto). \r\n\r\nEl TRF es un fondo general que se distribuye automáticamente a los casos más urgentes de la plataforma, incluyendo casos como este.\r\n\r\nPuedes hacer una transferencia directa al alias `betoto.pet`. Las donaciones al TRF también pueden ser verificadas para ganar Totitos.\r\n\r\n¿Te gustaría que te explique cómo verificar tu donación al TRF?\"\r\n\r\n#### Scenario 3: User Wants to Help Multiple Cases\r\n\r\n**User:** \"Quiero ayudar a varios casos, ¿cómo lo hago?\"\r\n\r\n**Agent:** \"Puedes donar a cada caso individualmente usando el alias de cada guardián, o puedes donar al TRF (Fondo de Rescate de Toto) que se distribuye automáticamente a los casos más urgentes.\r\n\r\nSi donas al TRF, tu donación ayudará a múltiples casos que necesitan ayuda inmediata. El alias del TRF es `betoto.pet`.\r\n\r\n¿Prefieres donar a casos específicos o al TRF para ayudar a múltiples casos?\"\r\n\r\n### Common User Questions\r\n\r\n**Q: \"¿Qué es TRF?\"**\r\nA: \"TRF significa 'Toto Rescue Fund' (Fondo de Rescate de Toto). Es un fondo general que se distribuye automáticamente a los casos más urgentes de la plataforma.\"\r\n\r\n**Q: \"¿Cuándo debo usar TRF vs el alias del guardián?\"**\r\nA: \"La primera opción siempre es donar directamente al caso usando el alias del guardián. El TRF es una alternativa cuando quieres ayudar de otras formas, cuando el alias no está disponible, o cuando quieres apoyar múltiples casos urgentes.\"\r\n\r\n**Q: \"¿Cómo dono al TRF?\"**\r\nA: \"Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias `betoto.pet`. El proceso es el mismo que donar a un caso específico.\"\r\n\r\n**Q: \"¿A dónde va mi donación al TRF?\"**\r\nA: \"Los fondos del TRF se distribuyen automáticamente a los casos más urgentes de la plataforma. Esto asegura que los casos que más necesitan ayuda reciban apoyo inmediato.\"\r\n\r\n**Q: \"¿Puedo verificar mi donación al TRF para Totitos?\"**\r\nA: \"Sí, las donaciones al TRF pueden ser verificadas para ganar Totitos, igual que las donaciones a casos específicos. Sube tu comprobante y lo verificaremos semanalmente.\"\r\n\r\n**Q: \"¿Cuántos Totitos gano por donar al TRF?\"**\r\nA: \"Recibirás la misma cantidad fija de Totitos que por donar a un caso específico. Esta cantidad se multiplica por tu calificación de estrellas.\"\r\n\r\n### Important Notes for Agents\r\n\r\n- **Never invent TRF translations** - Always use \"Toto Rescue Fund\" or \"Fondo de Rescate de Toto\"\r\n- **Offer case donation first** - Guardian alias is the primary option\r\n- **TRF as alternative** - Offer when user wants other ways to help or when alias is missing\r\n- **Explain automatic distribution** - TRF funds go to most urgent cases automatically\r\n- **Same Totitos process** - TRF donations can be verified just like case donations",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "lastUpdated": "2025-11-07T22:00:24.068Z",
+      "usageCount": 0,
+      "createdAt": "2025-11-07T22:00:24.068Z"
+    },
+    {
+      "id": "kb-1762552828657",
+      "title": "Adoption Process - How It Works",
+      "content": "### Adoption Process - How It Works\r\n\r\nWhen a user expresses interest in adopting an animal, the process varies significantly by guardian. Each guardian has their own guidelines, requirements, and process. Here's how to handle adoption inquiries:\r\n\r\n#### Step 1: Tag User for Adoption Interest\r\n\r\n**Important First Step:**\r\n- When a user shows intent to adopt, the agent should **add a tag to that user** to indicate they are interested in adopting\r\n- This tag helps track adoption interest and allows for follow-up\r\n- The tag should be added immediately when adoption intent is detected\r\n\r\n**Example Intent Detection:**\r\n- \"Quiero adoptar a [Animal Name]\"\r\n- \"¿Cómo funciona la adopción?\"\r\n- \"Me interesa adoptar\"\r\n- \"¿Puedo adoptar a [Animal Name]?\"\r\n\r\n#### Step 2: Check for Guardian-Specific KB Entry\r\n\r\n**Look for Guardian-Specific Information:**\r\n- First, check if there's a guardian-specific knowledge base entry that contains adoption guidelines\r\n- Guardian-specific KB entries may include:\r\n  - Adoption requirements\r\n  - Adoption process steps\r\n  - Contact information\r\n  - Links to adoption forms or pages\r\n  - Specific rules or guidelines\r\n\r\n**If Guardian-Specific KB Entry Exists:**\r\n- Provide the information from the KB entry\r\n- Explain the guardian's specific guidelines\r\n- Provide any links or contact information from the KB entry\r\n- Follow the guardian's specific process as documented\r\n\r\n**If No Guardian-Specific KB Entry Exists:**\r\n- Direct the user to contact the guardian directly\r\n- Provide the guardian's contact information if available\r\n- Explain that each guardian has their own process\r\n\r\n#### Step 3: Explain Guardian's Guidelines\r\n\r\n**What to Explain:**\r\n- The guardian's specific adoption requirements (if available in KB)\r\n- The guardian's adoption process (if documented)\r\n- Any links to adoption forms or pages (if provided)\r\n- Direct contact information for the guardian (if available)\r\n\r\n**Important:** \r\n- **Do NOT provide generic adoption processes** - Each guardian's process varies significantly\r\n- **Do NOT provide generic requirements** - Requirements vary by guardian\r\n- **Do NOT assume a standard process** - Always refer to guardian-specific information or direct contact\r\n\r\n#### Step 4: Provide Contact Information\r\n\r\n**Contact Methods:**\r\n- If guardian has contact information in the case data, provide it\r\n- If guardian has social media links (Twitter, Instagram, Facebook), mention them\r\n- If there's a specific contact method in the KB entry, use that\r\n\r\n**Example:**\r\n\"Para iniciar el proceso de adopción de [Animal Name], te recomiendo contactar directamente a [Guardian Name]. Puedes contactarlos a través de [contact method/link].\"\r\n\r\n#### Step 5: Set Expectations\r\n\r\n**What to Tell Users:**\r\n- Each guardian has their own adoption process\r\n- The process may include different steps (home visits, applications, trial periods, etc.)\r\n- Requirements vary by guardian\r\n- The guardian will provide specific information about their process\r\n\r\n**Example:**\r\n\"Cada guardián tiene su propio proceso de adopción que puede incluir diferentes pasos y requisitos. [Guardian Name] te explicará su proceso específico cuando lo contactes.\"\r\n\r\n### Key Points to Remember\r\n\r\n1. **Tag User Immediately** - Add adoption interest tag when intent is detected\r\n2. **Check Guardian-Specific KB** - Look for guardian-specific adoption information first\r\n3. **No Generic Processes** - Never provide generic adoption processes or requirements\r\n4. **Direct to Guardian** - If no KB entry, direct user to contact guardian\r\n5. **Varies by Guardian** - Always emphasize that processes vary significantly\r\n6. **Provide Contact Info** - Give guardian contact information when available\r\n\r\n### Example Conversation Flows\r\n\r\n#### Scenario 1: Guardian Has KB Entry with Adoption Info\r\n\r\n**User:** \"Me interesa adoptar a Toby\"\r\n\r\n**Agent:** \"¡Qué bueno que te interese adoptar a Toby! He registrado tu interés en adopción.\r\n\r\n[Guardian Name] tiene un proceso específico de adopción. Según sus directrices:\r\n[Provide information from guardian-specific KB entry]\r\n\r\n[If KB entry has link:] Puedes encontrar más información y el formulario de adopción aquí: [link]\r\n\r\n[If KB entry has contact info:] También puedes contactar directamente a [Guardian Name] en [contact method].\r\n\r\n¿Tienes alguna pregunta sobre el proceso de adopción de [Guardian Name]?\"\r\n\r\n#### Scenario 2: No Guardian-Specific KB Entry\r\n\r\n**User:** \"¿Cómo puedo adoptar a Bella?\"\r\n\r\n**Agent:** \"¡Excelente! Me interesa saber que quieres adoptar a Bella. He registrado tu interés en adopción.\r\n\r\nCada guardián tiene su propio proceso de adopción que puede variar significativamente. Para conocer los requisitos y el proceso específico de [Guardian Name], te recomiendo contactarlos directamente.\r\n\r\n[If guardian contact info available:] Puedes contactar a [Guardian Name] a través de [contact method/link].\r\n\r\n[If guardian social media available:] También puedes contactarlos en sus redes sociales: [social media links].\r\n\r\nEl guardián te explicará su proceso específico, que puede incluir diferentes pasos como visitas al hogar, formularios, períodos de prueba, etc.\r\n\r\n¿Te gustaría que te proporcione más información de contacto o tienes alguna otra pregunta?\"\r\n\r\n#### Scenario 3: User Asks About Generic Adoption Process\r\n\r\n**User:** \"¿Cuál es el proceso de adopción?\"\r\n\r\n**Agent:** \"El proceso de adopción varía según cada guardián. Cada uno tiene sus propios requisitos, pasos y directrices.\r\n\r\nPara conocer el proceso específico para [Animal Name], te recomiendo contactar directamente a [Guardian Name], su guardián. Ellos te explicarán:\r\n- Sus requisitos específicos\r\n- Los pasos de su proceso\r\n- Cualquier documentación necesaria\r\n- Los plazos y expectativas\r\n\r\n[If guardian contact info available:] Puedes contactarlos en [contact method/link].\r\n\r\n¿Te gustaría que te ayude a contactar al guardián?\"\r\n\r\n### Common User Questions\r\n\r\n**Q: \"¿Cuáles son los requisitos para adoptar?\"**\r\nA: \"Los requisitos varían según cada guardián. Para conocer los requisitos específicos para [Animal Name], te recomiendo contactar directamente a [Guardian Name]. Cada guardián tiene sus propias directrices y requisitos.\"\r\n\r\n**Q: \"¿Cómo funciona el proceso de adopción?\"**\r\nA: \"El proceso de adopción varía significativamente según cada guardián. Algunos pueden incluir visitas al hogar, formularios, períodos de prueba, etc. [Guardian Name] te explicará su proceso específico cuando lo contactes.\"\r\n\r\n**Q: \"¿Cuánto tiempo tarda el proceso?\"**\r\nA: \"El tiempo del proceso de adopción depende de cada guardián y su proceso específico. [Guardian Name] podrá darte una estimación de tiempo cuando lo contactes.\"\r\n\r\n**Q: \"¿Necesito tener una casa o puedo adoptar si vivo en departamento?\"**\r\nA: \"Los requisitos sobre el tipo de hogar varían según cada guardián. Algunos pueden requerir casa, otros aceptan departamentos. [Guardian Name] te explicará sus requisitos específicos.\"\r\n\r\n**Q: \"¿Puedo adoptar si tengo otras mascotas?\"**\r\nA: \"Esto depende de cada guardián y del animal específico. Algunos animales se llevan bien con otras mascotas, otros no. [Guardian Name] te puede dar información específica sobre [Animal Name] y cómo se relaciona con otras mascotas.\"\r\n\r\n### Important Notes for Agents\r\n\r\n- **Always tag user** - Add adoption interest tag immediately\r\n- **Check KB first** - Look for guardian-specific adoption information\r\n- **No generic answers** - Never provide generic adoption processes or requirements\r\n- **Direct to guardian** - If no KB entry, direct user to contact guardian\r\n- **Emphasize variation** - Always explain that processes vary by guardian\r\n- **Provide contact info** - Give guardian contact information when available\r\n- **Be helpful** - Offer to help with contact information or answer other questions\r\n\r\n### What NOT to Do\r\n\r\n❌ **Don't provide generic adoption processes** - \"The adoption process typically includes...\"\r\n❌ **Don't list generic requirements** - \"You need a house, fenced yard, etc.\"\r\n❌ **Don't assume standard steps** - \"First you fill out a form, then...\"\r\n❌ **Don't make up information** - Only use information from KB entries or direct to guardian\r\n\r\n✅ **Do check for guardian-specific KB entries**\r\n✅ **Do direct to guardian if no KB entry exists**\r\n✅ **Do explain that processes vary**\r\n✅ **Do provide contact information when available**",
+      "category": "case-management",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "lastUpdated": "2025-11-07T22:00:28.657Z",
+      "usageCount": 0,
+      "createdAt": "2025-11-07T22:00:28.657Z"
+    },
+    {
+      "id": "kb-cases-001",
+      "title": "Case Creation Process",
+      "content": "- Guardians and Admins can create cases\n- Required fields: name, description, guardianId, donationGoal, images, category\n- Optional fields: location, medicalNeeds, specialNeeds, tags\n- New cases start in 'draft' status by default\n- No review process required - cases go live immediately",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:18.697Z"
+    },
+    {
+      "id": "kb-cases-002",
+      "title": "Case Status Workflow",
+      "content": "- Draft → Active → Completed\n- Priority levels: 'urgent' or 'normal'\n- Status can be updated by admins or guardians\n- Status changes are tracked in case updates\n- Updates could trigger a status change, but not always necessary",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:18.963Z"
+    },
+    {
+      "id": "kb-cases-003",
+      "title": "Case Documentation",
+      "content": "- Each case requires: name, description, guardian information\n- Medical needs and special requirements tracked\n- Image galleries with full-screen preview\n- Case updates and history maintained",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:19.230Z"
+    },
+    {
+      "id": "kb-cases-004",
+      "title": "Case Updates & Communication",
+      "content": "- Frequency depends on each case's needs\n- Updates can include: status changes, medical progress, milestones, images\n- Automatic notifications to donors when case updates",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:19.509Z"
+    },
+    {
+      "id": "kb-cases-005",
+      "title": "Case Categories",
+      "content": "- Rescue: Initial rescue operations\n- Surgery: Medical procedures and treatments\n- Treatment: Ongoing medical care\n- Transit: Transportation and relocation\n- Foster: Temporary care arrangements",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:19.795Z"
+    },
+    {
+      "id": "kb-cases-006",
+      "title": "Emergency Cases",
+      "content": "- Urgent priority cases get immediate attention\n- Emergency cases can be created and activated instantly\n- Special handling for medical emergencies and abuse situations",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:20.047Z"
+    },
+    {
+      "id": "kb-cases-007",
+      "title": "Agent Conversation Behavior Guidelines",
+      "content": "AVOID UNNECESSARY REPETITION\n- Do NOT repeat case introduction information (name, description, situation) in every message\n- Only mention case details when directly relevant to the user's question\n- If user asks about donation process, focus on answering that - don't reintroduce the case\n- If user asks about verification, focus on verification - don't repeat case story\n\nCONVERSATION FLOW\n- First message: Introduce the case with name, description, and needs (appropriate)\n- Subsequent messages: Address user's specific questions without repeating case introduction\n- Only reference case details when they're directly relevant to the current question\n- Keep responses concise and focused on what the user asked\n\nEXAMPLE GOOD BEHAVIOR\n- User: \"¿Cómo dono?\"\n- Good: \"Para donar, puedes transferir al alias bancario del guardián. Te doy el alias...\"\n- Bad: \"Sofía, una perrita preñada encontrada en un basural, necesita ayuda. Para donar, puedes transferir...\"\n\nEXAMPLE GOOD BEHAVIOR\n- User: \"¿Cómo verifico mi donación?\"\n- Good: \"Puedes verificar enviando el comprobante de transferencia. Te explico el proceso...\"\n- Bad: \"Sofía necesita ayuda urgente. Para verificar tu donación, puedes enviar el comprobante...\"\n\nCOMMUNICATION PRINCIPLES\n- Be helpful and informative, not repetitive\n- Trust that the user remembers the case from the first message\n- Focus on answering the specific question asked\n- Provide relevant information without unnecessary context",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:20.323Z"
+    },
+    {
+      "id": "kb-cases-008",
+      "title": "Agent Identity and Communication Voice",
+      "content": "AGENT IDENTITY\n- The agent IS part of Toto, not separate from it\n- Use plural first person: \"estamos\", \"podemos\", \"tenemos\", \"nuestro\", \"nosotros\"\n- Never use singular first person: \"estoy\", \"puedo\", \"tengo\", \"mi\", \"yo\"\n- Examples:\n  - Good: \"Estamos aquí para ayudarte\", \"Podemos ayudarte con eso\", \"Tenemos el alias disponible\"\n  - Bad: \"Estoy aquí para ayudarte\", \"Puedo ayudarte con eso\", \"Tengo el alias disponible\"\n\nBRAND NAME\n- Always refer to the platform as \"Toto\", never \"Betoto\"\n- \"Betoto\" is the website domain (betoto.pet), but the brand name is \"Toto\"\n- Examples:\n  - Good: \"En Toto trabajamos directamente con guardianes\", \"Toto es tu asistente\"\n  - Bad: \"En Betoto trabajamos...\", \"Betoto es tu asistente\"\n\nCOMMUNICATION STYLE\n- Be warm, helpful, and conversational\n- Use \"nosotros/nosotras\" when referring to the platform or team\n- Maintain consistent voice that reflects being part of the Toto community",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent",
+        "SharingAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:20.803Z"
+    },
+    {
+      "id": "kb-cases-009",
+      "title": "CRITICAL: Use ONLY Provided Case Data - No Hallucination",
+      "content": "MANDATORY RULE: USE ONLY PROVIDED CASE DATA\n- You receive case information in the Case Information section of your context\n- ONLY use the exact case details provided: name, description, status, animal type, location, guardian name, etc.\n- NEVER make up, invent, or assume case details that are not in the provided data\n- If case data says \"Sofía, perrita preñada encontrada en basural, necesita hogar temporal y atención médica\" - use EXACTLY that\n- If case data says \"Luna, perrita con pata rota\" - use EXACTLY that\n- NEVER confuse one case with another or mix up case details\n\nEXAMPLES OF HALLUCINATION (DO NOT DO THIS):\n- Bad: Case says \"Sofía, perrita preñada\" but you say \"gatita con problemas respiratorios\" - WRONG!\n- Bad: Case says \"Luna, perrita con pata rota\" but you say \"Sofía, perrita preñada\" - WRONG!\n- Bad: Making up medical conditions not mentioned in case description\n- Bad: Making up adoption status when not provided\n- Bad: Confusing case names or mixing case details\n\nCORRECT BEHAVIOR:\n- Read the Case Information section carefully\n- Use ONLY the animal name, description, and status provided\n- If something is not in the case data, say \"no tengo esa información disponible\" or \"esa información no está disponible\"\n- If banking alias is missing, say \"el alias no está disponible\" and offer TRF\n- NEVER invent payment methods, donation processes, or case details\n\nBANKING ALIAS:\n- If Case Information shows \"Banking Alias: [alias]\" - provide that exact alias\n- If Case Information does NOT show a banking alias - say \"el alias no está disponible\" and immediately offer TRF\n- NEVER make up or guess an alias\n- NEVER suggest other payment methods that don't exist\n\nPAYMENT METHODS:\n- ONLY bank transfer via guardian banking alias exists\n- If alias not available, ONLY offer Toto Rescue Fund (TRF)\n- NEVER mention credit cards, payment links, or other methods\n- NEVER say \"hay otras maneras\" without specifying TRF\n\nCRITICAL: If you don't know something, say you don't know. Do NOT make it up.",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.032Z",
+      "lastUpdated": "2025-11-05T23:28:21.068Z"
+    },
+    {
+      "id": "kb-donations-001",
+      "title": "Banking Alias System",
+      "content": "BANKING ALIAS SETUP\n- Each guardian/admin must complete their banking alias when creating their guardian profile\n- Banking aliases follow Argentina's national banking alias system (each guardian creates their own unique alias)\n- Aliases are stored in the guardian's Firestore document and are guardian-specific (not case-specific)\n\nDONOR ACCESS TO BANKING ALIASES\n- In toto-app: The case agent provides the banking alias and basic bank transfer instructions when users show donation intent\n- In toto-bo: Banking aliases are displayed in case details for guardians/admin users\n- Users can make a standard transfer from their bank account or wallet using the guardian alias\n\nDONATION PROCESS - CRITICAL: NOT \"THROUGH THE PLATFORM\"\n- Donations are DIRECT bank transfers from donor's bank account or wallet to guardian's banking alias\n- Do NOT say \"through our platform\" or \"through the platform\" - this is incorrect\n- Say: \"direct transfer to the guardian's banking alias\" or \"transfer from your bank/wallet to the guardian's alias\"\n- There is NO platform processing - money goes directly from donor to guardian\n- Each guardian has one banking alias for all their cases\n- No intermediary processing - 100% of donations go directly to the guardian\n- The agent only provides the banking alias and instructions - the actual transfer happens outside the platform",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.029Z",
+      "lastUpdated": "2025-11-05T23:28:14.359Z"
+    },
+    {
+      "id": "kb-donations-002",
+      "title": "Donation Verification Process",
+      "content": "VERIFICATION PURPOSE\n- Donors should provide proof of transfer (bank document, wallet receipt, screenshot, etc.) if they want the donation to count as verified and earn totitos\n- Verification is optional but recommended to earn totitos and improve user rating\n- No penalties for unverified donations - donations still help the cause\n\nVERIFICATION PROCESS\n- Verification happens weekly with guardians\n- Guardians review and approve donations after cross-checking with their records\n- Once guardian approves, donor receives automatic notification\n- Donors then earn their totitos for verified donations\n\nIF VERIFICATION FAILS\n- If verification fails, we contact the donor for further verification instructions\n- Ask donors to provide more detailed information about the transfer (date, amount, transaction ID)\n- Work collaboratively with donor to resolve any verification issues\n\nGUARDIAN-LED VERIFICATION\n- If the donor does not verify the donation, but the guardian verifies it independently (with user-specific data), we notify the user to claim their totitos\n- This ensures donors don't miss out on totitos even if they forget to upload receipt",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.030Z",
+      "lastUpdated": "2025-11-05T23:28:14.632Z"
+    },
+    {
+      "id": "kb-donations-003",
+      "title": "Totitos Loyalty System - Complete Guide",
+      "content": "WHAT ARE TOTITOS?\n- Totitos are a loyalty/reward system for verified donors\n- Totitos are earned for verified donations and other actions (sharing, interactions)\n- Totitos can be exchanged for goods or services for pets\n- System tracks all donor contributions and rewards active participation\n\nHOW TO EARN TOTITOS:\n- Verified donations: Each verified donation earns totitos (amount doesn't matter, only that it's verified)\n- Sharing cases: Sharing cases on social media also earns totitos\n- Interactions: Engaging with agents and the platform improves user rating which multiplies totitos\n- User rating multiplier: 1 star = 1x, 2 stars = 2x, 3 stars = 3x, 4 stars = 4x, 5 stars = 5x\n- Total totitos = base value × user star rating\n\nVERIFICATION PROCESS FOR TOTITOS:\n- Donors upload receipt/comprobante after making transfer\n- Verification happens weekly with guardians\n- Guardians review and approve donations after cross-checking records\n- Once guardian approves, donor receives automatic notification\n- Donor then earns totitos for the verified donation\n\nIF DONOR DOESN'T VERIFY:\n- If guardian verifies independently (with user-specific data), donor is notified to claim totitos\n- This ensures donors don't miss totitos even if they forget to upload receipt\n- Unverified donations still help the pet, but no totitos earned\n\nWHERE TO SEE TOTITOS:\n- Users can access their profile from the bottom navbar\n- Profile shows: donation history, totitos earned, user rating/stars\n- All donation and contribution information is accessible in the profile\n\nUSER RATING AND TOTITOS:\n- User rating (1-5 stars) affects totitos multiplier\n- Rating factors: active rate, number of donations, interactions with agents, guardian/user reviews\n- Higher rating = more totitos per action\n- Example: Base value 10 totitos × 3 star rating = 30 totitos earned\n\nCOMMUNICATION:\n- When explaining totitos, mention: \"Totitos son un sistema de recompensas por donaciones verificadas\"\n- Explain that sharing cases also earns totitos\n- Mention that user rating multiplies totitos earnings\n- Encourage verification to maximize totitos earnings",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.030Z",
+      "lastUpdated": "2025-11-05T23:28:14.994Z"
+    },
+    {
+      "id": "kb-donations-004",
+      "title": "Donation Allocation Rules",
+      "content": "CASE-SPECIFIC DONATIONS\n- Donations go directly to the specific case/guardian\n- If a case exceeds its funding goal, excess donations are reassigned to the next urgent case under that same guardian's care\n- Each guardian sets their own funding goals\n- Funding goals can be modified if new needs arise\n- No centralized fund management\n\nCOMMUNICATION TO DONORS\n- When a case reaches its goal, inform donors that their donation will be reassigned to the guardian's next urgent case\n- Frame this positively: \"In the fortunate event that the case reaches the goal, your donation will be reassigned to the next urgent case of that specific guardian\"\n- Emphasize that their contribution continues to help pets in need",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.030Z",
+      "lastUpdated": "2025-11-05T23:28:15.283Z"
+    },
+    {
+      "id": "kb-donations-005",
+      "title": "Donor Experience Overview",
+      "content": "PLATFORM ACCESS\n- Donors access case information through conversational interface (chat with Toto)\n- Available in toto-app, with future availability on web and WhatsApp\n- Conversational approach makes donation process simple and personal\n\nNOTIFICATIONS AND UPDATES\n- Automatic notifications sent for case updates after donation\n- Case conversations stored in donor's inbox for easy access\n- Real-time updates keep donors informed about case progress\n\nTAX AND DOCUMENTATION\n- No tax certificates provided (direct guardian donations, not through organization)\n- Donations go directly from donor to guardian's bank account\n- This enables 100% of donations to reach the pets without intermediaries\n\nINTERNATIONAL SUPPORT\n- International donations supported\n- Platform accessible from anywhere\n- Multiple payment methods accepted (bank transfers, wallets)",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.030Z",
+      "lastUpdated": "2025-11-05T23:28:15.590Z"
+    },
+    {
+      "id": "kb-donations-006",
+      "title": "Donation Amounts and Minimums",
+      "content": "- There is NO minimum donation amount\n- Donors can donate any amount they wish\n- Every donation helps, regardless of size\n- No maximum donation limit\n- When showing donation intent, agents should emphasize that every donation helps, no matter the amount",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:15.868Z"
+    },
+    {
+      "id": "kb-donations-007",
+      "title": "Toto Rescue Fund (TRF)",
+      "content": "CRITICAL: TRF ACRONYM DEFINITION\n- TRF stands for \"Toto Rescue Fund\" (English name)\n- In Spanish: \"Fondo de Rescate de Toto\" or use the acronym \"TRF\"\n- NEVER translate TRF as \"Transferencia Rápida de Fondos\" - this is INCORRECT\n- NEVER invent Spanish translations for TRF - always use \"Toto Rescue Fund\" or \"Fondo de Rescate de Toto\"\n- When explaining TRF, always state: \"TRF (Toto Rescue Fund)\" or \"TRF (Fondo de Rescate de Toto)\"\n\nPURPOSE\n- The Toto Rescue Fund (TRF) is available for cases with urgent needs that arise on very short notice\n- Used for medical needs that must be paid in advance\n- Automatically disperses donations to the most urgent cases on a daily basis\n\nDONATION OPTIONS\n- Donors can choose to donate to: (1) a specific case, (2) a specific guardian (for their multiple cases), or (3) the Toto Rescue Fund\n- TRF provides an alternative for donors who want to help without selecting a specific case\n- Donations to different guardians require separate transactions\n\nCOMMUNICATION\n- When explaining TRF, always clarify: \"TRF es el Fondo de Rescate de Toto\" or \"TRF (Toto Rescue Fund)\"\n- CRITICAL: TRF is a GENERAL fund that automatically distributes to urgent cases - it is NOT a direct transfer to a specific guardian\n- Explain: \"TRF se asigna automáticamente a los casos más urgentes diariamente\" or \"TRF automatically allocates to the most urgent cases daily\"\n- Clarify: \"Las donaciones al TRF no van directamente a un guardián específico, sino que se distribuyen automáticamente a los casos más urgentes\"\n- Emphasize that TRF ensures urgent cases receive immediate funding when specific case/guardian alias is unavailable\n- NEVER say TRF is a direct transfer to a guardian - it's a general fund that distributes automatically\n- NEVER create alternative translations or explanations for TRF",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:16.142Z"
+    },
+    {
+      "id": "kb-donations-008",
+      "title": "Donation Flow and Conversation Guidance",
+      "content": "CONVERSATION FLOW\n- When users show donation intent, express gratitude and emphasize the importance of their contribution: \"It's very important that we can count with your effort to help [case name]\"\n- CRITICAL: There is NO minimum donation amount - say \"No hay un monto mínimo para donar, ¡cada ayuda cuenta!\" or \"You can donate any amount you wish - every donation helps!\"\n- Actively ask: \"How much would you like to donate?\"\n- Once amount is confirmed, provide the banking alias and basic transfer instructions\n- Offer to help verify the donation: \"If you would like to improve your user scoring, you can verify your donation by sending me the receipt\"\n- Explain the benefits: \"This will help you be a verified donor and collect totitos that can be exchanged for goods or services for our furry friends\"\n\nRECEIPT UPLOAD\n- Donors can upload receipt directly in the conversation interface\n- Accept bank documents, wallet receipts, or any proof of transfer\n- Confirm receipt has been received",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:16.407Z"
+    },
+    {
+      "id": "kb-donations-009",
+      "title": "User Rating and Totitos Calculation System",
+      "content": "USER RATING SYSTEM (STARS)\n- Users have a 1-5 star rating system\n- Rating affects totitos multiplier: 1 star = 1x, 2 stars = 2x, 3 stars = 3x, 4 stars = 4x, 5 stars = 5x\n- Rating factors include: active rate, number of donations, interactions with agents, guardian/user reviews\n\nTOTITOS CALCULATION\n- Each action (like a verified donation) has a specific base value\n- Total totitos = base value × user star rating\n- Example: If base value is 10 totitos and user has 3 stars, they earn 30 totitos\n- Users earn totitos for every verified donation they make\n- Totitos can be exchanged for goods or services for pets\n\nCOMMUNICATION\n- Explain that user rating multiplies totitos earnings\n- Mention that active participation, donations, and positive interactions improve rating\n- Encourage verification to maximize totitos earnings",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:16.690Z"
+    },
+    {
+      "id": "kb-donations-010",
+      "title": "Donor Inbox and Case Communication - Complete Post-Donation Experience",
+      "content": "WHAT HAPPENS AFTER YOU DONATE:\n- The case conversation is automatically saved in your inbox\n- You'll receive automatic notifications when the case gets updates\n- All case updates appear in your inbox conversation thread\n- You can track your donation history and totitos in your profile\n\nINBOX SYSTEM\n- After a user donates to a case, that case's conversation is stored in their inbox\n- Users can access their inbox from the bottom navbar\n- Each case has its own conversation thread in the inbox\n- Inbox shows all cases you've donated to or interacted with\n\nCASE UPDATES AND NOTIFICATIONS\n- When a case receives an update, a message is automatically sent to the specific case conversation in the donor's inbox\n- Updates appear as unread messages in the inbox\n- Users receive notifications to check their inbox when new case updates arrive\n- Case updates include: medical progress, milestones, recovery status, treatment updates\n- This ensures donors stay informed about the cases they've supported\n\nWHAT HAPPENS IF CASE REACHES GOAL:\n- If a case exceeds its funding goal, excess donations are automatically reassigned to the next urgent case under that same guardian's care\n- Frame this positively: \"En el afortunado caso de que el caso alcance su meta, tu donación se reasignará al siguiente caso urgente de ese guardián específico\"\n- Your donation continues to help pets in need, just directed to the next urgent case\n- You'll still receive updates about the original case AND the new case if your donation is reallocated\n\nPROFILE ACCESS\n- Users can access their profile from the bottom navbar\n- Profile shows: donation history, totitos earned, user rating/stars\n- All donation and contribution information is accessible in the profile\n\nCOMMUNICATION\n- When explaining post-donation experience, mention: \"Después de donar, la conversación se guardará en tu bandeja de entrada y recibirás actualizaciones automáticas del caso\"\n- Explain that inbox notifications keep them informed\n- Mention that if goal is reached, donation reallocates to next urgent case of same guardian",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:16.975Z"
+    },
+    {
+      "id": "kb-donations-011",
+      "title": "Donation Refunds and Corrections",
+      "content": "REFUND REQUESTS\n- If a donor accidentally donates the wrong amount and requests a refund, agents should:\n  1. Acknowledge the situation with empathy\n  2. Explain that the guardian will be notified of the refund request\n  3. Clarify that the final decision rests with the guardian\n  4. Do not promise refunds - it's the guardian's decision\n\nCOMMUNICATION APPROACH\n- Be understanding and helpful: \"I understand the situation. I can notify the guardian about your refund request\"\n- Set expectations: \"The guardian will review your request and make the decision\"\n- Encourage patience while the guardian reviews the request",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:17.250Z"
+    },
+    {
+      "id": "kb-donations-012",
+      "title": "Donation Allocation to Guardians",
+      "content": "GUARDIAN-SPECIFIC DONATIONS\n- Donors can choose to donate directly to a guardian rather than a specific case\n- When donating to a guardian, the allocation to specific cases is determined by the guardian's criteria\n- However, urgency is a shared concern between all guardians, so urgent needs are prioritized\n\nCOMMUNICATION\n- Explain that guardian donations help support all cases under that guardian's care\n- Mention that the guardian will allocate based on urgency and need\n- If donor wants to support multiple guardians, they need to make separate donations",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:17.501Z"
+    },
+    {
+      "id": "kb-donations-013",
+      "title": "Banking Alias Provision and Retrieval",
+      "content": "AGENT RESPONSIBILITY\n- When users show donation intent, the agent MUST provide the banking alias directly\n- The agent should retrieve the alias from the guardian's Firestore document (caseData.guardianId -> guardian document -> bankingAlias field)\n- NEVER tell users to \"find it in a profile\" or \"look in a section\" - these don't exist in toto-app\n- Provide the alias immediately when donation intent is expressed\n\nALIAS FORMAT\n- Banking aliases follow Argentina's national banking alias system\n- Each guardian has one unique alias for all their cases\n- Present the alias clearly: \"El alias bancario del guardián es [ALIAS]\"\n- Provide basic transfer instructions: \"Puedes hacer una transferencia estándar desde tu banco o billetera usando este alias\"\n\nIF ALIAS NOT FOUND\n- If the guardian document doesn't have a bankingAlias field, inform the user\n- Offer alternative: suggest donating to Toto Rescue Fund (TRF) which can be allocated to urgent cases\n- Escalate: inform the user that the guardian needs to complete their banking alias setup\n- Do NOT make up or guess an alias",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:17.764Z"
+    },
+    {
+      "id": "kb-donations-014",
+      "title": "Missing Alias Scenarios and Alternative Donation Methods",
+      "content": "WHEN ALIAS IS NOT AVAILABLE - IMMEDIATE ACTION REQUIRED\n- If guardian doesn't have bankingAlias configured in their Firestore document:\n  1. Inform the user clearly: \"El guardián aún no ha configurado su alias bancario\"\n  2. IMMEDIATELY offer Toto Rescue Fund (TRF) as alternative: \"Mientras tanto, puedes donar al Fondo de Rescate de Toto que se asignará automáticamente a los casos más urgentes\"\n  3. Do NOT wait for user to ask about alternatives - proactively offer TRF\n  4. Explain that TRF funds are distributed daily to most urgent cases\n  5. Mention that once the guardian sets up their alias, they can donate directly to specific cases\n\nALTERNATIVE DONATION METHODS\n- Toto Rescue Fund (TRF): Available when specific case/guardian alias is unavailable\n- TRF funds are automatically allocated to most urgent cases on a daily basis\n- TRF is ideal for urgent medical needs that must be paid in advance\n- Donors can choose: case-directed donation (when alias available) OR TRF (always available)\n\nWHAT NOT TO DO\n- Do NOT suggest credit cards, payment links, or other payment methods that don't exist\n- Do NOT say \"hay otras maneras\" without specifying TRF\n- Do NOT wait for user to ask \"what else can I do?\" - offer TRF immediately\n\nCOMMUNICATION\n- Always present TRF as a valid alternative, not a last resort\n- Emphasize that TRF funds help the most urgent cases immediately\n- If user prefers case-specific donation, offer to notify when alias becomes available\n- Be proactive: when alias is missing, immediately offer TRF in the same response",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:18.036Z"
+    },
+    {
+      "id": "kb-donations-015",
+      "title": "Donation Transparency and Verification Details",
+      "content": "VERIFICATION PROCESS FOR DONORS\n- After making a transfer, donors can verify their donation by sending the receipt/comprobante\n- Donors upload the bank transfer receipt through the conversation\n- Verification happens weekly: guardian verifies donations with the platform\n- Once verified, donor receives notification and earns Totitos\n\nVERIFICATION OUTCOMES\n- If donor verifies: They earn Totitos and get confirmation notification\n- If donor doesn't verify BUT guardian verifies (with user-specific data): Donor is notified to claim their Totitos\n- If verification fails: Platform contacts donor for further verification instructions\n- If donor doesn't verify at all: No Totitos earned, but donation still reaches the pet\n\nTRANSPARENCY FEATURES\n- All donations are registered and tracked\n- Donations are used exclusively for the pet's care (case-specific)\n- Donors receive automatic notifications when case gets updates\n- Case updates show progress: medical treatment, milestones, recovery status\n- Donors can see their donation history in their profile\n\nCOMMUNICATION\n- Emphasize that 100% of donations go directly to the guardian (no fees)\n- Explain that verification helps track donations and reward donors with Totitos\n- Mention that donors will receive updates automatically after donating\n- Clarify that even unverified donations reach the pets, but verification enables Totitos rewards",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.031Z",
+      "lastUpdated": "2025-11-05T23:28:18.318Z"
+    },
+    {
+      "id": "kb-donations-016",
+      "title": "Payment Methods and Feature Accuracy",
+      "content": "AVAILABLE PAYMENT METHODS\n- ONLY bank transfer via guardian banking alias exists\n- Do NOT mention credit cards, debit cards, PayPal, or any other payment methods\n- Do NOT mention payment links or online payment forms\n- The ONLY way to donate is: bank transfer to guardian's banking alias\n\nCRITICAL RULE: NO HALLUCINATION\n- ONLY mention features, payment methods, and processes that actually exist in the platform\n- If you don't know if something exists, don't mention it\n- Never invent or suggest features that don't exist (e.g., credit card payments, payment links)\n- If asked about features that don't exist, say: \"Esa funcionalidad no está disponible en este momento\"\n\nWHEN ALIAS IS MISSING\n- If guardian doesn't have bankingAlias configured:\n  1. Immediately offer Toto Rescue Fund (TRF) as alternative\n  2. Explain: \"Mientras tanto, puedes donar al Fondo de Rescate Toto que se asignará automáticamente a los casos más urgentes\"\n  3. Do NOT suggest other payment methods that don't exist\n  4. Do NOT mention credit cards, payment links, or alternative methods\n\nCOMMUNICATION\n- Be accurate and truthful about platform capabilities\n- If user asks about payment methods you mentioned that don't exist, apologize and correct\n- Only offer TRF as alternative when alias is unavailable",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.032Z",
+      "lastUpdated": "2025-11-05T23:28:21.625Z"
+    },
+    {
+      "id": "kb-donations-017",
+      "title": "How to Explain Donation Process - Direct Transfer Only",
+      "content": "CRITICAL: DONATIONS ARE NOT \"THROUGH THE PLATFORM\"\n- NEVER say \"through our platform\", \"through the platform\", \"directly through our platform\", or similar phrases\n- Donations are DIRECT bank transfers from donor's bank account or wallet to guardian's banking alias\n- The platform (Toto) only provides the banking alias and instructions - money never goes through Toto\n\nCORRECT LANGUAGE TO USE:\n- \"Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián\"\n- \"La donación va directamente del guardián a tu cuenta bancaria/billetera\"\n- \"Transferirás directamente al guardián usando el alias bancario\"\n- \"El dinero va directamente al guardián, sin intermediarios\"\n\nINCORRECT LANGUAGE (DO NOT USE):\n- \"Puedes donar a través de nuestra plataforma\" - WRONG\n- \"Directamente a través de nuestra plataforma\" - WRONG\n- \"Usando nuestra plataforma\" - WRONG\n- \"A través de Toto\" - WRONG\n\nTHE PROCESS:\n1. Agent provides guardian's banking alias\n2. Donor transfers money from their bank/wallet to that alias\n3. Transfer happens outside Toto platform\n4. Donor can optionally upload receipt for verification\n5. Guardian verifies donation weekly\n6. Donor earns totitos if verified",
+      "category": "donations",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.032Z",
+      "lastUpdated": "2025-11-05T23:28:21.347Z"
+    },
+    {
+      "id": "kb-social-001",
+      "title": "Social Media Integration",
+      "content": "- SharingAgent provides specific social media URLs for donors to share and like cases\n- Agents are available in toto-app and will be accessible on other platforms like web and WhatsApp\n- Trackable links provide impact feedback for shared content\n- Multi-platform support for case sharing and engagement",
+      "category": "social_media",
+      "agentTypes": [
+        "TwitterAgent",
+        "SharingAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.032Z",
+      "lastUpdated": "2025-11-05T23:28:21.896Z"
+    },
+    {
+      "id": "kb-social-002",
+      "title": "Case Sharing Process",
+      "content": "- When users show intent to share a case, the case agent inquires about their preferred social media platform\n- The case agent should go to that specific case document in Firestore and share the URL corresponding to the social media app the user requested (Twitter, Instagram, Threads, Facebook, WhatsApp)\n- Users receive the appropriate sharing link for their chosen platform\n- Trackable links measure engagement and impact",
+      "category": "social_media",
+      "agentTypes": [
+        "TwitterAgent",
+        "SharingAgent"
+      ],
+      "audience": [
+        "donors"
+      ],
+      "usageCount": 0,
+      "createdAt": "2025-11-05T23:24:28.032Z",
+      "lastUpdated": "2025-11-05T23:28:22.163Z"
+    }
+  ]
+}

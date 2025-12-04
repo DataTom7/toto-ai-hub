@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-011",
+  "title": "Donation Refunds and Corrections",
+  "content": "REFUND REQUESTS\n- If a donor accidentally donates the wrong amount and requests a refund, agents should:\n  1. Acknowledge the situation with empathy\n  2. Explain that the guardian will be notified of the refund request\n  3. Clarify that the final decision rests with the guardian\n  4. Do not promise refunds - it's the guardian's decision\n\nCOMMUNICATION APPROACH\n- Be understanding and helpful: \"I understand the situation. I can notify the guardian about your refund request\"\n- Set expectations: \"The guardian will review your request and make the decision\"\n- Encourage patience while the guardian reviews the request",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:17.250Z"
+}

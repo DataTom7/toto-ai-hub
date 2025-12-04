@@ -1,0 +1,104 @@
+{
+  "timestamp": "2025-12-03T22:59:29.657Z",
+  "mode": "live",
+  "results": [
+    {
+      "id": "kb-business-donation-amounts",
+      "filePath": "01-donation-amounts.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-business-no-minimum",
+      "filePath": "02-minimum-donation.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-flow-donation-intent",
+      "filePath": "01-donation-intent.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-flow-donation-amount-selected",
+      "filePath": "02-donation-amount-selected.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-flow-donation-verification",
+      "filePath": "03-donation-verification.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-flow-sharing-intent",
+      "filePath": "04-sharing-intent.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-flow-help-seeking",
+      "filePath": "05-help-seeking.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-flow-affirmative-response",
+      "filePath": "06-affirmative-response.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-flow-adoption-foster",
+      "filePath": "07-adoption-foster-inquiry.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-guidelines-first-message",
+      "filePath": "01-first-message.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-guidelines-conversation-flow",
+      "filePath": "02-conversation-progression.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-product-trf-definition",
+      "filePath": "01-trf-definition.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-product-totitos",
+      "filePath": "02-totitos-system.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    },
+    {
+      "id": "kb-product-donation-verification",
+      "filePath": "03-donation-verification.json",
+      "success": true,
+      "action": "added",
+      "message": "Entry added to Firestore"
+    }
+  ]
+}

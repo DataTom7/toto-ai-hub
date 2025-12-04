@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-013",
+  "title": "Banking Alias Provision and Retrieval",
+  "content": "AGENT RESPONSIBILITY\n- When users show donation intent, the agent MUST provide the banking alias directly\n- The agent should retrieve the alias from the guardian's Firestore document (caseData.guardianId -> guardian document -> bankingAlias field)\n- NEVER tell users to \"find it in a profile\" or \"look in a section\" - these don't exist in toto-app\n- Provide the alias immediately when donation intent is expressed\n\nALIAS FORMAT\n- Banking aliases follow Argentina's national banking alias system\n- Each guardian has one unique alias for all their cases\n- Present the alias clearly: \"El alias bancario del guardián es [ALIAS]\"\n- Provide basic transfer instructions: \"Puedes hacer una transferencia estándar desde tu banco o billetera usando este alias\"\n\nIF ALIAS NOT FOUND\n- If the guardian document doesn't have a bankingAlias field, inform the user\n- Offer alternative: suggest donating to Toto Rescue Fund (TRF) which can be allocated to urgent cases\n- Escalate: inform the user that the guardian needs to complete their banking alias setup\n- Do NOT make up or guess an alias",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:17.764Z"
+}

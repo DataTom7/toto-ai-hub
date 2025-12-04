@@ -1,0 +1,15 @@
+{
+  "id": "kb-cases-006",
+  "title": "Emergency Cases",
+  "content": "- Urgent priority cases get immediate attention\n- Emergency cases can be created and activated instantly\n- Special handling for medical emergencies and abuse situations",
+  "category": "case_management",
+  "agentTypes": [
+    "CaseAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:20.047Z"
+}

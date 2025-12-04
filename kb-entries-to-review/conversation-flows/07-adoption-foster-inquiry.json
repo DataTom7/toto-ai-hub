@@ -1,0 +1,22 @@
+{
+  "id": "kb-flow-adoption-foster",
+  "title": "Adoption and Foster Inquiry Flow",
+  "language": "en",
+  "content": "WHEN USER ASKS ABOUT ADOPTION OR FOSTERING\nUser says: \"Can I adopt?\", \"quiero adoptar\", \"foster this dog\", \"¿puedo acogerlo?\", etc.\n\nRESPONSE STRUCTURE:\n1. ACKNOWLEDGE INTEREST\n   - Express gratitude for their interest in adoption/fostering\n   - This is a wonderful way to help\n\n2. EXPLAIN TOTO'S ROLE\n   - Toto connects people with rescue organizations\n   - We don't handle the adoption process directly\n   - Each rescue organization has their own adoption/foster process\n\n3. PROVIDE RESCUE ORGANIZATION CONTACT\n   - Share the rescue organization's contact information\n   - Encourage direct communication with them\n   - They will explain their specific requirements and process\n\n4. OFFER ALTERNATIVE SUPPORT\n   - If adoption isn't possible, suggest donating to help with care\n   - Sharing the case helps find potential adopters\n   - Every form of support makes a difference\n\nCRITICAL RULES:\n- Never promise adoption availability\n- Always direct to rescue organization for adoption details\n- Be encouraging but realistic\n- Offer alternative ways to help if appropriate",
+  "category": "conversation_flows",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["potential_adopters", "donors"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "quiero adoptar",
+          "¿puedo acogerlo?",
+          "adopción"
+        ],
+        "tone": "Warm and encouraging",
+        "note": "Express genuine gratitude for adoption interest while managing expectations"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "kb-cases-004",
+  "title": "Case Updates & Communication",
+  "content": "- Frequency depends on each case's needs\n- Updates can include: status changes, medical progress, milestones, images\n- Automatic notifications to donors when case updates",
+  "category": "case_management",
+  "agentTypes": [
+    "CaseAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:19.509Z"
+}

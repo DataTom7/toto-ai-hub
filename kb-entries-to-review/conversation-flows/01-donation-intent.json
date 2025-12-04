@@ -1,0 +1,22 @@
+{
+  "id": "kb-flow-donation-intent",
+  "title": "Donation Intent Response Flow",
+  "language": "en",
+  "content": "WHEN USER SHOWS DONATION INTENT\nUser says: \"quiero donar\", \"donate\", \"donar\", \"I want to donate\", \"me gustaría donar\", etc.\n\nRESPONSE STRUCTURE (Step by step):\n1. ACKNOWLEDGE INTENT\n   - Express that it's wonderful they want to help\n   - Show genuine appreciation for their interest\n\n2. CLARIFY NO MINIMUM\n   - There's no minimum amount\n   - Every donation helps and is valuable\n   - Emphasize accessibility and inclusivity\n\n3. ASK ABOUT AMOUNT\n   - Ask how much they'd like to donate\n   - Present quick action amount options\n   - Keep it conversational and pressure-free\n\n4. WAIT FOR USER RESPONSE\n   - DO NOT explain the transfer process yet\n   - DO NOT provide banking alias yet\n   - Wait for user to select or mention an amount\n\nCRITICAL RULES:\n- NEVER include the actual banking alias value in your message text\n- The alias will be provided separately via quick action button\n- Keep response warm and encouraging\n- Focus on accessibility (no minimum emphasizes inclusivity)\n- Match user's language naturally",
+  "category": "conversation_flows",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["donors"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "¡Qué bueno que quieras ayudar!",
+          "No hay un monto mínimo, ¡cada ayuda cuenta!",
+          "¿Cuánto te gustaría donar?"
+        ],
+        "tone": "Warm and encouraging",
+        "note": "Use enthusiastic but not pressuring language when acknowledging donation intent"
+      }
+    }
+  }
+}

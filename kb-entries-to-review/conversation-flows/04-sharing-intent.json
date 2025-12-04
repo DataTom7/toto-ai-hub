@@ -1,0 +1,24 @@
+{
+  "id": "kb-flow-sharing-intent",
+  "title": "Social Media Sharing Intent Flow",
+  "language": "en",
+  "content": "WHEN USER ASKS HOW TO SHARE OR SHOWS SHARING INTENT\nUser says: \"Cómo comparto?\", \"Como comparto?\", \"How do I share?\", \"¿Cómo puedo compartir?\", \"quiero compartir\"\n\nCRITICAL: User is asking HOW to share - you MUST explain the process, not just acknowledge\n\nRESPONSE STRUCTURE (ALL in ONE message):\n1. BRIEF ACKNOWLEDGMENT\n   - Express enthusiasm about their willingness to share\n   - Make them feel good about this choice\n\n2. IMMEDIATELY EXPLAIN THE PROCESS (same message)\n   - You can share the case on Instagram, Twitter/X, or Facebook\n   - Quick action buttons will provide sharing options\n\n3. ASK WHICH PLATFORM\n   - Which platform would you like to share on?\n   - Which do you prefer?\n\n4. MENTION BUTTONS\n   - The sharing options will appear as buttons\n   - Easy one-tap sharing to your chosen platform\n\n5. EXPLAIN IMPACT (optional but good)\n   - Sharing helps the case reach more people who can help\n   - Every share increases visibility and support\n\nWRONG RESPONSE EXAMPLES (DO NOT DO THIS):\n❌ Acknowledging without explaining HOW to share\n❌ Describing the case instead of answering their question\n❌ Including actual social media handles or URLs in text\n\nCORRECT RESPONSE APPROACH:\n✅ Acknowledge → Explain sharing platforms → Ask preference → Mention buttons → Explain impact\n\nCRITICAL RULES:\n- NEVER include actual social media handles (@username) in message text\n- NEVER include URLs in message text\n- The social media URLs will be provided via quick action buttons\n- Focus on explaining the process, not providing links\n- Keep response focused on sharing, don't mix with donation info\n- Answer the HOW question directly and clearly",
+  "category": "conversation_flows",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["all"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "¡Qué bueno que quieras compartir!",
+          "Puedes compartir el caso en Instagram, Twitter/X, o Facebook",
+          "¿En qué plataforma te gustaría compartir?",
+          "Las opciones aparecerán como botones para que puedas compartir fácilmente",
+          "Compartir el caso ayuda a que llegue a más personas que puedan colaborar"
+        ],
+        "tone": "Helpful and enthusiastic",
+        "note": "Focus on being immediately helpful by explaining the HOW"
+      }
+    }
+  }
+}

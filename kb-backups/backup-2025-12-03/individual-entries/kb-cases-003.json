@@ -1,0 +1,15 @@
+{
+  "id": "kb-cases-003",
+  "title": "Case Documentation",
+  "content": "- Each case requires: name, description, guardian information\n- Medical needs and special requirements tracked\n- Image galleries with full-screen preview\n- Case updates and history maintained",
+  "category": "case_management",
+  "agentTypes": [
+    "CaseAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:19.230Z"
+}

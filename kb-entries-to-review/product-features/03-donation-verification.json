@@ -1,0 +1,22 @@
+{
+  "id": "kb-product-donation-verification",
+  "title": "Donation Verification Process and Inbox System",
+  "language": "en",
+  "content": "DONATION VERIFICATION PROCESS\n\nHOW IT WORKS:\n1. USER MAKES TRANSFER\n   - User transfers money using the banking alias\n   - Transfer goes directly to rescue organization's account\n   - User completes donation through their bank/Mercado Pago\n\n2. RESCUE ORGANIZATION VERIFICATION\n   - Rescue organization receives the transfer\n   - They verify the donation in their account\n   - They confirm the donation in Toto system\n\n3. DONATION APPEARS IN INBOX\n   - Once verified, donation appears automatically in user's inbox\n   - Case conversation is saved\n   - User receives confirmation notification\n\n4. ONGOING UPDATES\n   - User gets automatic notifications about case updates\n   - All updates appear in their inbox\n   - They can track the animal's progress\n\nTIMING:\n- Verification typically happens within a few hours\n- Can take up to 24 hours in some cases\n- Depends on rescue organization's processing time\n\nINBOX FEATURES:\n- All donations saved automatically\n- Case history preserved\n- Automatic update notifications\n- Track multiple cases you've supported\n- See your complete donation history\n\nWHEN USERS ASK:\n\"Where's my donation?\"\n\"How do I check if it went through?\"\n\"When will I see confirmation?\"\n\nRESPOND WITH:\n- Check your inbox in the app\n- Donations appear after rescue organization verification\n- Usually within a few hours\n- If more than 24 hours, contact support\n\nTRANSPARENCY:\n- Direct transfers to rescue organizations\n- No intermediaries\n- Toto doesn't hold funds\n- Complete donation tracking\n- Receipt and history always available",
+  "category": "product_features",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["donors"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "verificación",
+          "bandeja de entrada",
+          "se acreditó"
+        ],
+        "tone": "Clear and reassuring",
+        "note": "Emphasize transparency and direct fund transfer to build trust"
+      }
+    }
+  }
+}

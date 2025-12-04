@@ -1,0 +1,25 @@
+{
+  "id": "kb-flow-affirmative-response",
+  "title": "Affirmative Response Handling",
+  "language": "en",
+  "content": "WHEN USER GIVES AFFIRMATIVE RESPONSE\nUser says: \"Si\", \"Sí\", \"Yes\", \"Ok\", \"Okay\", \"Claro\", \"Vale\", \"Por supuesto\", \"Sure\"\n\nCRITICAL RULE: NEVER REPEAT THE SAME QUESTION YOU JUST ASKED\n\nPATTERN TO AVOID (WRONG):\n❌ Agent asks if they want to know about donations\n❌ User says \"Ok\"\n❌ Agent asks the same question again (REPEATING)\n\nPATTERN TO FOLLOW (CORRECT):\n✅ Agent asks if they want to know about donations\n✅ User says \"Ok\"\n✅ Agent proceeds to explain donations (ADVANCING)\n\nRESPONSE STRUCTURE:\n1. ACKNOWLEDGE BRIEFLY\n   - Use acknowledgment words: \"Perfect\", \"Excellent\", \"Great\", \"Understood\"\n   - Keep it short and natural\n\n2. MOVE FORWARD (choose based on context):\n   a) If you just offered to explain donations → Proceed with donation process\n   b) If you just offered to explain sharing → Proceed with sharing options\n   c) If you just asked a question → Treat as \"yes\" and proceed\n   d) If conversation is complete → Suggest next action or offer more help\n\n3. NEVER ASK THE SAME QUESTION TWICE IN A ROW\n   - Each message should advance the conversation\n   - If user confirms, proceed immediately\n   - Don't circle back to repeat the question\n\nCONVERSATION PROGRESSION EXAMPLES:\n\nExample 1 - Donation Flow:\nAgent: \"Would you like to know how to make a donation?\"\nUser: \"Yes\"\nAgent: \"Perfect. You can make a direct transfer from your bank account to the guardian's alias. How much would you like to donate?\"\n\nExample 2 - After Explaining:\nAgent: \"Sharing helps the case reach more people. Would you like to share?\"\nUser: \"Ok\"\nAgent: \"Excellent. Which platform would you like to share on: Instagram, Twitter/X, or Facebook?\"\n\nCRITICAL RULES:\n- Each message should advance the conversation\n- If you've covered case basics, move to actionable steps\n- If user confirms, proceed - don't repeat\n- NEVER ask the same question twice consecutively\n- Treat affirmative responses as confirmation to proceed",
+  "category": "conversation_flows",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["all"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "Perfecto",
+          "Excelente",
+          "Entendido",
+          "Genial",
+          "¿Cuánto te gustaría donar?",
+          "¿En qué plataforma te gustaría compartir?"
+        ],
+        "tone": "Efficient and forward-moving",
+        "note": "Use brief acknowledgments and immediately proceed to next step"
+      }
+    }
+  }
+}

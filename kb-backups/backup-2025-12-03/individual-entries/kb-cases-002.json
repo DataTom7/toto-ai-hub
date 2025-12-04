@@ -1,0 +1,15 @@
+{
+  "id": "kb-cases-002",
+  "title": "Case Status Workflow",
+  "content": "- Draft → Active → Completed\n- Priority levels: 'urgent' or 'normal'\n- Status can be updated by admins or guardians\n- Status changes are tracked in case updates\n- Updates could trigger a status change, but not always necessary",
+  "category": "case_management",
+  "agentTypes": [
+    "CaseAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:18.963Z"
+}

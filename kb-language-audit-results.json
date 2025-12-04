@@ -1,0 +1,377 @@
+{
+  "timestamp": "2025-12-03T22:18:52.243Z",
+  "summary": {
+    "total": 32,
+    "english-only": 15,
+    "bilingual": 1,
+    "spanish-only": 0,
+    "mixed": 12,
+    "unknown": 4,
+    "needsConversion": 13
+  },
+  "details": [
+    {
+      "id": "kb-1762552808869",
+      "title": "How to Share Cases on Social Media",
+      "category": "social-media",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-1762552813861",
+      "title": "How to Verify Donations",
+      "category": "donations",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-1762552824068",
+      "title": "TRF (Toto Rescue Fund) - How to Donate",
+      "category": "donations",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-1762552828657",
+      "title": "Adoption Process - How It Works",
+      "category": "case-management",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-cases-001",
+      "title": "Case Creation Process",
+      "category": "case_management",
+      "type": "unknown",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": []
+    },
+    {
+      "id": "kb-cases-002",
+      "title": "Case Status Workflow",
+      "category": "case_management",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-cases-003",
+      "title": "Case Documentation",
+      "category": "case_management",
+      "type": "unknown",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": []
+    },
+    {
+      "id": "kb-cases-004",
+      "title": "Case Updates & Communication",
+      "category": "case_management",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-cases-005",
+      "title": "Case Categories",
+      "category": "case_management",
+      "type": "unknown",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": []
+    },
+    {
+      "id": "kb-cases-006",
+      "title": "Emergency Cases",
+      "category": "case_management",
+      "type": "unknown",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": []
+    },
+    {
+      "id": "kb-cases-007",
+      "title": "Agent Conversation Behavior Guidelines",
+      "category": "case_management",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-cases-008",
+      "title": "Agent Identity and Communication Voice",
+      "category": "case_management",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-cases-009",
+      "title": "CRITICAL: Use ONLY Provided Case Data - No Hallucination",
+      "category": "case_management",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-donations-001",
+      "title": "Banking Alias System",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-002",
+      "title": "Donation Verification Process",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-003",
+      "title": "Totitos Loyalty System - Complete Guide",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-004",
+      "title": "Donation Allocation Rules",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-005",
+      "title": "Donor Experience Overview",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-006",
+      "title": "Donation Amounts and Minimums",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-007",
+      "title": "Toto Rescue Fund (TRF)",
+      "category": "donations",
+      "type": "bilingual",
+      "needsConversion": true,
+      "patterns": [
+        "Spanish label"
+      ],
+      "suggestions": [
+        "Convert to English-only with tone guidance",
+        "Remove language labels (Spanish:/English:)",
+        "Add cultural notes to metadata instead"
+      ]
+    },
+    {
+      "id": "kb-donations-008",
+      "title": "Donation Flow and Conversation Guidance",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-009",
+      "title": "User Rating and Totitos Calculation System",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-010",
+      "title": "Donor Inbox and Case Communication - Complete Post-Donation Experience",
+      "category": "donations",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-donations-011",
+      "title": "Donation Refunds and Corrections",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-012",
+      "title": "Donation Allocation to Guardians",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-013",
+      "title": "Banking Alias Provision and Retrieval",
+      "category": "donations",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-donations-014",
+      "title": "Missing Alias Scenarios and Alternative Donation Methods",
+      "category": "donations",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-donations-015",
+      "title": "Donation Transparency and Verification Details",
+      "category": "donations",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-donations-016",
+      "title": "Payment Methods and Feature Accuracy",
+      "category": "donations",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-donations-017",
+      "title": "How to Explain Donation Process - Direct Transfer Only",
+      "category": "donations",
+      "type": "mixed",
+      "needsConversion": true,
+      "patterns": [],
+      "suggestions": [
+        "Analyze manually - mixed content detected"
+      ]
+    },
+    {
+      "id": "kb-social-001",
+      "title": "Social Media Integration",
+      "category": "social_media",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    },
+    {
+      "id": "kb-social-002",
+      "title": "Case Sharing Process",
+      "category": "social_media",
+      "type": "english-only",
+      "needsConversion": false,
+      "patterns": [],
+      "suggestions": [
+        "Already English-only ✅",
+        "Consider adding cultural notes for Spanish/Portuguese"
+      ]
+    }
+  ]
+}

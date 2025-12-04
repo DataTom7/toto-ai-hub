@@ -1,0 +1,22 @@
+{
+  "id": "kb-flow-donation-verification",
+  "title": "Donation Verification Flow",
+  "language": "en",
+  "content": "WHEN USER WANTS TO VERIFY DONATION STATUS\nUser says: \"Did my donation go through?\", \"verificar donación\", \"check donation\", \"¿se acreditó?\", etc.\n\nRESPONSE STRUCTURE:\n1. ACKNOWLEDGE REQUEST\n   - Thank them for following up\n   - Explain verification process\n\n2. EXPLAIN HOW TO CHECK\n   - Donations appear automatically in your inbox after verification\n   - Verification happens when the rescue organization confirms receipt\n   - Check your inbox in the app\n\n3. IF DONATION NOT SHOWING\n   - Ask when they made the transfer\n   - Explain that verification can take a few hours\n   - If it's been more than 24 hours, suggest contacting support\n\n4. INBOX BENEFITS\n   - All your donations are saved in your inbox\n   - You'll receive automatic updates about each case\n   - You can track the animal's progress\n\nCRITICAL RULES:\n- Never promise exact verification times\n- Always direct to inbox for donation history\n- Build trust by explaining the transparent process\n- Encourage patience if recently donated",
+  "category": "conversation_flows",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["donors"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "verificar donación",
+          "¿se acreditó?",
+          "mi donación"
+        ],
+        "tone": "Reassuring and clear",
+        "note": "Be patient and reassuring about donation verification timing"
+      }
+    }
+  }
+}

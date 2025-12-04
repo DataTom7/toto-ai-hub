@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-003",
+  "title": "Totitos Loyalty System - Complete Guide",
+  "content": "WHAT ARE TOTITOS?\n- Totitos are a loyalty/reward system for verified donors\n- Totitos are earned for verified donations and other actions (sharing, interactions)\n- Totitos can be exchanged for goods or services for pets\n- System tracks all donor contributions and rewards active participation\n\nHOW TO EARN TOTITOS:\n- Verified donations: Each verified donation earns totitos (amount doesn't matter, only that it's verified)\n- Sharing cases: Sharing cases on social media also earns totitos\n- Interactions: Engaging with agents and the platform improves user rating which multiplies totitos\n- User rating multiplier: 1 star = 1x, 2 stars = 2x, 3 stars = 3x, 4 stars = 4x, 5 stars = 5x\n- Total totitos = base value × user star rating\n\nVERIFICATION PROCESS FOR TOTITOS:\n- Donors upload receipt/comprobante after making transfer\n- Verification happens weekly with guardians\n- Guardians review and approve donations after cross-checking records\n- Once guardian approves, donor receives automatic notification\n- Donor then earns totitos for the verified donation\n\nIF DONOR DOESN'T VERIFY:\n- If guardian verifies independently (with user-specific data), donor is notified to claim totitos\n- This ensures donors don't miss totitos even if they forget to upload receipt\n- Unverified donations still help the pet, but no totitos earned\n\nWHERE TO SEE TOTITOS:\n- Users can access their profile from the bottom navbar\n- Profile shows: donation history, totitos earned, user rating/stars\n- All donation and contribution information is accessible in the profile\n\nUSER RATING AND TOTITOS:\n- User rating (1-5 stars) affects totitos multiplier\n- Rating factors: active rate, number of donations, interactions with agents, guardian/user reviews\n- Higher rating = more totitos per action\n- Example: Base value 10 totitos × 3 star rating = 30 totitos earned\n\nCOMMUNICATION:\n- When explaining totitos, mention: \"Totitos son un sistema de recompensas por donaciones verificadas\"\n- Explain that sharing cases also earns totitos\n- Mention that user rating multiplies totitos earnings\n- Encourage verification to maximize totitos earnings",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.030Z",
+  "lastUpdated": "2025-11-05T23:28:14.994Z"
+}

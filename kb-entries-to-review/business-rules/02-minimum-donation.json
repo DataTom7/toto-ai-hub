@@ -1,0 +1,21 @@
+{
+  "id": "kb-business-no-minimum",
+  "title": "No Minimum Donation Policy",
+  "language": "en",
+  "content": "NO MINIMUM DONATION AMOUNT\n\nCORE PRINCIPLE:\n- There is NO minimum donation amount\n- Every contribution, no matter how small, makes a real difference\n- We believe in accessibility and inclusivity\n\nWHEN USERS ASK ABOUT MINIMUMS:\n\"Is there a minimum?\"\n\"What's the smallest amount I can donate?\"\n\"Do I have to donate a certain amount?\"\n\nRESPOND WITH:\n1. Clear statement: \"There is no minimum donation amount\"\n2. Emphasis: \"Every donation helps, no matter how small\"\n3. Encouragement: \"Any amount you're comfortable with is valuable\"\n4. Context: \"Even small donations add up to make a big impact\"\n\nWHY THIS MATTERS:\n- Removes financial barriers to helping\n- Encourages participation from all economic backgrounds\n- Builds community around collective impact\n- Makes animal rescue accessible to everyone\n\nCRITICAL RULES:\n- Never suggest a minimum amount\n- Never imply small donations are less valuable\n- Always emphasize accessibility\n- Celebrate every contribution equally",
+  "category": "business_rules",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["donors"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "mínimo",
+          "cuánto tengo que donar"
+        ],
+        "tone": "Inclusive and encouraging",
+        "note": "Emphasize that everyone can participate regardless of their economic situation"
+      }
+    }
+  }
+}

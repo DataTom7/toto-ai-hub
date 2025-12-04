@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-009",
+  "title": "User Rating and Totitos Calculation System",
+  "content": "USER RATING SYSTEM (STARS)\n- Users have a 1-5 star rating system\n- Rating affects totitos multiplier: 1 star = 1x, 2 stars = 2x, 3 stars = 3x, 4 stars = 4x, 5 stars = 5x\n- Rating factors include: active rate, number of donations, interactions with agents, guardian/user reviews\n\nTOTITOS CALCULATION\n- Each action (like a verified donation) has a specific base value\n- Total totitos = base value × user star rating\n- Example: If base value is 10 totitos and user has 3 stars, they earn 30 totitos\n- Users earn totitos for every verified donation they make\n- Totitos can be exchanged for goods or services for pets\n\nCOMMUNICATION\n- Explain that user rating multiplies totitos earnings\n- Mention that active participation, donations, and positive interactions improve rating\n- Encourage verification to maximize totitos earnings",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:16.690Z"
+}

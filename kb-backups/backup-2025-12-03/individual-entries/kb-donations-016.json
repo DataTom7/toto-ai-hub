@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-016",
+  "title": "Payment Methods and Feature Accuracy",
+  "content": "AVAILABLE PAYMENT METHODS\n- ONLY bank transfer via guardian banking alias exists\n- Do NOT mention credit cards, debit cards, PayPal, or any other payment methods\n- Do NOT mention payment links or online payment forms\n- The ONLY way to donate is: bank transfer to guardian's banking alias\n\nCRITICAL RULE: NO HALLUCINATION\n- ONLY mention features, payment methods, and processes that actually exist in the platform\n- If you don't know if something exists, don't mention it\n- Never invent or suggest features that don't exist (e.g., credit card payments, payment links)\n- If asked about features that don't exist, say: \"Esa funcionalidad no está disponible en este momento\"\n\nWHEN ALIAS IS MISSING\n- If guardian doesn't have bankingAlias configured:\n  1. Immediately offer Toto Rescue Fund (TRF) as alternative\n  2. Explain: \"Mientras tanto, puedes donar al Fondo de Rescate Toto que se asignará automáticamente a los casos más urgentes\"\n  3. Do NOT suggest other payment methods that don't exist\n  4. Do NOT mention credit cards, payment links, or alternative methods\n\nCOMMUNICATION\n- Be accurate and truthful about platform capabilities\n- If user asks about payment methods you mentioned that don't exist, apologize and correct\n- Only offer TRF as alternative when alias is unavailable",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.032Z",
+  "lastUpdated": "2025-11-05T23:28:21.625Z"
+}

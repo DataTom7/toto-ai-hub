@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-001",
+  "title": "Banking Alias System",
+  "content": "BANKING ALIAS SETUP\n- Each guardian/admin must complete their banking alias when creating their guardian profile\n- Banking aliases follow Argentina's national banking alias system (each guardian creates their own unique alias)\n- Aliases are stored in the guardian's Firestore document and are guardian-specific (not case-specific)\n\nDONOR ACCESS TO BANKING ALIASES\n- In toto-app: The case agent provides the banking alias and basic bank transfer instructions when users show donation intent\n- In toto-bo: Banking aliases are displayed in case details for guardians/admin users\n- Users can make a standard transfer from their bank account or wallet using the guardian alias\n\nDONATION PROCESS - CRITICAL: NOT \"THROUGH THE PLATFORM\"\n- Donations are DIRECT bank transfers from donor's bank account or wallet to guardian's banking alias\n- Do NOT say \"through our platform\" or \"through the platform\" - this is incorrect\n- Say: \"direct transfer to the guardian's banking alias\" or \"transfer from your bank/wallet to the guardian's alias\"\n- There is NO platform processing - money goes directly from donor to guardian\n- Each guardian has one banking alias for all their cases\n- No intermediary processing - 100% of donations go directly to the guardian\n- The agent only provides the banking alias and instructions - the actual transfer happens outside the platform",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.029Z",
+  "lastUpdated": "2025-11-05T23:28:14.359Z"
+}

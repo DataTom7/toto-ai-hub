@@ -1,0 +1,16 @@
+{
+  "id": "kb-cases-007",
+  "title": "Agent Conversation Behavior Guidelines",
+  "content": "AVOID UNNECESSARY REPETITION\n- Do NOT repeat case introduction information (name, description, situation) in every message\n- Only mention case details when directly relevant to the user's question\n- If user asks about donation process, focus on answering that - don't reintroduce the case\n- If user asks about verification, focus on verification - don't repeat case story\n\nCONVERSATION FLOW\n- First message: Introduce the case with name, description, and needs (appropriate)\n- Subsequent messages: Address user's specific questions without repeating case introduction\n- Only reference case details when they're directly relevant to the current question\n- Keep responses concise and focused on what the user asked\n\nEXAMPLE GOOD BEHAVIOR\n- User: \"¿Cómo dono?\"\n- Good: \"Para donar, puedes transferir al alias bancario del guardián. Te doy el alias...\"\n- Bad: \"Sofía, una perrita preñada encontrada en un basural, necesita ayuda. Para donar, puedes transferir...\"\n\nEXAMPLE GOOD BEHAVIOR\n- User: \"¿Cómo verifico mi donación?\"\n- Good: \"Puedes verificar enviando el comprobante de transferencia. Te explico el proceso...\"\n- Bad: \"Sofía necesita ayuda urgente. Para verificar tu donación, puedes enviar el comprobante...\"\n\nCOMMUNICATION PRINCIPLES\n- Be helpful and informative, not repetitive\n- Trust that the user remembers the case from the first message\n- Focus on answering the specific question asked\n- Provide relevant information without unnecessary context",
+  "category": "case_management",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:20.323Z"
+}

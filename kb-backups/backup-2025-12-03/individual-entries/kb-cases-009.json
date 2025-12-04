@@ -1,0 +1,16 @@
+{
+  "id": "kb-cases-009",
+  "title": "CRITICAL: Use ONLY Provided Case Data - No Hallucination",
+  "content": "MANDATORY RULE: USE ONLY PROVIDED CASE DATA\n- You receive case information in the Case Information section of your context\n- ONLY use the exact case details provided: name, description, status, animal type, location, guardian name, etc.\n- NEVER make up, invent, or assume case details that are not in the provided data\n- If case data says \"Sofía, perrita preñada encontrada en basural, necesita hogar temporal y atención médica\" - use EXACTLY that\n- If case data says \"Luna, perrita con pata rota\" - use EXACTLY that\n- NEVER confuse one case with another or mix up case details\n\nEXAMPLES OF HALLUCINATION (DO NOT DO THIS):\n- Bad: Case says \"Sofía, perrita preñada\" but you say \"gatita con problemas respiratorios\" - WRONG!\n- Bad: Case says \"Luna, perrita con pata rota\" but you say \"Sofía, perrita preñada\" - WRONG!\n- Bad: Making up medical conditions not mentioned in case description\n- Bad: Making up adoption status when not provided\n- Bad: Confusing case names or mixing case details\n\nCORRECT BEHAVIOR:\n- Read the Case Information section carefully\n- Use ONLY the animal name, description, and status provided\n- If something is not in the case data, say \"no tengo esa información disponible\" or \"esa información no está disponible\"\n- If banking alias is missing, say \"el alias no está disponible\" and offer TRF\n- NEVER invent payment methods, donation processes, or case details\n\nBANKING ALIAS:\n- If Case Information shows \"Banking Alias: [alias]\" - provide that exact alias\n- If Case Information does NOT show a banking alias - say \"el alias no está disponible\" and immediately offer TRF\n- NEVER make up or guess an alias\n- NEVER suggest other payment methods that don't exist\n\nPAYMENT METHODS:\n- ONLY bank transfer via guardian banking alias exists\n- If alias not available, ONLY offer Toto Rescue Fund (TRF)\n- NEVER mention credit cards, payment links, or other methods\n- NEVER say \"hay otras maneras\" without specifying TRF\n\nCRITICAL: If you don't know something, say you don't know. Do NOT make it up.",
+  "category": "case_management",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.032Z",
+  "lastUpdated": "2025-11-05T23:28:21.068Z"
+}

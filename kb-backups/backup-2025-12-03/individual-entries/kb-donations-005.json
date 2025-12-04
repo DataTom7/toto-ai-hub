@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-005",
+  "title": "Donor Experience Overview",
+  "content": "PLATFORM ACCESS\n- Donors access case information through conversational interface (chat with Toto)\n- Available in toto-app, with future availability on web and WhatsApp\n- Conversational approach makes donation process simple and personal\n\nNOTIFICATIONS AND UPDATES\n- Automatic notifications sent for case updates after donation\n- Case conversations stored in donor's inbox for easy access\n- Real-time updates keep donors informed about case progress\n\nTAX AND DOCUMENTATION\n- No tax certificates provided (direct guardian donations, not through organization)\n- Donations go directly from donor to guardian's bank account\n- This enables 100% of donations to reach the pets without intermediaries\n\nINTERNATIONAL SUPPORT\n- International donations supported\n- Platform accessible from anywhere\n- Multiple payment methods accepted (bank transfers, wallets)",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.030Z",
+  "lastUpdated": "2025-11-05T23:28:15.590Z"
+}

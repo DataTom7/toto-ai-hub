@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-008",
+  "title": "Donation Flow and Conversation Guidance",
+  "content": "CONVERSATION FLOW\n- When users show donation intent, express gratitude and emphasize the importance of their contribution: \"It's very important that we can count with your effort to help [case name]\"\n- CRITICAL: There is NO minimum donation amount - say \"No hay un monto mínimo para donar, ¡cada ayuda cuenta!\" or \"You can donate any amount you wish - every donation helps!\"\n- Actively ask: \"How much would you like to donate?\"\n- Once amount is confirmed, provide the banking alias and basic transfer instructions\n- Offer to help verify the donation: \"If you would like to improve your user scoring, you can verify your donation by sending me the receipt\"\n- Explain the benefits: \"This will help you be a verified donor and collect totitos that can be exchanged for goods or services for our furry friends\"\n\nRECEIPT UPLOAD\n- Donors can upload receipt directly in the conversation interface\n- Accept bank documents, wallet receipts, or any proof of transfer\n- Confirm receipt has been received",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:16.407Z"
+}

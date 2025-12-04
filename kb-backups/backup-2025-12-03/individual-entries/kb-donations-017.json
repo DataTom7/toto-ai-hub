@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-017",
+  "title": "How to Explain Donation Process - Direct Transfer Only",
+  "content": "CRITICAL: DONATIONS ARE NOT \"THROUGH THE PLATFORM\"\n- NEVER say \"through our platform\", \"through the platform\", \"directly through our platform\", or similar phrases\n- Donations are DIRECT bank transfers from donor's bank account or wallet to guardian's banking alias\n- The platform (Toto) only provides the banking alias and instructions - money never goes through Toto\n\nCORRECT LANGUAGE TO USE:\n- \"Puedes hacer una transferencia directa desde tu cuenta bancaria o billetera al alias del guardián\"\n- \"La donación va directamente del guardián a tu cuenta bancaria/billetera\"\n- \"Transferirás directamente al guardián usando el alias bancario\"\n- \"El dinero va directamente al guardián, sin intermediarios\"\n\nINCORRECT LANGUAGE (DO NOT USE):\n- \"Puedes donar a través de nuestra plataforma\" - WRONG\n- \"Directamente a través de nuestra plataforma\" - WRONG\n- \"Usando nuestra plataforma\" - WRONG\n- \"A través de Toto\" - WRONG\n\nTHE PROCESS:\n1. Agent provides guardian's banking alias\n2. Donor transfers money from their bank/wallet to that alias\n3. Transfer happens outside Toto platform\n4. Donor can optionally upload receipt for verification\n5. Guardian verifies donation weekly\n6. Donor earns totitos if verified",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.032Z",
+  "lastUpdated": "2025-11-05T23:28:21.347Z"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "kb-cases-005",
+  "title": "Case Categories",
+  "content": "- Rescue: Initial rescue operations\n- Surgery: Medical procedures and treatments\n- Treatment: Ongoing medical care\n- Transit: Transportation and relocation\n- Foster: Temporary care arrangements",
+  "category": "case_management",
+  "agentTypes": [
+    "CaseAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:19.795Z"
+}

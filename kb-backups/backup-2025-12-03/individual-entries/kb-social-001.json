@@ -1,0 +1,16 @@
+{
+  "id": "kb-social-001",
+  "title": "Social Media Integration",
+  "content": "- SharingAgent provides specific social media URLs for donors to share and like cases\n- Agents are available in toto-app and will be accessible on other platforms like web and WhatsApp\n- Trackable links provide impact feedback for shared content\n- Multi-platform support for case sharing and engagement",
+  "category": "social_media",
+  "agentTypes": [
+    "TwitterAgent",
+    "SharingAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.032Z",
+  "lastUpdated": "2025-11-05T23:28:21.896Z"
+}

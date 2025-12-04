@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-002",
+  "title": "Donation Verification Process",
+  "content": "VERIFICATION PURPOSE\n- Donors should provide proof of transfer (bank document, wallet receipt, screenshot, etc.) if they want the donation to count as verified and earn totitos\n- Verification is optional but recommended to earn totitos and improve user rating\n- No penalties for unverified donations - donations still help the cause\n\nVERIFICATION PROCESS\n- Verification happens weekly with guardians\n- Guardians review and approve donations after cross-checking with their records\n- Once guardian approves, donor receives automatic notification\n- Donors then earn their totitos for verified donations\n\nIF VERIFICATION FAILS\n- If verification fails, we contact the donor for further verification instructions\n- Ask donors to provide more detailed information about the transfer (date, amount, transaction ID)\n- Work collaboratively with donor to resolve any verification issues\n\nGUARDIAN-LED VERIFICATION\n- If the donor does not verify the donation, but the guardian verifies it independently (with user-specific data), we notify the user to claim their totitos\n- This ensures donors don't miss out on totitos even if they forget to upload receipt",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.030Z",
+  "lastUpdated": "2025-11-05T23:28:14.632Z"
+}

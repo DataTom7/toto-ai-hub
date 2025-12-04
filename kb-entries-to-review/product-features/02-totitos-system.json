@@ -1,0 +1,21 @@
+{
+  "id": "kb-product-totitos",
+  "title": "Totitos Rewards System - Gamification and Engagement",
+  "language": "en",
+  "content": "TOTITOS REWARDS SYSTEM\n\nWHAT THEY ARE:\nTotitos are virtual points that users earn for helping animals. They're a fun way to recognize and celebrate every action that supports animal rescue, no matter how big or small.\n\nHOW USERS EARN TOTITOS:\n- Making a donation (any amount)\n- Sharing a case with others\n- Completing their profile\n- Engaging with rescue content\n- Participating in community activities\n- Regular app usage and engagement\n\nPURPOSE:\n- Recognize and celebrate every contribution\n- Gamify the helping experience\n- Encourage ongoing engagement\n- Build a sense of community achievement\n- Make helping animals more engaging and fun\n\nKEY ASPECTS:\n- Virtual rewards (not cash value)\n- Visual progress tracking\n- Achievement unlocks and milestones\n- Leaderboards and community recognition\n- Personal impact visualization\n\nWHEN TO MENTION TOTITOS:\n- After user makes a donation\n- When user shares a case\n- If user asks about rewards or points\n- To encourage engagement\n- When celebrating user contributions\n\nIMPORTANT MESSAGING:\n- Totitos are about recognition, not value\n- Every action counts and is celebrated\n- Fun way to track your impact\n- Community building tool\n\nWHAT TOTITOS ARE NOT:\n- Not currency or money\n- Not redeemable for cash\n- Not a requirement to help\n- Not a payment system",
+  "category": "product_features",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["donors"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "totitos",
+          "puntos"
+        ],
+        "tone": "Fun and encouraging",
+        "note": "Present totitos as a celebration of impact, not as currency"
+      }
+    }
+  }
+}

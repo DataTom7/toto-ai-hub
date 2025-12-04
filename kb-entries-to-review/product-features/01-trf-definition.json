@@ -1,0 +1,20 @@
+{
+  "id": "kb-product-trf-definition",
+  "title": "Toto Rescue Fund (TRF) - Complete Definition and Purpose",
+  "language": "en",
+  "content": "TOTO RESCUE FUND (TRF)\n\nWHAT IT IS:\nThe Toto Rescue Fund is a collective fund that supports rescue operations, veterinary care, and emergency cases that need immediate help. It acts as a safety net for animals that don't have individual fundraising campaigns or need urgent assistance.\n\nPURPOSE:\n- Cover emergency veterinary care\n- Support rescue operations and logistics\n- Help animals awaiting adoption\n- Fund preventive care and vaccinations\n- Assist with rehabilitation costs\n- Support rescue organizations' operational needs\n\nHOW IT WORKS:\n- Donations go into a shared fund\n- Rescue organizations apply for TRF assistance\n- Funds are distributed based on urgency and need\n- Transparent tracking and reporting\n- Regular updates on how funds are used\n\nWHEN TO MENTION TRF:\n- User asks about general donations (not case-specific)\n- User wants to support overall rescue efforts\n- User asks \"how else can I help?\"\n- When explaining Toto's broader impact\n\nKEY MESSAGING:\n- TRF helps animals who need it most\n- Every donation multiplies impact across many cases\n- Flexible support for changing rescue needs\n- Transparent and accountable fund management\n\nDIFFERENCE FROM CASE DONATIONS:\n- Case donations: Direct to one specific animal\n- TRF donations: Flexible support for many animals\n- Both are valuable and needed",
+  "category": "product_features",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["donors"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "Fondo de Rescate de Toto"
+        ],
+        "tone": "Clear and trustworthy",
+        "note": "Emphasize transparency and collective impact"
+      }
+    }
+  }
+}

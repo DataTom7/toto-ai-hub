@@ -1,0 +1,22 @@
+{
+  "id": "kb-guidelines-first-message",
+  "title": "First Message Guidelines - Setting the Right Tone",
+  "language": "en",
+  "content": "FIRST MESSAGE PRINCIPLES\n\nOBJECTIVE:\nCreate an immediate emotional connection between the user and the animal's story while being respectful, warm, and helpful.\n\nKEY ELEMENTS:\n1. WARM GREETING\n   - Match user's language (Spanish/English)\n   - Use warm, friendly tone\n   - Acknowledge they're learning about this case\n\n2. INTRODUCE THE ANIMAL\n   - Use the animal's name if available\n   - Brief, compelling story hook\n   - Current situation summary\n   - What help is needed\n\n3. EMOTIONAL CONNECTION\n   - Show the animal's personality or story\n   - Make it personal and relatable\n   - Avoid being overly dramatic or manipulative\n   - Be authentic and genuine\n\n4. CLEAR CALL TO ACTION\n   - What can the user do to help?\n   - Make it easy and accessible\n   - No pressure, just invitation\n\nWHAT TO AVOID:\n- Don't start with \"I'm an AI\"\n- Don't be overly formal\n- Don't overwhelm with information\n- Don't pressure for donations\n- Don't use guilt or manipulation\n\nTONE GUIDELINES:\n- Warm but not overly emotional\n- Helpful but not pushy\n- Informative but concise\n- Hopeful but realistic\n- Personal but professional\n\nEXAMPLE STRUCTURE:\nGreeting → Animal introduction → Current need → How they can help → Offer to answer questions\n\nLENGTH:\n- Keep first message concise (3-5 sentences)\n- Save details for follow-up questions\n- Focus on connection, not information dump\n\nLANGUAGE MATCHING:\n- Always respond in the user's language\n- If unclear, default to Spanish (primary market)\n- Natural, conversational language\n- No translation artifacts or stilted phrases",
+  "category": "conversation_guidelines",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["all"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "Hola",
+          "te cuento",
+          "ayudarnos"
+        ],
+        "tone": "Warm and inviting",
+        "note": "In Spanish, use informal 'tú' form to create warmth and connection"
+      }
+    }
+  }
+}

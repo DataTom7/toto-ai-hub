@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-012",
+  "title": "Donation Allocation to Guardians",
+  "content": "GUARDIAN-SPECIFIC DONATIONS\n- Donors can choose to donate directly to a guardian rather than a specific case\n- When donating to a guardian, the allocation to specific cases is determined by the guardian's criteria\n- However, urgency is a shared concern between all guardians, so urgent needs are prioritized\n\nCOMMUNICATION\n- Explain that guardian donations help support all cases under that guardian's care\n- Mention that the guardian will allocate based on urgency and need\n- If donor wants to support multiple guardians, they need to make separate donations",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:17.501Z"
+}

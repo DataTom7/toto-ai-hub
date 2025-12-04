@@ -10,34 +10,66 @@
 
 import * as dotenv from 'dotenv';
 import * as admin from 'firebase-admin';
+import * as path from 'path';
+import * as fs from 'fs';
 import { VertexAISearchService, SearchableDocument } from '../src/services/VertexAISearchService';
 
 // Load environment variables
 dotenv.config();
 
 // Initialize Firebase Admin
-const projectId = process.env.TOTO_BO_PROJECT_ID || 'toto-bo';
-const serviceAccountKey = process.env.TOTO_BO_SERVICE_ACCOUNT_KEY;
+const initializeFirebase = () => {
+  if (admin.apps.length === 0) {
+    const projectId = process.env.TOTO_BO_PROJECT_ID || 'toto-bo-stg';
+    const serviceAccountKey = process.env.TOTO_BO_SERVICE_ACCOUNT_KEY;
 
-if (!serviceAccountKey) {
-  console.error('❌ TOTO_BO_SERVICE_ACCOUNT_KEY environment variable is required');
-  process.exit(1);
-}
+    let serviceAccount;
 
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(serviceAccountKey);
-} catch (error) {
-  console.error('❌ Failed to parse TOTO_BO_SERVICE_ACCOUNT_KEY as JSON');
-  process.exit(1);
-}
+    if (serviceAccountKey) {
+      // Try environment variable first
+      try {
+        serviceAccount = JSON.parse(serviceAccountKey);
+        console.log('✅ Using service account from environment variable');
+      } catch (error) {
+        console.error('❌ Failed to parse TOTO_BO_SERVICE_ACCOUNT_KEY as JSON');
+        process.exit(1);
+      }
+    } else {
+      // Fallback to local service account files
+      console.log('📂 Looking for local service account files...');
+      const localPaths = [
+        path.join(__dirname, '../toto-bo-stg-firebase-adminsdk-fbsvc-369557e118.json'),
+        path.join(__dirname, '../toto-bo-firebase-adminsdk-fbsvc-138f229598.json')
+      ];
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  projectId: projectId
-});
+      let found = false;
+      for (const localPath of localPaths) {
+        if (fs.existsSync(localPath)) {
+          serviceAccount = JSON.parse(fs.readFileSync(localPath, 'utf8'));
+          console.log(`✅ Using local service account: ${path.basename(localPath)}`);
+          found = true;
+          break;
+        }
+      }
 
-const db = admin.firestore();
+      if (!found) {
+        console.error('❌ No Firebase credentials found');
+        console.error('   Set TOTO_BO_SERVICE_ACCOUNT_KEY environment variable or');
+        console.error('   Place service account JSON in project root');
+        process.exit(1);
+      }
+    }
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      projectId: projectId
+    });
+  }
+
+  return admin.firestore();
+};
+
+const db = initializeFirebase();
 const KB_COLLECTION = 'knowledge_base';
 
 async function syncKBToVertex() {

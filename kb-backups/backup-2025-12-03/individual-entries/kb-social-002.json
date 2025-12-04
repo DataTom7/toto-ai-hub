@@ -1,0 +1,16 @@
+{
+  "id": "kb-social-002",
+  "title": "Case Sharing Process",
+  "content": "- When users show intent to share a case, the case agent inquires about their preferred social media platform\n- The case agent should go to that specific case document in Firestore and share the URL corresponding to the social media app the user requested (Twitter, Instagram, Threads, Facebook, WhatsApp)\n- Users receive the appropriate sharing link for their chosen platform\n- Trackable links measure engagement and impact",
+  "category": "social_media",
+  "agentTypes": [
+    "TwitterAgent",
+    "SharingAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.032Z",
+  "lastUpdated": "2025-11-05T23:28:22.163Z"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-010",
+  "title": "Donor Inbox and Case Communication - Complete Post-Donation Experience",
+  "content": "WHAT HAPPENS AFTER YOU DONATE:\n- The case conversation is automatically saved in your inbox\n- You'll receive automatic notifications when the case gets updates\n- All case updates appear in your inbox conversation thread\n- You can track your donation history and totitos in your profile\n\nINBOX SYSTEM\n- After a user donates to a case, that case's conversation is stored in their inbox\n- Users can access their inbox from the bottom navbar\n- Each case has its own conversation thread in the inbox\n- Inbox shows all cases you've donated to or interacted with\n\nCASE UPDATES AND NOTIFICATIONS\n- When a case receives an update, a message is automatically sent to the specific case conversation in the donor's inbox\n- Updates appear as unread messages in the inbox\n- Users receive notifications to check their inbox when new case updates arrive\n- Case updates include: medical progress, milestones, recovery status, treatment updates\n- This ensures donors stay informed about the cases they've supported\n\nWHAT HAPPENS IF CASE REACHES GOAL:\n- If a case exceeds its funding goal, excess donations are automatically reassigned to the next urgent case under that same guardian's care\n- Frame this positively: \"En el afortunado caso de que el caso alcance su meta, tu donación se reasignará al siguiente caso urgente de ese guardián específico\"\n- Your donation continues to help pets in need, just directed to the next urgent case\n- You'll still receive updates about the original case AND the new case if your donation is reallocated\n\nPROFILE ACCESS\n- Users can access their profile from the bottom navbar\n- Profile shows: donation history, totitos earned, user rating/stars\n- All donation and contribution information is accessible in the profile\n\nCOMMUNICATION\n- When explaining post-donation experience, mention: \"Después de donar, la conversación se guardará en tu bandeja de entrada y recibirás actualizaciones automáticas del caso\"\n- Explain that inbox notifications keep them informed\n- Mention that if goal is reached, donation reallocates to next urgent case of same guardian",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:16.975Z"
+}

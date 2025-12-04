@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-007",
+  "title": "Toto Rescue Fund (TRF)",
+  "content": "CRITICAL: TRF ACRONYM DEFINITION\n- TRF stands for \"Toto Rescue Fund\" (English name)\n- In Spanish: \"Fondo de Rescate de Toto\" or use the acronym \"TRF\"\n- NEVER translate TRF as \"Transferencia Rápida de Fondos\" - this is INCORRECT\n- NEVER invent Spanish translations for TRF - always use \"Toto Rescue Fund\" or \"Fondo de Rescate de Toto\"\n- When explaining TRF, always state: \"TRF (Toto Rescue Fund)\" or \"TRF (Fondo de Rescate de Toto)\"\n\nPURPOSE\n- The Toto Rescue Fund (TRF) is available for cases with urgent needs that arise on very short notice\n- Used for medical needs that must be paid in advance\n- Automatically disperses donations to the most urgent cases on a daily basis\n\nDONATION OPTIONS\n- Donors can choose to donate to: (1) a specific case, (2) a specific guardian (for their multiple cases), or (3) the Toto Rescue Fund\n- TRF provides an alternative for donors who want to help without selecting a specific case\n- Donations to different guardians require separate transactions\n\nCOMMUNICATION\n- When explaining TRF, always clarify: \"TRF es el Fondo de Rescate de Toto\" or \"TRF (Toto Rescue Fund)\"\n- CRITICAL: TRF is a GENERAL fund that automatically distributes to urgent cases - it is NOT a direct transfer to a specific guardian\n- Explain: \"TRF se asigna automáticamente a los casos más urgentes diariamente\" or \"TRF automatically allocates to the most urgent cases daily\"\n- Clarify: \"Las donaciones al TRF no van directamente a un guardián específico, sino que se distribuyen automáticamente a los casos más urgentes\"\n- Emphasize that TRF ensures urgent cases receive immediate funding when specific case/guardian alias is unavailable\n- NEVER say TRF is a direct transfer to a guardian - it's a general fund that distributes automatically\n- NEVER create alternative translations or explanations for TRF",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:16.142Z"
+}

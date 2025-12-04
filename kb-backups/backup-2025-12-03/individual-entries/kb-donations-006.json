@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-006",
+  "title": "Donation Amounts and Minimums",
+  "content": "- There is NO minimum donation amount\n- Donors can donate any amount they wish\n- Every donation helps, regardless of size\n- No maximum donation limit\n- When showing donation intent, agents should emphasize that every donation helps, no matter the amount",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:15.868Z"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "kb-donations-004",
+  "title": "Donation Allocation Rules",
+  "content": "CASE-SPECIFIC DONATIONS\n- Donations go directly to the specific case/guardian\n- If a case exceeds its funding goal, excess donations are reassigned to the next urgent case under that same guardian's care\n- Each guardian sets their own funding goals\n- Funding goals can be modified if new needs arise\n- No centralized fund management\n\nCOMMUNICATION TO DONORS\n- When a case reaches its goal, inform donors that their donation will be reassigned to the guardian's next urgent case\n- Frame this positively: \"In the fortunate event that the case reaches the goal, your donation will be reassigned to the next urgent case of that specific guardian\"\n- Emphasize that their contribution continues to help pets in need",
+  "category": "donations",
+  "agentTypes": [
+    "CaseAgent",
+    "DonationAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.030Z",
+  "lastUpdated": "2025-11-05T23:28:15.283Z"
+}

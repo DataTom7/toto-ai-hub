@@ -1,0 +1,15 @@
+{
+  "id": "kb-cases-001",
+  "title": "Case Creation Process",
+  "content": "- Guardians and Admins can create cases\n- Required fields: name, description, guardianId, donationGoal, images, category\n- Optional fields: location, medicalNeeds, specialNeeds, tags\n- New cases start in 'draft' status by default\n- No review process required - cases go live immediately",
+  "category": "case_management",
+  "agentTypes": [
+    "CaseAgent"
+  ],
+  "audience": [
+    "donors"
+  ],
+  "usageCount": 0,
+  "createdAt": "2025-11-05T23:24:28.031Z",
+  "lastUpdated": "2025-11-05T23:28:18.697Z"
+}
