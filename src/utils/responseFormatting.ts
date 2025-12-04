@@ -104,8 +104,58 @@ export function generateFormattingHints(message: string): FormattingHints {
 /**
  * Generate suggested chunks for typing animation
  * Groups sentences intelligently: max 2 sentences per chunk, questions get their own chunk
+ * Also handles bullet points and markdown lists - each bullet becomes its own chunk
  */
 function generateSuggestedChunks(message: string, hints: FormattingHints): string[] {
+  // First, check for bullet points or markdown lists
+  const bulletPattern = /^[\s]*[\*\-\•]|^[\s]*\d+[\.\)]/gm;
+  const hasBullets = bulletPattern.test(message);
+  
+  if (hasBullets) {
+    // Split by bullet points - each bullet becomes its own chunk
+    const lines = message.split(/\n/);
+    const chunks: string[] = [];
+    let currentChunk = '';
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      // Check if this line is a bullet point
+      if (bulletPattern.test(trimmedLine)) {
+        // Save previous chunk if exists
+        if (currentChunk.trim()) {
+          chunks.push(currentChunk.trim());
+          currentChunk = '';
+        }
+        
+        // Clean up bullet point formatting (remove *, -, •, numbers, bold markers)
+        let cleanLine = trimmedLine
+          .replace(/^[\*\-\•\d]+[\.\)]\s*/, '') // Remove bullet markers
+          .replace(/\*\*/g, '') // Remove bold markers
+          .replace(/\*/g, '') // Remove remaining asterisks
+          .trim();
+        
+        chunks.push(cleanLine);
+      } else if (trimmedLine) {
+        // Regular text - add to current chunk
+        if (currentChunk) {
+          currentChunk += ' ' + trimmedLine;
+        } else {
+          currentChunk = trimmedLine;
+        }
+      }
+    }
+    
+    // Add remaining chunk
+    if (currentChunk.trim()) {
+      chunks.push(currentChunk.trim());
+    }
+    
+    // Filter out empty chunks
+    return chunks.filter(c => c.length > 0);
+  }
+  
+  // Fallback to sentence-based chunking for non-bullet text
   // Split into sentences first
   const sentencePattern = /[.!?]+(?=\s|$|¿)/g;
   const sentences: string[] = [];

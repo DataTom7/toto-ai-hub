@@ -30,6 +30,7 @@ export class CaseAgent extends BaseAgent {
   private conversationMemory: Map<string, ConversationMemory> = new Map();
   private userProfiles: Map<string, UserProfile> = new Map();
   private ragService?: RAGService;
+  private translationCache: Map<string, string> = new Map(); // Cache for language-agnostic intent detection
   // Default audience for KB retrieval - primarily serves donors
   private readonly DEFAULT_AUDIENCE = 'donors';
   private analytics: AgentAnalytics = {
@@ -112,6 +113,7 @@ export class CaseAgent extends BaseAgent {
       });
 
       if (result.chunks.length === 0) {
+        console.warn(`[CaseAgent] No KB entries retrieved for query: "${message.substring(0, 50)}..."`);
         return '';
       }
 
@@ -119,6 +121,12 @@ export class CaseAgent extends BaseAgent {
       const knowledgeContext = result.chunks.map(chunk => 
         `**${chunk.title}**\n${chunk.content}`
       ).join('\n\n');
+
+      // Log KB retrieval for debugging
+      console.log(`[CaseAgent] Retrieved ${result.chunks.length} KB entries for query: "${message.substring(0, 50)}..." (confidence: ${result.confidence?.toFixed(2) || 'N/A'})`);
+      result.chunks.forEach((chunk, idx) => {
+        console.log(`  [${idx + 1}] ${chunk.title}`);
+      });
 
       return knowledgeContext;
     } catch (error) {
@@ -129,9 +137,12 @@ export class CaseAgent extends BaseAgent {
 
   /**
    * Process message with knowledge context
+   * IMPORTANT: The 'message' parameter is actually the FULL enhanced context built by buildEnhancedContext()
+   * It already includes system prompt, case context, conversation history, KB context, etc.
+   * We should use it directly, not rebuild the prompt.
    */
   private async processMessageWithKnowledge(
-    message: string,
+    message: string, // This is actually the full enhanced context
     context: UserContext,
     conversationContext?: ConversationContext,
     knowledgeContext?: string
@@ -139,8 +150,10 @@ export class CaseAgent extends BaseAgent {
     const startTime = Date.now();
 
     try {
-      const systemPrompt = this.getSystemPrompt(knowledgeContext);
-      const fullPrompt = `${systemPrompt}\n\nUser Context: ${JSON.stringify(context)}\n\nUser Message: ${message}`;
+      // The 'message' parameter is already the complete enhanced context from buildEnhancedContext()
+      // It includes: system prompt + case context + user context + conversation history + KB context + user message
+      // We should use it directly instead of rebuilding
+      const fullPrompt = message;
 
       const result = await this.model.generateContent({
         contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
@@ -263,26 +276,17 @@ export class CaseAgent extends BaseAgent {
       
       // Determine quick action triggers explicitly
       // Check if user has already selected a donation amount (from conversation history or current message)
-      const currentMessageHasAmount = /\$\d+/.test(message) || /\d+\s*(pesos|ars)/i.test(message);
-      const hasSelectedAmount = currentMessageHasAmount || memory.conversationHistory.some((entry: any) => 
-        (entry.user?.toLowerCase().includes('quiero donar') && /\$\d+/.test(entry.user)) ||
-        (entry.user?.toLowerCase().includes('donar') && /\$\d+/.test(entry.user))
+      const currentMessageHasAmount = /\$\d+/.test(message) || /\d+\s*(pesos|ars)/i.test(message) || /\d{3,}/.test(message);
+      const hasSelectedAmount = currentMessageHasAmount || memory.conversationHistory.some((entry: any) =>
+        (entry.user && (/\$\d+/.test(entry.user) || /\d+\s*(pesos|ars)/i.test(entry.user) || /\d{3,}/.test(entry.user)))
       );
-      
-      // Check if message is asking about amount (not providing alias)
-      const isAskingAboutAmount = message.toLowerCase().includes('cuánto') || 
-                                   message.toLowerCase().includes('cuanto') ||
-                                   message.toLowerCase().includes('monto') ||
-                                   message.toLowerCase().includes('cantidad') ||
-                                   message.toLowerCase().includes('how much') ||
-                                   message.toLowerCase().includes('amount') ||
-                                   (result.message?.toLowerCase().includes('cuánto') || 
-                                    result.message?.toLowerCase().includes('cuanto'));
-      
-      // Show banking alias only when providing donation instructions (not when asking about amount)
-      const shouldShowBankingAlias = intentAnalysis.intent === 'donate' && 
+
+      // CORRECTED LOGIC: Show amount buttons when donation intent WITHOUT amount
+      // Show banking alias when donation intent WITH amount
+      const shouldShowAmountButtons = intentAnalysis.intent === 'donate' && !hasSelectedAmount;
+      const shouldShowBankingAlias = intentAnalysis.intent === 'donate' &&
                                     !!enhancedCaseData.guardianBankingAlias &&
-                                    !isAskingAboutAmount; // Don't show alias when asking about amount
+                                    hasSelectedAmount; // Show alias AFTER amount is selected
       
       const shouldShowSocialMedia = intentAnalysis.intent === 'share';
       
@@ -424,7 +428,7 @@ export class CaseAgent extends BaseAgent {
           shownActions.push(`guardian_contact: ${contactChannels.join(', ')}`);
         }
       }
-      if (intentAnalysis.intent === 'donate' && isAskingAboutAmount && !hasSelectedAmount) {
+      if (shouldShowAmountButtons) {
         const suggestedAmounts = [500, 1000, 2500, 5000];
         const amounts = suggestedAmounts.map((a: number) => `$${a.toLocaleString('es-AR')}`).join(', ');
         shownActions.push(`donation_amounts: ${amounts}`);
@@ -447,11 +451,9 @@ export class CaseAgent extends BaseAgent {
           showSocialMedia: shouldShowSocialMedia && Object.keys(socialUrls).length > 0,
           showAdoptionInfo: intentAnalysis.intent === 'adopt',
           showGuardianContact: shouldShowGuardianContact && Object.keys(guardianContactUrls).length > 0,
-          // Only show donation amounts when asking about amount (not when showing alias)
-          showDonationIntent: intentAnalysis.intent === 'donate' && isAskingAboutAmount && !hasSelectedAmount,
-          suggestedDonationAmounts: (intentAnalysis.intent === 'donate' && isAskingAboutAmount && !hasSelectedAmount) 
-            ? [500, 1000, 2500, 5000] 
-            : undefined, // Suggested amounts in ARS
+          // Show donation amounts when user expresses donation intent WITHOUT amount
+          showDonationIntent: shouldShowAmountButtons,
+          suggestedDonationAmounts: shouldShowAmountButtons ? [500, 1000, 2500, 5000] : undefined, // Suggested amounts in ARS
           actionTriggers: intentAnalysis.intent ? [intentAnalysis.intent] : []
         },
         
@@ -738,23 +740,72 @@ export class CaseAgent extends BaseAgent {
 
   private async analyzeUserIntent(message: string, memory: ConversationMemory, userProfile: UserProfile): Promise<IntentAnalysis> {
     const lowerMessage = message.toLowerCase().trim();
-    
-    // Check for affirmative responses that indicate user wants to continue/progress
-    const affirmativePatterns = ['si', 'sí', 'yes', 'ok', 'okay', 'vale', 'claro', 'por supuesto', 'of course', 'sure'];
-    const isAffirmative = affirmativePatterns.some(pattern => 
-      lowerMessage === pattern || lowerMessage === `${pattern}.` || lowerMessage === `${pattern}!`
+
+    // Language-agnostic affirmative detection - normalize to English first
+    const normalizedMessage = await this.normalizeMessageForIntentDetection(lowerMessage);
+    const affirmativePatterns = ['yes', 'ok', 'okay', 'of course', 'sure', 'absolutely', 'definitely'];
+    const isAffirmative = affirmativePatterns.some(pattern =>
+      normalizedMessage === pattern || normalizedMessage === `${pattern}.` || normalizedMessage === `${pattern}!`
     );
-    
-    // If it's an affirmative response and we have conversation history, interpret as "continue/progress"
+
+    // If it's an affirmative response and we have conversation history, maintain context
     if (isAffirmative && memory.conversationHistory.length > 0) {
-      // Check what was last discussed to determine next step
+      // Check recent conversation history to determine what user is agreeing to
+      const lastUserMessage = memory.conversationHistory
+        .filter(msg => msg.role === 'user')
+        .slice(-2)[0]; // Get second-to-last user message (before "Si")
+
       const lastAssistantMessage = memory.conversationHistory
         .filter(msg => msg.role === 'assistant')
         .slice(-1)[0]?.message?.toLowerCase() || '';
+
+      // CRITICAL: Maintain donation flow context
+      // Use semantic detection instead of language-specific keywords
+      // Normalize once and reuse for all checks
+      const normalizedLastAssistant = await this.normalizeMessageForIntentDetection(lastAssistantMessage.toLowerCase());
       
-      // If we've already introduced the case, user likely wants to know how to help
-      if (lastAssistantMessage.includes('nina') || lastAssistantMessage.includes('perrita') || 
-          lastAssistantMessage.includes('caso') || lastAssistantMessage.includes('ayuda')) {
+      if (lastUserMessage?.intent === 'donate' ||
+          normalizedLastAssistant.includes('donate') ||
+          normalizedLastAssistant.includes('donation') ||
+          normalizedLastAssistant.includes('how much') ||
+          normalizedLastAssistant.includes('amount') ||
+          normalizedLastAssistant.includes('alias') ||
+          normalizedLastAssistant.includes('transfer')) {
+        return {
+          intent: 'donate',
+          confidence: 0.95,
+          suggestedActions: ['donate'],
+          emotionalTone: 'neutral',
+          urgency: 'medium'
+        };
+      }
+
+      // If asking about sharing, maintain share intent
+      if (normalizedLastAssistant.includes('share')) {
+        return {
+          intent: 'share',
+          confidence: 0.95,
+          suggestedActions: ['share'],
+          emotionalTone: 'neutral',
+          urgency: 'medium'
+        };
+      }
+
+      // If asking about adoption, maintain adopt intent
+      if (normalizedLastAssistant.includes('adopt')) {
+        return {
+          intent: 'adopt',
+          confidence: 0.95,
+          suggestedActions: ['adopt', 'contact'],
+          emotionalTone: 'neutral',
+          urgency: 'medium'
+        };
+      }
+
+      // Default: If just introduced the case, user wants to help
+      // Use semantic detection instead of language-specific keywords
+      if (normalizedLastAssistant.includes('case') || normalizedLastAssistant.includes('help') || 
+          normalizedLastAssistant.includes('introduce') || normalizedLastAssistant.includes('present')) {
         return {
           intent: 'help',
           confidence: 0.9,
@@ -765,19 +816,24 @@ export class CaseAgent extends BaseAgent {
       }
     }
     
-    // Intent patterns
+    // Language-agnostic intent detection using semantic patterns
+    // Translate message to English first for consistent matching, then use English keywords
+    // This approach scales to any language
+    const normalizedMessage = await this.normalizeMessageForIntentDetection(lowerMessage);
+    
+    // Use English-only keywords for intent detection (language-agnostic)
     const intents = {
-      donate: ['donate', 'donation', 'donar', 'donación', 'help financially', 'ayudar económicamente'],
-      adopt: ['adopt', 'adoptar', 'take home', 'llevar a casa', 'forever home', 'hogar permanente'],
-      share: ['share', 'compartir', 'tell others', 'contar a otros', 'spread the word', 'difundir'],
-      contact: ['contact', 'contactar', 'get in touch', 'ponerse en contacto', 'talk to', 'hablar con'],
-      learn: ['learn', 'aprender', 'know more', 'saber más', 'information', 'información', 'details', 'detalles'],
-      help: ['help', 'ayudar', 'assist', 'asistir', 'support', 'apoyar'],
-      urgent: ['urgent', 'urgente', 'emergency', 'emergencia', 'asap', 'immediately', 'inmediatamente']
+      donate: ['donate', 'donation', 'help financially', 'give money', 'contribute', 'payment'],
+      adopt: ['adopt', 'take home', 'forever home', 'take care', 'foster'],
+      share: ['share', 'tell others', 'spread the word', 'post', 'social media'],
+      contact: ['contact', 'get in touch', 'talk to', 'reach out', 'message'],
+      learn: ['learn', 'know more', 'information', 'details', 'tell me about'],
+      help: ['help', 'assist', 'support', 'what can i do', 'how can i help'],
+      urgent: ['urgent', 'emergency', 'asap', 'immediately', 'right now']
     };
 
     const detectedIntent = Object.keys(intents).find(intent => 
-      intents[intent as keyof typeof intents].some(pattern => lowerMessage.includes(pattern))
+      intents[intent as keyof typeof intents].some(pattern => normalizedMessage.includes(pattern))
     ) || (isAffirmative ? 'help' : 'general');
 
     const confidence = this.calculateIntentConfidence(message, detectedIntent);
@@ -879,10 +935,11 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
     const actions: AgentAction[] = [];
     const lowerResponse = response.toLowerCase();
 
-    // Enhanced action extraction based on intent and context
+    // Language-agnostic action extraction - normalize response to English first
+    const normalizedResponse = await this.normalizeMessageForIntentDetection(lowerResponse);
     const actionPatterns = {
       donate: {
-        patterns: ['donate', 'donation', 'donar', 'donación', 'help financially', 'ayudar económicamente'],
+        patterns: ['donate', 'donation', 'help financially', 'give money', 'contribute'],
         action: {
           type: 'donate' as const,
           payload: { 
@@ -897,7 +954,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
         }
       },
       share: {
-        patterns: ['share', 'compartir', 'tell others', 'contar a otros', 'spread the word', 'difundir'],
+        patterns: ['share', 'tell others', 'spread the word', 'post', 'social media'],
           action: {
             type: 'share' as const,
             payload: { 
@@ -915,7 +972,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
         }
       },
       adopt: {
-        patterns: ['adopt', 'adoptar', 'take home', 'llevar a casa', 'forever home', 'hogar permanente'],
+        patterns: ['adopt', 'take home', 'forever home', 'take care', 'foster'],
         action: {
           type: 'adopt' as const,
           payload: { 
@@ -929,7 +986,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
         }
       },
       contact: {
-        patterns: ['contact', 'contactar', 'get in touch', 'ponerse en contacto', 'talk to', 'hablar con'],
+        patterns: ['contact', 'get in touch', 'reach out', 'talk to', 'message'],
         action: {
           type: 'contact' as const,
           payload: { 
@@ -960,7 +1017,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
 
     // Extract actions based on response content and intent
     Object.entries(actionPatterns).forEach(([actionType, config]) => {
-      const hasPattern = config.patterns.some(pattern => lowerResponse.includes(pattern));
+      const hasPattern = config.patterns.some(pattern => normalizedResponse.includes(pattern));
       const matchesIntent = intentAnalysis.intent === actionType;
       
       if (hasPattern || matchesIntent) {
@@ -1136,14 +1193,64 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
     return ['Up to date on vaccinations', 'No known health issues'];
   }
 
+  /**
+   * Normalize message to English for language-agnostic intent detection
+   * This allows us to use English-only keywords while supporting any language
+   */
+  private async normalizeMessageForIntentDetection(message: string): Promise<string> {
+    try {
+      // Simple heuristic: if message contains mostly English characters, return as-is
+      const isEnglish = /^[a-zA-Z0-9\s.,!?'"\-:;()]+$/.test(message.trim());
+      if (isEnglish) {
+        return message.toLowerCase();
+      }
+
+      // For non-English, translate to English using Gemini
+      // Cache translations to avoid repeated API calls
+      const cacheKey = `intent_translation_${message}`;
+      if (this.translationCache.has(cacheKey)) {
+        return this.translationCache.get(cacheKey)!;
+      }
+
+      const translatePrompt = `Translate the following text to English. Return ONLY the English translation, no explanations.
+
+Text: "${message}"
+
+English translation:`;
+
+      const result = await this.model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: translatePrompt }] }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 256,
+        },
+      });
+
+      const englishText = result.response.text().trim().toLowerCase();
+      // Remove quotes if present
+      const cleanText = englishText.replace(/^["']|["']$/g, '');
+
+      // Cache the translation
+      this.translationCache.set(cacheKey, cleanText);
+
+      return cleanText;
+    } catch (error) {
+      console.warn('[CaseAgent] Translation failed for intent detection, using original message:', error);
+      // Fallback: return original message (may have false negatives but won't break)
+      return message.toLowerCase();
+    }
+  }
+
+
   private calculateIntentConfidence(message: string, intent: string): number {
-    // Simple confidence calculation based on keyword matches
+    // Language-agnostic confidence calculation
+    // Message should already be normalized to English via normalizeMessageForIntentDetection
     const intentKeywords = {
-      donate: ['donate', 'donation', 'donar', 'donación'],
-      adopt: ['adopt', 'adoptar', 'take home', 'llevar a casa'],
-      share: ['share', 'compartir', 'tell others', 'contar a otros'],
-      contact: ['contact', 'contactar', 'get in touch', 'ponerse en contacto'],
-      learn: ['learn', 'aprender', 'know more', 'saber más']
+      donate: ['donate', 'donation', 'help financially', 'give money'],
+      adopt: ['adopt', 'take home', 'forever home'],
+      share: ['share', 'tell others', 'spread the word'],
+      contact: ['contact', 'get in touch', 'reach out'],
+      learn: ['learn', 'know more', 'information']
     };
 
     const keywords = intentKeywords[intent as keyof typeof intentKeywords] || [];
@@ -1221,6 +1328,9 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
   }
 
   private buildCaseContext(enhancedCaseData: EnhancedCaseData): string {
+    // CRITICAL: Do NOT include social media handles or banking aliases in case context
+    // These are provided via quick action buttons only, not in LLM text responses
+    // Including them in context causes the LLM to include them in responses, violating safety rules
     return `\nCase Information:
 - Name: ${enhancedCaseData.name} (${enhancedCaseData.id})
 - Status: ${enhancedCaseData.status}
@@ -1231,10 +1341,8 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
 - Urgency Level: ${enhancedCaseData.urgencyLevel}
 - Funding Progress: ${enhancedCaseData.fundingProgress ? `${enhancedCaseData.fundingProgress.percentage.toFixed(1)}%` : 'N/A'}
 ${enhancedCaseData.adoptionStatus ? `- Adoption Status: ${enhancedCaseData.adoptionStatus}` : ''}
-${enhancedCaseData.guardianBankingAlias ? `- Banking Alias: ${enhancedCaseData.guardianBankingAlias}` : ''}
-${enhancedCaseData.guardianTwitter ? `- Guardian Twitter: @${enhancedCaseData.guardianTwitter}` : ''}
-${enhancedCaseData.guardianInstagram ? `- Guardian Instagram: @${enhancedCaseData.guardianInstagram}` : ''}
-${enhancedCaseData.guardianFacebook ? `- Guardian Facebook: ${enhancedCaseData.guardianFacebook}` : ''}`;
+${enhancedCaseData.guardianBankingAlias ? `- Banking Alias: Available (provided via quick actions only)` : ''}
+${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enhancedCaseData.guardianFacebook ? `- Social Media: Available (provided via quick actions only)` : ''}`;
   }
 
   private buildIntentContext(intentAnalysis: any, emotionalState: string): string {
