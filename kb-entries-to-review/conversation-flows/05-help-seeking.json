@@ -2,7 +2,7 @@
   "id": "kb-flow-help-seeking",
   "title": "Help-Seeking Intent Response Flow",
   "language": "en",
-  "content": "WHEN USER ASKS HOW TO HELP\nUser says: \"Cómo puedo ayudar?\", \"How can I help?\", \"¿Qué puedo hacer?\", \"What can I do?\", \"¿Cómo ayudo?\", \"How do I help?\"\n\nCRITICAL: User already knows about the case - they want ACTIONABLE STEPS, not case description\n\nRESPONSE STRUCTURE:\n1. EXPRESS GRATITUDE\n   - Thank them sincerely for wanting to help\n   - Make them feel appreciated\n\n2. LIST CONCRETE OPTIONS (with brief explanations)\n   a) DONATION\n      - Make a direct donation to the guardian\n      - No minimum amount required\n\n   b) SHARING\n      - Share the case on social media\n      - Helps it reach more people who can help\n\n   c) ADOPTION (if applicable)\n      - Can explain adoption requirements\n      - Connect with rescue organization\n\n3. ASK FOLLOW-UP\n   - Which would you like to know more about?\n   - What interests you most?\n\nCORRECT RESPONSE APPROACH:\n✅ Thank them → List concrete options with brief explanations → Ask which they want to explore\n\nWRONG RESPONSE EXAMPLES (DO NOT DO THIS):\n❌ Describing the case details when user asks HOW to help\n❌ Just repeating case information the user already knows\n❌ Not providing actionable steps\n\nCRITICAL RULES:\n- NEVER repeat case description when user asks how to help\n- Focus on ACTIONABLE STEPS\n- User wants to know WHAT THEY CAN DO, not case details\n- If you've already introduced the case, don't do it again\n- Keep options clear and concise\n- Let user choose their preferred way to help",
+  "content": "WHEN USER ASKS HOW TO HELP\nUser says: \"Cómo puedo ayudar?\", \"How can I help?\", \"¿Qué puedo hacer?\", \"What can I do?\", \"¿Cómo ayudo?\", \"How do I help?\"\n\nCRITICAL: Keep response BRIEF - quick action buttons will handle the details\n\nRESPONSE STRUCTURE:\n1. EXPRESS GRATITUDE (1 sentence)\n   - Thank them sincerely\n   - Example: \"¡Qué bueno que quieras ayudar!\"\n\n2. MENTION OPTIONS BRIEFLY (1-2 sentences max)\n   - Donation and sharing are the main ways\n   - Example: \"Podés donar para los gastos médicos o compartir su historia para que más personas la conozcan\"\n   - DO NOT list banking aliases, social media links, or detailed instructions\n   - Quick action buttons will show these options\n\n3. NO FOLLOW-UP QUESTION NEEDED\n   - Quick action buttons guide the user\n   - User can tap Donate or Share buttons\n\nCORRECT RESPONSE LENGTH: 2-3 sentences total\n\nEXAMPLE GOOD RESPONSE:\n\"¡Qué bueno que quieras ayudar a [nombre]! Podés hacer una donación para los gastos médicos o compartir su historia en redes sociales. [Quick action buttons: Donate | Share]\"\n\nWRONG RESPONSE EXAMPLES (DO NOT DO THIS):\n❌ Listing banking alias in the message text (buttons will show it)\n❌ Listing social media links (buttons will show them)\n❌ Explaining adoption process in detail\n❌ More than 3-4 sentences\n❌ Repeating case description\n\nCRITICAL RULES:\n- MAXIMUM 3-4 sentences total\n- DO NOT include banking aliases, URLs, or contact info in text\n- Quick action buttons handle all details\n- Keep it conversational and warm\n- Trust the UI to show the options",
   "category": "conversation_flows",
   "agentTypes": ["CaseAgent"],
   "audience": ["all"],
@@ -10,14 +10,12 @@
     "culturalNotes": {
       "es": {
         "examples": [
-          "¡Gracias por querer ayudar!",
-          "haciendo una donación directa al guardián",
-          "compartiendo el caso en redes sociales para que llegue a más personas",
-          "si estás interesado en adoptar, puedo contarte los requisitos",
-          "¿Cuál te gustaría conocer más?"
+          "¡Qué bueno que quieras ayudar!",
+          "Podés donar para los gastos médicos o compartir su historia",
+          "¡Gracias por querer ayudar!"
         ],
-        "tone": "Grateful and action-oriented",
-        "note": "Focus on concrete actions they can take immediately"
+        "tone": "Warm, brief, and action-oriented. Use 'vos' conjugation in Argentina.",
+        "note": "Keep it short - 2-3 sentences maximum. Quick action buttons will show donation and sharing options."
       }
     }
   }
