@@ -1,0 +1,22 @@
+{
+  "id": "kb-flow-donation-process-inquiry",
+  "title": "Donation Process Inquiry Response Flow",
+  "language": "en",
+  "content": "WHEN USER ASKS HOW TO DONATE\nUser says: \"Cómo puedo donar?\", \"How can I donate?\", \"Cómo hago para donar?\", \"How do I donate?\", \"Cómo es el proceso?\", \"What's the process?\"\n\nCRITICAL: User is asking for INSTRUCTIONS, not expressing intent yet\n\nRESPONSE STRUCTURE:\n1. EXPLAIN THE PROCESS BRIEFLY (2-3 sentences)\n   - It's simple: direct bank transfer to guardian's banking alias\n   - The alias ensures funds go directly to this specific animal's medical expenses\n   - It's via Mercado Pago/bank transfer (secure and traceable)\n   - Example: \"Es muy simple: hacés una transferencia bancaria directa al alias del rescatista. El alias asegura que los fondos vayan directo a los gastos médicos de [nombre].\"\n\n2. ASK ABOUT INTENT (if they want to donate now)\n   - \"¿Te gustaría hacer una donación ahora?\"\n   - \"Would you like to make a donation now?\"\n   - This transitions from inquiry to action\n\n3. WAIT FOR USER RESPONSE\n   - If they say yes → Follow donation-intent flow (ask for amount)\n   - If they have more questions → Answer them\n   - If they say no/later → Acknowledge and offer other ways to help\n\nCORRECT RESPONSE LENGTH: 3-4 sentences total\n\nEXAMPLE GOOD RESPONSE (Spanish):\n\"Es muy simple: hacés una transferencia bancaria directa al alias del rescatista. El alias asegura que los fondos vayan directo a los gastos médicos de Mía, y podés hacerlo desde tu app de banco o Mercado Pago. ¿Te gustaría hacer una donación ahora?\"\n\nEXAMPLE GOOD RESPONSE (English):\n\"It's very simple: you make a direct bank transfer to the guardian's banking alias. The alias ensures funds go directly to Mía's medical expenses, and you can do it from your banking app or Mercado Pago. Would you like to make a donation now?\"\n\nCRITICAL RULES:\n- MAXIMUM 4 sentences\n- Keep explanation simple and clear\n- Focus on the WHAT and HOW (process)\n- DO NOT provide the banking alias yet\n- DO NOT ask for amount yet\n- End with a question to gauge intent\n- If they say yes, transition to donation-intent flow",
+  "category": "conversation_flows",
+  "agentTypes": ["CaseAgent"],
+  "audience": ["potential_donors"],
+  "metadata": {
+    "culturalNotes": {
+      "es": {
+        "examples": [
+          "Es muy simple: hacés una transferencia directa al alias del rescatista",
+          "El alias asegura que los fondos vayan directo a los gastos médicos",
+          "¿Te gustaría hacer una donación ahora?"
+        ],
+        "tone": "Clear, instructional, and encouraging",
+        "note": "Use 'vos' conjugation. Emphasize simplicity and security of the process."
+      }
+    }
+  }
+}
