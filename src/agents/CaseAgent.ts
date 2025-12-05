@@ -21,6 +21,7 @@ import { buildCaseAgentSystemPrompt } from '../prompts/caseAgentPrompts';
 import { getTRFAlias, isValidBankingAlias } from '../config/banking.config';
 import { CASE_AGENT_CONSTANTS } from '../config/constants';
 import { hasAmount, hasAmountInHistory, extractAmount } from '../utils/amountDetection';
+import { safeValidateProcessCaseInquiryInput } from '../validators/caseAgent.validators';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -228,35 +229,64 @@ export class CaseAgent extends BaseAgent {
     conversationContext?: ConversationContext
   ): Promise<CaseResponse> {
     const startTime = Date.now();
+
+    // Validate inputs
+    const validationResult = safeValidateProcessCaseInquiryInput({
+      message,
+      caseData,
+      userContext: context,
+      conversationContext,
+    });
+
+    if (!validationResult.success) {
+      console.error('[CaseAgent] Input validation failed:', validationResult.error.errors);
+      const errorMessages = validationResult.error.errors.map(e => e.message).join(', ');
+      const errorResponse = createErrorResponse('VALIDATION_ERROR', {
+        validationErrors: errorMessages
+      });
+      return {
+        success: false,
+        message: errorResponse.userMessage[context?.language === 'en' ? 'en' : 'es'],
+        error: errorResponse.message
+      };
+    }
+
+    // Use validated data (trimmed, sanitized)
+    const validated = validationResult.data;
+    const validatedMessage = validated.message;
+    // Use original caseData since it has the correct complete type
+    const validatedCaseData = caseData;
+    const validatedContext = validated.userContext;
+
     // Use conversationContext.conversationId if available, otherwise create stable sessionId
     // This ensures conversation memory persists across multiple messages in the same conversation
-    const sessionId = conversationContext?.conversationId 
-      ? conversationContext.conversationId 
-      : `${context.userId}_${caseData.id}`;
+    const sessionId = conversationContext?.conversationId
+      ? conversationContext.conversationId
+      : `${validatedContext.userId}_${validatedCaseData.id}`;
 
     try {
       // Update analytics
       this.analytics.totalInteractions++;
 
       // Get or create conversation memory
-      const memory = this.getOrCreateConversationMemory(sessionId, context.userId, caseData.id);
-      
+      const memory = this.getOrCreateConversationMemory(sessionId, validatedContext.userId, validatedCaseData.id);
+
       // Get or create user profile
-      const userProfile = this.getOrCreateUserProfile(context.userId);
+      const userProfile = this.getOrCreateUserProfile(validatedContext.userId);
 
       // Enhance case data with additional context
-      const enhancedCaseData = await this.enhanceCaseData(caseData);
+      const enhancedCaseData = await this.enhanceCaseData(validatedCaseData);
 
       // Analyze user intent and emotional state
-      const intentAnalysis = await this.analyzeUserIntent(message, memory, userProfile);
-      const emotionalState = await this.detectEmotionalState(message);
+      const intentAnalysis = await this.analyzeUserIntent(validatedMessage, memory, userProfile);
+      const emotionalState = await this.detectEmotionalState(validatedMessage);
 
       // Retrieve relevant knowledge using RAG (pass user context for audience determination)
-      const knowledgeContextResult = await this.retrieveRelevantKnowledge(message, JSON.stringify({
+      const knowledgeContextResult = await this.retrieveRelevantKnowledge(validatedMessage, JSON.stringify({
         caseData: enhancedCaseData,
-        userContext: context,
+        userContext: validatedContext,
         conversationHistory: memory.conversationHistory
-      }), context);
+      }), validatedContext);
       
       // Extract KB entry titles for post-processing detection
       const kbTitles = knowledgeContextResult ? 
@@ -266,9 +296,9 @@ export class CaseAgent extends BaseAgent {
 
       // Build comprehensive context
       const enhancedMessage = this.buildEnhancedContext(
-        message,
+        validatedMessage,
         enhancedCaseData,
-        context,
+        validatedContext,
         memory,
         userProfile,
         intentAnalysis,
@@ -277,15 +307,15 @@ export class CaseAgent extends BaseAgent {
       );
 
       // Process with enhanced context and knowledge
-      const result = await this.processMessageWithKnowledge(enhancedMessage, context, conversationContext, knowledgeContext);
+      const result = await this.processMessageWithKnowledge(enhancedMessage, validatedContext, conversationContext, knowledgeContext);
 
       // Post-process response to enforce KB rules (remove bullets, enforce help-seeking rules, etc.)
       if (result.message && result.success) {
         // Check if user has already selected a donation amount
-        const currentMessageHasAmount = hasAmount(message);
+        const currentMessageHasAmount = hasAmount(validatedMessage);
         const hasSelectedAmount = currentMessageHasAmount || hasAmountInHistory(memory);
         // Determine if banking alias or TRF alias will be shown (for Totitos question timing)
-        const isAskingForAlternatives = /\b(otras?\s+formas?|other\s+ways?|alternativas?|alternative|múltiples?\s+casos?|multiple\s+cases?|más\s+urgentes?|most\s+urgent|donar\s+a\s+toto|donate\s+to\s+toto)\b/i.test(message);
+        const isAskingForAlternatives = /\b(otras?\s+formas?|other\s+ways?|alternativas?|alternative|múltiples?\s+casos?|multiple\s+cases?|más\s+urgentes?|most\s+urgent|donar\s+a\s+toto|donate\s+to\s+toto)\b/i.test(validatedMessage);
         const willShowBankingAlias = intentAnalysis.intent === 'donate' &&
                                     !!enhancedCaseData.guardianBankingAlias &&
                                     hasSelectedAmount &&
@@ -300,10 +330,10 @@ export class CaseAgent extends BaseAgent {
       const processingTime = Date.now() - startTime;
 
       // Update conversation memory
-      this.updateConversationMemory(memory, message, result.message, intentAnalysis);
+      this.updateConversationMemory(memory, validatedMessage, result.message, intentAnalysis);
 
       // Update user profile
-      this.updateUserProfile(userProfile, caseData.id, intentAnalysis);
+      this.updateUserProfile(userProfile, validatedCaseData.id, intentAnalysis);
 
       // Extract intelligent actions
       const actions = await this.extractIntelligentActions(result.message || '', intentAnalysis, enhancedCaseData);
@@ -316,33 +346,33 @@ export class CaseAgent extends BaseAgent {
 
       // Generate formatting hints for better UI rendering
       const formattingHints = generateFormattingHints(result.message || '');
-      
+
       // Determine quick action triggers explicitly
       // Check if user has already selected a donation amount (from conversation history or current message)
-      const currentMessageHasAmount = hasAmount(message);
-      const hasSelectedAmount = currentMessageHasAmount || hasAmountInHistory(memory);
+      const currentMessageHasAmountCheck = hasAmount(validatedMessage);
+      const hasSelectedAmountCheck = currentMessageHasAmountCheck || hasAmountInHistory(memory);
 
       // CORRECTED LOGIC: Show amount buttons when donation intent WITHOUT amount
       // Show banking alias when donation intent WITH amount
-      const shouldShowAmountButtons = intentAnalysis.intent === 'donate' && !hasSelectedAmount;
-      
+      const shouldShowAmountButtons = intentAnalysis.intent === 'donate' && !hasSelectedAmountCheck;
+
       // Check if user is asking for alternative donation methods
-      const isAskingForAlternatives = /\b(otras?\s+formas?|other\s+ways?|alternativas?|alternative|múltiples?\s+casos?|multiple\s+cases?|más\s+urgentes?|most\s+urgent|donar\s+a\s+toto|donate\s+to\s+toto)\b/i.test(message);
+      const isAskingForAlternativesCheck = /\b(otras?\s+formas?|other\s+ways?|alternativas?|alternative|múltiples?\s+casos?|multiple\s+cases?|más\s+urgentes?|most\s+urgent|donar\s+a\s+toto|donate\s+to\s+toto)\b/i.test(validatedMessage);
       
       // Show guardian alias if available and amount selected, OR show TRF alias if:
       // 1. Guardian alias is missing, OR
       // 2. User explicitly asks for alternatives
       const shouldShowBankingAlias = intentAnalysis.intent === 'donate' &&
                                     !!enhancedCaseData.guardianBankingAlias &&
-                                    hasSelectedAmount &&
-                                    !isAskingForAlternatives; // Don't show guardian alias if user wants alternatives
-      
+                                    hasSelectedAmountCheck &&
+                                    !isAskingForAlternativesCheck; // Don't show guardian alias if user wants alternatives
+
       // Show TRF alias when:
       // 1. Guardian alias is missing AND amount selected, OR
       // 2. User asks for alternatives AND amount selected
       const shouldShowTRFAlias = intentAnalysis.intent === 'donate' &&
-                                 hasSelectedAmount &&
-                                 (!enhancedCaseData.guardianBankingAlias || isAskingForAlternatives);
+                                 hasSelectedAmountCheck &&
+                                 (!enhancedCaseData.guardianBankingAlias || isAskingForAlternativesCheck);
       
       const shouldShowSocialMedia = intentAnalysis.intent === 'share';
 
@@ -350,7 +380,7 @@ export class CaseAgent extends BaseAgent {
       const shouldShowHelpActions = intentAnalysis.intent === 'help';
 
       // Check if user is asking about foster care or adoption
-      const isFosterCareOrAdoptionQuestion = this.isFosterCareOrAdoptionQuestion(message);
+      const isFosterCareOrAdoptionQuestion = this.isFosterCareOrAdoptionQuestion(validatedMessage);
       const shouldShowGuardianContact = isFosterCareOrAdoptionQuestion && !!enhancedCaseData.guardianId;
 
       // Fetch guardian contact info if needed for foster care/adoption questions
@@ -1680,6 +1710,13 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
   private postProcessResponse(response: string, intent: string, knowledgeContext?: string, kbTitles?: string, hasSelectedAmount?: boolean, willShowBankingAlias?: boolean): string {
     let cleaned = response;
 
+    // Remove ALL markdown formatting
+    // Remove bold/italic markers (**text**, *text*, __text__, _text_)
+    cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '$1'); // **bold** -> bold
+    cleaned = cleaned.replace(/\*([^*]+)\*/g, '$1'); // *italic* -> italic
+    cleaned = cleaned.replace(/__([^_]+)__/g, '$1'); // __bold__ -> bold
+    cleaned = cleaned.replace(/_([^_]+)_/g, '$1'); // _italic_ -> italic
+    
     // Remove bullet points and markdown lists
     // Replace "* " or "- " at start of lines with nothing
     cleaned = cleaned.replace(/^[\s]*[\*\-]\s+/gm, '');
