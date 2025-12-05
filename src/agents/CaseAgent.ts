@@ -254,6 +254,11 @@ export class CaseAgent extends BaseAgent {
       // Process with enhanced context and knowledge
       const result = await this.processMessageWithKnowledge(enhancedMessage, context, conversationContext, knowledgeContext);
 
+      // Post-process response to enforce KB rules (remove bullets, enforce help-seeking rules, etc.)
+      if (result.message && result.success) {
+        result.message = this.postProcessResponse(result.message, intentAnalysis.intent, knowledgeContext);
+      }
+
       const processingTime = Date.now() - startTime;
 
       // Update conversation memory
@@ -290,6 +295,9 @@ export class CaseAgent extends BaseAgent {
       
       const shouldShowSocialMedia = intentAnalysis.intent === 'share';
       
+      // For help-seeking intent, show both donation and sharing quick actions
+      const shouldShowHelpActions = intentAnalysis.intent === 'help';
+      
       // Check if user is asking about foster care or adoption
       const isFosterCareOrAdoptionQuestion = this.isFosterCareOrAdoptionQuestion(message);
       const shouldShowGuardianContact = isFosterCareOrAdoptionQuestion && !!enhancedCaseData.guardianId;
@@ -300,9 +308,9 @@ export class CaseAgent extends BaseAgent {
         guardianContactInfo = await this.fetchGuardianContactInfo(enhancedCaseData.guardianId);
       }
       
-      // Build social media URLs if sharing intent detected
+      // Build social media URLs if sharing intent detected OR help-seeking (to show quick actions)
       let socialUrls: any = {};
-      if (shouldShowSocialMedia) {
+      if (shouldShowSocialMedia || shouldShowHelpActions) {
         if (enhancedCaseData.guardianInstagram) {
           socialUrls.instagram = enhancedCaseData.guardianInstagram.startsWith('http') 
             ? enhancedCaseData.guardianInstagram 
@@ -416,7 +424,7 @@ export class CaseAgent extends BaseAgent {
       if (shouldShowBankingAlias && enhancedCaseData.guardianBankingAlias) {
         shownActions.push('banking_alias');
       }
-      if (shouldShowSocialMedia && Object.keys(socialUrls).length > 0) {
+      if ((shouldShowSocialMedia || shouldShowHelpActions) && Object.keys(socialUrls).length > 0) {
         const socialPlatforms = Object.keys(socialUrls).filter(key => socialUrls[key]);
         if (socialPlatforms.length > 0) {
           shownActions.push(`social_media: ${socialPlatforms.join(', ')}`);
@@ -428,7 +436,7 @@ export class CaseAgent extends BaseAgent {
           shownActions.push(`guardian_contact: ${contactChannels.join(', ')}`);
         }
       }
-      if (shouldShowAmountButtons) {
+      if (shouldShowAmountButtons || shouldShowHelpActions) {
         const suggestedAmounts = [500, 1000, 2500, 5000];
         const amounts = suggestedAmounts.map((a: number) => `$${a.toLocaleString('es-AR')}`).join(', ');
         shownActions.push(`donation_amounts: ${amounts}`);
@@ -448,12 +456,12 @@ export class CaseAgent extends BaseAgent {
         // Explicit quick action triggers
         quickActions: {
           showBankingAlias: shouldShowBankingAlias,
-          showSocialMedia: shouldShowSocialMedia && Object.keys(socialUrls).length > 0,
+          showSocialMedia: (shouldShowSocialMedia || shouldShowHelpActions) && Object.keys(socialUrls).length > 0,
           showAdoptionInfo: intentAnalysis.intent === 'adopt',
           showGuardianContact: shouldShowGuardianContact && Object.keys(guardianContactUrls).length > 0,
-          // Show donation amounts when user expresses donation intent WITHOUT amount
-          showDonationIntent: shouldShowAmountButtons,
-          suggestedDonationAmounts: shouldShowAmountButtons ? [500, 1000, 2500, 5000] : undefined, // Suggested amounts in ARS
+          // Show donation amounts when user expresses donation intent WITHOUT amount, OR for help-seeking
+          showDonationIntent: shouldShowAmountButtons || shouldShowHelpActions,
+          suggestedDonationAmounts: (shouldShowAmountButtons || shouldShowHelpActions) ? [500, 1000, 2500, 5000] : undefined, // Suggested amounts in ARS
           actionTriggers: intentAnalysis.intent ? [intentAnalysis.intent] : []
         },
         
@@ -1412,5 +1420,59 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
 
   protected getErrorMessage(): string {
     return 'I apologize, but I encountered an issue getting information about this case. Please try again or contact support.';
+  }
+
+  /**
+   * Post-process response to enforce KB rules
+   * - Remove bullet points and markdown formatting
+   * - Enforce help-seeking response rules (2 sentences, no adoption/guardian contact)
+   * - Convert lists to plain sentences
+   */
+  private postProcessResponse(response: string, intent: string, knowledgeContext?: string): string {
+    let cleaned = response;
+
+    // Remove bullet points and markdown lists
+    // Replace "* " or "- " at start of lines with nothing
+    cleaned = cleaned.replace(/^[\s]*[\*\-]\s+/gm, '');
+    // Remove any remaining markdown list markers
+    cleaned = cleaned.replace(/^\d+\.\s+/gm, '');
+
+    // For help-seeking intent, enforce strict rules
+    if (intent === 'help' && knowledgeContext?.toLowerCase().includes('help-seeking')) {
+      // Split into sentences
+      const sentences = cleaned.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      
+      // Remove sentences that mention adoption, guardian contact, or foster care
+      const filteredSentences = sentences.filter(s => {
+        const lower = s.toLowerCase();
+        return !lower.includes('adopt') && 
+               !lower.includes('adopción') &&
+               !lower.includes('guardian') &&
+               !lower.includes('guardian') &&
+               !lower.includes('contactar') &&
+               !lower.includes('contact') &&
+               !lower.includes('foster') &&
+               !lower.includes('hogar temporal');
+      });
+
+      // Keep only first 2 sentences (gratitude + options)
+      if (filteredSentences.length > 2) {
+        cleaned = filteredSentences.slice(0, 2).join('. ').trim();
+        if (!cleaned.endsWith('.') && !cleaned.endsWith('!') && !cleaned.endsWith('?')) {
+          cleaned += '.';
+        }
+      } else {
+        cleaned = filteredSentences.join('. ').trim();
+        if (!cleaned.endsWith('.') && !cleaned.endsWith('!') && !cleaned.endsWith('?')) {
+          cleaned += '.';
+        }
+      }
+    }
+
+    // Clean up extra whitespace
+    cleaned = cleaned.replace(/\n\s*\n/g, '\n').trim();
+    cleaned = cleaned.replace(/\s+/g, ' ');
+
+    return cleaned;
   }
 }

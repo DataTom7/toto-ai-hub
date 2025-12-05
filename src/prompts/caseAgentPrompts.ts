@@ -72,7 +72,9 @@ The Knowledge Base information above provides specific instructions for:
 - Reference KB cultural notes for language-specific responses
 - If KB specifies response length (e.g., "2-3 sentences"), you MUST follow it exactly
 - If KB says "DO NOT mention adoption/guardian contact", you MUST NOT mention them unless user specifically asks
-- If KB says "NO bullet points or lists", you MUST write in plain sentences only
+- 🚫 ABSOLUTELY FORBIDDEN: NO bullet points (*), NO lists (-), NO markdown formatting
+- Write ONLY in plain sentences, separated by periods
+- For help-seeking questions: EXACTLY 2 sentences (gratitude + options), NO adoption/guardian contact mention
 - KB guidelines are NOT suggestions - they are REQUIREMENTS`;
 
 /**
