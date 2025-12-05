@@ -118,6 +118,7 @@ export class CaseAgent extends BaseAgent {
       }
 
       // Format knowledge chunks for the system prompt
+      // Include both title and content so post-processing can detect help-seeking KB entry
       const knowledgeContext = result.chunks.map(chunk => 
         `**${chunk.title}**\n${chunk.content}`
       ).join('\n\n');
@@ -233,11 +234,17 @@ export class CaseAgent extends BaseAgent {
       const emotionalState = await this.detectEmotionalState(message);
 
       // Retrieve relevant knowledge using RAG (pass user context for audience determination)
-      const knowledgeContext = await this.retrieveRelevantKnowledge(message, JSON.stringify({
+      const knowledgeContextResult = await this.retrieveRelevantKnowledge(message, JSON.stringify({
         caseData: enhancedCaseData,
         userContext: context,
         conversationHistory: memory.conversationHistory
       }), context);
+      
+      // Extract KB entry titles for post-processing detection
+      const kbTitles = knowledgeContextResult ? 
+        knowledgeContextResult.split('\n').filter(line => line.startsWith('**')).map(line => line.replace(/\*\*/g, '').trim()).join(' ') 
+        : '';
+      const knowledgeContext = knowledgeContextResult;
 
       // Build comprehensive context
       const enhancedMessage = this.buildEnhancedContext(
@@ -256,7 +263,7 @@ export class CaseAgent extends BaseAgent {
 
       // Post-process response to enforce KB rules (remove bullets, enforce help-seeking rules, etc.)
       if (result.message && result.success) {
-        result.message = this.postProcessResponse(result.message, intentAnalysis.intent, knowledgeContext);
+        result.message = this.postProcessResponse(result.message, intentAnalysis.intent, knowledgeContext, kbTitles);
       }
 
       const processingTime = Date.now() - startTime;
@@ -1428,7 +1435,7 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
    * - Enforce help-seeking response rules (2 sentences, no adoption/guardian contact)
    * - Convert lists to plain sentences
    */
-  private postProcessResponse(response: string, intent: string, knowledgeContext?: string): string {
+  private postProcessResponse(response: string, intent: string, knowledgeContext?: string, kbTitles?: string): string {
     let cleaned = response;
 
     // Remove bullet points and markdown lists
@@ -1438,21 +1445,40 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
     cleaned = cleaned.replace(/^\d+\.\s+/gm, '');
 
     // For help-seeking intent, enforce strict rules
-    if (intent === 'help' && knowledgeContext?.toLowerCase().includes('help-seeking')) {
-      // Split into sentences
+    // Check if intent is help OR if knowledgeContext/kbTitles mentions help-seeking
+    const helpSeekingInContext = knowledgeContext?.toLowerCase().includes('help-seeking') || 
+                                  kbTitles?.toLowerCase().includes('help-seeking') ||
+                                  knowledgeContext?.toLowerCase().includes('help-seeking intent') ||
+                                  kbTitles?.toLowerCase().includes('help-seeking intent');
+    const isHelpSeeking = intent === 'help' || helpSeekingInContext;
+    
+    if (isHelpSeeking) {
+      // Split into sentences (handle Spanish and English punctuation)
       const sentences = cleaned.split(/[.!?]+/).filter(s => s.trim().length > 0);
       
-      // Remove sentences that mention adoption, guardian contact, or foster care
+      // Remove sentences that mention adoption, guardian contact, foster care, or follow-up questions
       const filteredSentences = sentences.filter(s => {
-        const lower = s.toLowerCase();
-        return !lower.includes('adopt') && 
-               !lower.includes('adopción') &&
-               !lower.includes('guardian') &&
-               !lower.includes('guardian') &&
-               !lower.includes('contactar') &&
-               !lower.includes('contact') &&
-               !lower.includes('foster') &&
-               !lower.includes('hogar temporal');
+        const lower = s.toLowerCase().trim();
+        // Remove sentences with forbidden content
+        const hasForbiddenContent = 
+          lower.includes('adopt') || 
+          lower.includes('adopción') ||
+          lower.includes('guardian') ||
+          lower.includes('contactar') ||
+          lower.includes('contact') ||
+          lower.includes('foster') ||
+          lower.includes('hogar temporal') ||
+          lower.includes('hogar permanente') ||
+          lower.includes('darle un hogar') ||
+          lower.includes('dar hogar') ||
+          lower.includes('proceso de adopción') ||
+          lower.includes('adoption process') ||
+          lower.startsWith('¿qué te parece') ||
+          lower.startsWith('what do you think') ||
+          lower.startsWith('cuál te gustaría') ||
+          lower.startsWith('which would you like');
+        
+        return !hasForbiddenContent;
       });
 
       // Keep only first 2 sentences (gratitude + options)
@@ -1461,11 +1487,14 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
         if (!cleaned.endsWith('.') && !cleaned.endsWith('!') && !cleaned.endsWith('?')) {
           cleaned += '.';
         }
-      } else {
+      } else if (filteredSentences.length > 0) {
         cleaned = filteredSentences.join('. ').trim();
         if (!cleaned.endsWith('.') && !cleaned.endsWith('!') && !cleaned.endsWith('?')) {
           cleaned += '.';
         }
+      } else {
+        // If all sentences were filtered, use a default help-seeking response
+        cleaned = '¡Qué bueno que quieras ayudar! Podés donar para los gastos médicos o compartir su historia en redes sociales.';
       }
     }
 
