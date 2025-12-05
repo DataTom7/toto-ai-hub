@@ -102,7 +102,7 @@ export const VECTOR_DB_CONSTANTS = {
   /**
    * HNSW index parameters (if using in-memory HNSW)
    */
-  HNSW_MAX_ELEMENTS: 10000,
+  HNSW_MAX_ELEMENTS: 100000,
   HNSW_M: 16,
   HNSW_EF_CONSTRUCTION: 200,
 } as const;

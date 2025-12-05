@@ -16,6 +16,18 @@
  */
 
 import { GoogleAuth } from 'google-auth-library';
+import { VECTOR_DB_CONSTANTS } from '../config/constants';
+
+// Conditional import for HNSW - requires native compilation
+// Note: On Windows, requires Visual Studio build tools for installation
+let HierarchicalNSW: any;
+try {
+  const hnswlib = require('hnswlib-node');
+  HierarchicalNSW = hnswlib.HierarchicalNSW;
+} catch (error) {
+  console.warn('[VectorDBService] hnswlib-node not available. HNSW features will be disabled.');
+  console.warn('[VectorDBService] To enable: Install Visual Studio build tools and run: npm install hnswlib-node');
+}
 
 /**
  * Vector document structure
@@ -94,6 +106,11 @@ export class VectorDBService {
   private auth?: GoogleAuth;
   private inMemoryStore: Map<string, VectorDocument> = new Map();
   private instanceId: string; // For debugging - track instance identity
+  
+  // HNSW properties for fast similarity search
+  private hnswIndex?: any; // HierarchicalNSW type (conditional import)
+  private documentIdMap: Map<number, string> = new Map(); // HNSW index ID -> document ID
+  private nextHnswId: number = 0;
 
   constructor(config: VectorDBConfig) {
     // Generate unique instance ID for debugging
@@ -120,6 +137,37 @@ export class VectorDBService {
       console.log(`[VectorDBService] Initialized with Vertex AI backend (instance: ${this.instanceId})`);
     } else {
       console.log(`[VectorDBService] Initialized with in-memory backend (instance: ${this.instanceId})`);
+      console.log('[VectorDBService] Using in-memory vector storage with HNSW indexing');
+      this.initializeHNSW();
+    }
+  }
+
+  /**
+   * Initialize HNSW index for fast similarity search
+   */
+  private initializeHNSW(): void {
+    try {
+      if (!HierarchicalNSW) {
+        console.warn('[VectorDBService] HNSW library not available. Falling back to brute-force search.');
+        console.warn('[VectorDBService] Install Visual Studio build tools and run: npm install hnswlib-node');
+        return;
+      }
+
+      const dimensions = this.config.dimensions || 768;
+      const maxElements = VECTOR_DB_CONSTANTS.HNSW_MAX_ELEMENTS;
+
+      this.hnswIndex = new HierarchicalNSW('cosine', dimensions);
+      this.hnswIndex.initIndex(
+        maxElements,
+        VECTOR_DB_CONSTANTS.HNSW_M,
+        VECTOR_DB_CONSTANTS.HNSW_EF_CONSTRUCTION
+      );
+
+      console.log(`[VectorDBService] ✅ HNSW index initialized (${dimensions}D, max ${maxElements} docs)`);
+    } catch (error) {
+      console.error('[VectorDBService] ❌ Failed to initialize HNSW:', error);
+      console.warn('[VectorDBService] Falling back to brute-force search.');
+      // Don't throw - allow fallback to brute force
     }
   }
 
@@ -130,7 +178,16 @@ export class VectorDBService {
     if (this.config.backend === 'vertex-ai') {
       await this.upsertVertexAI([document]);
     } else {
+      // Store in Map (for metadata)
       this.inMemoryStore.set(document.id, document);
+
+      // Add to HNSW index
+      if (this.hnswIndex) {
+        const hnswId = this.nextHnswId++;
+        this.documentIdMap.set(hnswId, document.id);
+        this.hnswIndex.addPoint(document.embedding, hnswId);
+      }
+
       console.log(`[VectorDBService] upsert: Added document ${document.id} (store size: ${this.inMemoryStore.size})`);
     }
   }
@@ -143,10 +200,41 @@ export class VectorDBService {
       if (this.config.backend === 'vertex-ai') {
         await this.upsertVertexAI(documents);
       } else {
-        documents.forEach(doc => {
-          this.inMemoryStore.set(doc.id, doc);
-        });
-        console.log(`[VectorDBService] upsertBatch: Added ${documents.length} documents (store size: ${this.inMemoryStore.size}, instance: ${this.instanceId})`);
+        let successCount = 0;
+        let failureCount = 0;
+        const errors: string[] = [];
+
+        for (const doc of documents) {
+          try {
+            // Store in Map
+            this.inMemoryStore.set(doc.id, doc);
+
+            // Add to HNSW index
+            if (this.hnswIndex) {
+              const hnswId = this.nextHnswId++;
+              this.documentIdMap.set(hnswId, doc.id);
+              this.hnswIndex.addPoint(doc.embedding, hnswId);
+            }
+
+            successCount++;
+          } catch (error) {
+            failureCount++;
+            errors.push(`${doc.id}: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+
+        console.log(`[VectorDBService] upsertBatch: Added ${successCount} documents (store size: ${this.inMemoryStore.size}, instance: ${this.instanceId})`);
+        
+        if (failureCount > 0) {
+          console.warn(`[VectorDBService] upsertBatch: ${failureCount} documents failed to add`);
+        }
+
+        return {
+          success: failureCount === 0,
+          processedCount: successCount,
+          failedCount: failureCount,
+          errors: errors.length > 0 ? errors.map(e => ({ id: e.split(':')[0], error: e.split(':').slice(1).join(':').trim() })) : undefined,
+        };
       }
 
       return {
@@ -430,75 +518,120 @@ export class VectorDBService {
   // ===== IN-MEMORY OPERATIONS =====
 
   /**
-   * Search in-memory store
+   * Search in-memory store using HNSW for fast similarity search
+   * Falls back to brute-force if HNSW is not available
    */
   private searchInMemory(query: VectorSearchQuery): VectorSearchResult[] {
+    const { embedding, topK = 5, minScore, filters } = query;
+
+    // Use HNSW if available, otherwise fall back to brute force
+    if (!this.hnswIndex || this.inMemoryStore.size === 0) {
+      // Fallback to brute-force search
+      return this.searchInMemoryBruteForce(query);
+    }
+
+    try {
+      // Get more candidates than needed to account for filtering
+      const candidateK = Math.min(topK * 5, this.inMemoryStore.size);
+
+      // O(log n) HNSW search 🚀
+      const result = this.hnswIndex.searchKnn(embedding, candidateK);
+
+      const results: VectorSearchResult[] = [];
+
+      // Process neighbors
+      for (let i = 0; i < result.neighbors.length; i++) {
+        const hnswId = result.neighbors[i];
+        const distance = result.distances[i];
+        const score = 1 - distance; // Convert distance to similarity
+
+        // Get document ID from map
+        const docId = this.documentIdMap.get(hnswId);
+        if (!docId) continue;
+
+        // Get full document
+        const doc = this.inMemoryStore.get(docId);
+        if (!doc) continue;
+
+        // Apply filters
+        if (filters && !this.matchesFilters(doc, filters)) {
+          continue;
+        }
+
+        // Apply score threshold
+        if (minScore && score < minScore) {
+          continue;
+        }
+
+        results.push({
+          document: doc,
+          score,
+          distance
+        });
+
+        // Stop when we have enough results
+        if (results.length >= topK) {
+          break;
+        }
+      }
+
+      console.log(`[VectorDBService] HNSW returned ${results.length} results (searched ${candidateK} candidates)`);
+
+      return results;
+
+    } catch (error) {
+      console.error('[VectorDBService] HNSW search failed:', error);
+      // Fallback to brute-force search
+      return this.searchInMemoryBruteForce(query);
+    }
+  }
+
+  /**
+   * Brute-force search fallback (O(n) - used when HNSW is not available)
+   */
+  private searchInMemoryBruteForce(query: VectorSearchQuery): VectorSearchResult[] {
     const topK = query.topK || 5;
     const results: VectorSearchResult[] = [];
 
-    // Debug: Log store size and query details
     const totalDocs = this.inMemoryStore.size;
-    console.log(`[VectorDBService] searchInMemory: Store has ${totalDocs} documents`);
-    console.log(`[VectorDBService] searchInMemory: Query embedding dimensions: ${query.embedding.length}`);
-    console.log(`[VectorDBService] searchInMemory: Filters:`, JSON.stringify(query.filters || {}));
-    console.log(`[VectorDBService] searchInMemory: minScore: ${query.minScore ?? 'none'}, topK: ${topK}`);
+    console.log(`[VectorDBService] searchInMemory (brute-force): Store has ${totalDocs} documents`);
 
     if (totalDocs === 0) {
       console.warn('[VectorDBService] searchInMemory: Store is empty! No documents loaded.');
       return [];
     }
 
-    let filteredOut = 0;
-    let scoreFilteredOut = 0;
-    let processed = 0;
-
     // Calculate similarity for all documents
     for (const doc of this.inMemoryStore.values()) {
-      processed++;
-      
       // Apply filters
       if (query.filters && !this.matchesFilters(doc, query.filters)) {
-        filteredOut++;
         continue;
       }
 
       // Validate embeddings
       if (!doc.embedding || doc.embedding.length === 0) {
-        console.warn(`[VectorDBService] searchInMemory: Document ${doc.id} has no embedding!`);
         continue;
       }
 
       if (doc.embedding.length !== query.embedding.length) {
-        console.warn(`[VectorDBService] searchInMemory: Document ${doc.id} embedding dimension mismatch: ${doc.embedding.length} vs ${query.embedding.length}`);
         continue;
       }
 
       // Calculate cosine similarity
       const score = this.cosineSimilarity(query.embedding, doc.embedding);
-      const distance = 1 - score; // Convert to distance
+      const distance = 1 - score;
 
       // Apply min score filter
       if (query.minScore !== undefined && score < query.minScore) {
-        scoreFilteredOut++;
         continue;
       }
 
       results.push({ document: doc, score, distance });
     }
 
-    console.log(`[VectorDBService] searchInMemory: Processed ${processed} docs, ${filteredOut} filtered by metadata, ${scoreFilteredOut} filtered by minScore, ${results.length} passed all filters`);
-
     // Sort by score (descending) and return top K
     results.sort((a, b) => b.score - a.score);
-    const finalResults = results.slice(0, topK);
-    
-    if (finalResults.length > 0) {
-      console.log(`[VectorDBService] searchInMemory: Returning ${finalResults.length} results (top score: ${finalResults[0].score.toFixed(4)})`);
-    } else {
-      console.warn(`[VectorDBService] searchInMemory: No results after filtering!`);
-    }
-    
-    return finalResults;
+    return results.slice(0, topK);
   }
 
   /**
