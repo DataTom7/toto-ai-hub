@@ -1540,6 +1540,44 @@ app.post('/api/case', async (req, res) => {
   }
 });
 
+// ===== DONATION RECEIPT ANALYSIS ENDPOINT =====
+// Analyze donation receipt images to extract bank, amount, transaction ID, etc.
+
+app.post('/api/donations/analyze-receipt', async (req, res) => {
+  try {
+    const { imageUrl, expectedAmount, expectedAlias } = req.body;
+
+    if (!imageUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'imageUrl is required'
+      });
+    }
+
+    // Import the service (lazy import to avoid initialization issues)
+    const { DonationReceiptAnalysisService } = require('./dist/services/DonationReceiptAnalysisService');
+    const receiptService = new DonationReceiptAnalysisService();
+
+    // Analyze the receipt
+    const analysis = await receiptService.analyzeReceipt(imageUrl, {
+      expectedAmount,
+      expectedAlias,
+    });
+
+    res.json({
+      success: true,
+      analysis,
+    });
+
+  } catch (error) {
+    console.error('Error analyzing donation receipt:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to analyze receipt'
+    });
+  }
+});
+
 // ===== AI API GATEWAY ENDPOINTS =====
 // These endpoints are used by toto-bo AI Hub dashboard
 

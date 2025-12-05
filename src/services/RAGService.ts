@@ -119,7 +119,13 @@ export class RAGService {
    * Now uses VectorDBService for unlimited storage (no 1,000 chunk limit)
    */
   async addKnowledgeChunks(chunks: KnowledgeChunk[], knowledgeBaseService?: any): Promise<void> {
+    console.log(`[RAGService] addKnowledgeChunks() called with ${chunks.length} chunks`);
     try {
+      if (chunks.length === 0) {
+        console.warn('[RAGService] addKnowledgeChunks: No chunks provided!');
+        return;
+      }
+      
       // Convert KnowledgeChunks to VectorDocuments and generate embeddings
       const vectorDocuments: VectorDocument[] = [];
       const chunksNeedingEmbedding: Array<{ id: string; embedding: number[] }> = [];
@@ -132,10 +138,12 @@ export class RAGService {
         if (!embedding || embedding.length === 0) {
           embedding = await this.generateEmbedding(chunk.content);
           generatedCount++;
+          console.log(`[RAGService] Generated embedding for ${chunk.id}: ${embedding.length} dimensions`);
           // Track chunks that need embedding cached to Firestore
           chunksNeedingEmbedding.push({ id: chunk.id, embedding });
         } else {
           cachedCount++;
+          console.log(`[RAGService] Using cached embedding for ${chunk.id}: ${embedding.length} dimensions`);
         }
 
         // Ensure embedding has correct dimensions
@@ -169,11 +177,16 @@ export class RAGService {
       }
       
       // Batch upsert to VectorDBService
+      console.log(`[RAGService] Upserting ${vectorDocuments.length} vector documents to VectorDB...`);
       const result = await this.vectorDB.upsertBatch(vectorDocuments);
 
       if (result.success) {
         console.log(`✅ Added ${result.processedCount} knowledge chunks to VectorDB`);
         console.log(`   📊 Embeddings: ${cachedCount} cached, ${generatedCount} generated`);
+        
+        // Verify the documents were actually added
+        const count = await this.vectorDB.count();
+        console.log(`[RAGService] VectorDB now contains ${count} documents`);
       } else {
         console.warn(`⚠️  Some chunks failed to add: ${result.failedCount} failed`);
         if (result.errors) {
@@ -293,16 +306,19 @@ export class RAGService {
   private async generateQueryEmbedding(text: string): Promise<number[]> {
     try {
       // Try Vertex AI text-embedding-004 first (best multilingual support)
-      // Currently disabled - will be enabled when GCP setup is complete
       if (this.useVertexAIEmbeddings) {
+        console.log('[RAGService] Using Vertex AI for query embedding');
         try {
           return await this.generateVertexAIEmbedding(text, 'RETRIEVAL_QUERY');
         } catch (error) {
-          console.warn('[RAGService] Vertex AI query embedding failed, falling back to translation-based:', error);
+          console.warn('[RAGService] Vertex AI query embedding failed, falling back to Gemini:', error);
         }
+      } else {
+        console.log('[RAGService] Vertex AI NOT enabled, using Gemini fallback');
       }
 
       // Fallback to Gemini-based multilingual embedding
+      console.log('[RAGService] Using Gemini for query embedding');
       return await this.generateGeminiMultilingualEmbedding(text);
     } catch (error) {
       console.error('[RAGService] Error generating query embedding, using hash-based fallback:', error);
@@ -500,7 +516,8 @@ English translation:`;
       
       // Generate embedding for the query (use RETRIEVAL_QUERY task type)
       const queryEmbedding = await this.generateQueryEmbedding(userQuery);
-      
+      console.log(`[RAGService] Query embedding dimensions: ${queryEmbedding.length}`);
+
       // Build filters for VectorDBService
       // Filter by agent type (stored as tags in metadata)
       const filters: VectorSearchQuery['filters'] = {};
@@ -517,11 +534,16 @@ English translation:`;
         embedding: queryEmbedding,
         topK: maxResults * 2, // Get more results to filter by agentType
         filters,
-        minScore: 0.3, // Minimum similarity threshold
+        minScore: 0.0, // Minimum similarity threshold (disabled for debugging)
       };
       
       const vectorResults = await this.vectorDB.search(vectorSearchQuery);
-      
+
+      console.log(`[RAGService] VectorDB returned ${vectorResults.length} results for query: "${userQuery.substring(0, 50)}..."`);
+      if (vectorResults.length > 0) {
+        console.log(`[RAGService] Top result score: ${vectorResults[0].score?.toFixed(3)}, title: ${(vectorResults[0].document.metadata as any)?.title}`);
+      }
+
       // Convert VectorSearchResults to KnowledgeChunks and filter by agentType
       const scoredChunks = vectorResults
         .map(result => {

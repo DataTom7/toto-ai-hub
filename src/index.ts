@@ -32,8 +32,10 @@ export class TotoAI {
   private instagramAgent: InstagramAgent;
   private ragService: RAGService;
 
-  constructor() {
-    this.ragService = new RAGService();
+  constructor(ragService?: RAGService) {
+    // Use provided RAGService or create a new one
+    // This allows TotoAPIGateway to share its initialized RAGService
+    this.ragService = ragService || new RAGService();
     this.caseAgent = new CaseAgent();
     this.twitterAgent = new TwitterAgent();
     this.instagramAgent = new InstagramAgent();

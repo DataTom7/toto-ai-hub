@@ -15,10 +15,17 @@
     "sync-kb-to-vertex": "ts-node scripts/sync-kb-to-vertex.ts",
     "add-missing-kb-entries": "ts-node scripts/add-missing-kb-entries.ts",
     "migrate-prompts-to-kb": "ts-node src/scripts/migrate-prompts-to-kb.ts",
+    "migrate-knowledge-base": "ts-node scripts/migrate-knowledge-base.ts",
+    "verify-kb-entries": "ts-node scripts/verify-kb-entries.ts",
+    "analyze-kb-migration": "ts-node scripts/analyze-kb-migration.ts",
+    "add-missing-kb": "ts-node scripts/add-missing-kb-entries.ts",
+    "check-firestore": "ts-node scripts/check-firestore-instance.ts",
     "audit-kb-languages": "ts-node src/scripts/audit-kb-languages.ts",
     "backup-kb": "ts-node src/scripts/backup-kb-entries.ts",
     "convert-kb-to-english": "ts-node src/scripts/convert-kb-to-english.ts",
-    "convert-kb-dry-run": "ts-node src/scripts/convert-kb-to-english.ts --dry-run"
+    "convert-kb-dry-run": "ts-node src/scripts/convert-kb-to-english.ts --dry-run",
+    "update-kb-donations-013": "ts-node scripts/update-kb-donations-013.ts",
+    "update-kb-from-hardcoded": "ts-node scripts/update-kb-entries-from-hardcoded.ts"
   },
   "keywords": [
     "ai",

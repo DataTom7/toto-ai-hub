@@ -93,8 +93,12 @@ export class VectorDBService {
   private config: Required<VectorDBConfig>;
   private auth?: GoogleAuth;
   private inMemoryStore: Map<string, VectorDocument> = new Map();
+  private instanceId: string; // For debugging - track instance identity
 
   constructor(config: VectorDBConfig) {
+    // Generate unique instance ID for debugging
+    this.instanceId = `VectorDB-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     // Set defaults
     this.config = {
       backend: config.backend,
@@ -113,9 +117,9 @@ export class VectorDBService {
       this.auth = new GoogleAuth({
         scopes: ['https://www.googleapis.com/auth/cloud-platform'],
       });
-      console.log('[VectorDBService] Initialized with Vertex AI backend');
+      console.log(`[VectorDBService] Initialized with Vertex AI backend (instance: ${this.instanceId})`);
     } else {
-      console.log('[VectorDBService] Initialized with in-memory backend');
+      console.log(`[VectorDBService] Initialized with in-memory backend (instance: ${this.instanceId})`);
     }
   }
 
@@ -127,6 +131,7 @@ export class VectorDBService {
       await this.upsertVertexAI([document]);
     } else {
       this.inMemoryStore.set(document.id, document);
+      console.log(`[VectorDBService] upsert: Added document ${document.id} (store size: ${this.inMemoryStore.size})`);
     }
   }
 
@@ -138,7 +143,10 @@ export class VectorDBService {
       if (this.config.backend === 'vertex-ai') {
         await this.upsertVertexAI(documents);
       } else {
-        documents.forEach(doc => this.inMemoryStore.set(doc.id, doc));
+        documents.forEach(doc => {
+          this.inMemoryStore.set(doc.id, doc);
+        });
+        console.log(`[VectorDBService] upsertBatch: Added ${documents.length} documents (store size: ${this.inMemoryStore.size}, instance: ${this.instanceId})`);
       }
 
       return {
@@ -164,6 +172,7 @@ export class VectorDBService {
    * Search for similar vectors
    */
   async search(query: VectorSearchQuery): Promise<VectorSearchResult[]> {
+    console.log(`[VectorDBService] search() called with backend: ${this.config.backend} (instance: ${this.instanceId})`);
     if (this.config.backend === 'vertex-ai') {
       return await this.searchVertexAI(query);
     } else {
@@ -222,7 +231,9 @@ export class VectorDBService {
       return -1; // Indicate count is not available
     } else {
       if (!filters) {
-        return this.inMemoryStore.size;
+        const size = this.inMemoryStore.size;
+        console.log(`[VectorDBService] count(): Store has ${size} documents`);
+        return size;
       }
 
       // Count with filters
@@ -232,6 +243,7 @@ export class VectorDBService {
           count++;
         }
       }
+      console.log(`[VectorDBService] count(): ${count} documents match filters (total: ${this.inMemoryStore.size})`);
       return count;
     }
   }
@@ -424,10 +436,40 @@ export class VectorDBService {
     const topK = query.topK || 5;
     const results: VectorSearchResult[] = [];
 
+    // Debug: Log store size and query details
+    const totalDocs = this.inMemoryStore.size;
+    console.log(`[VectorDBService] searchInMemory: Store has ${totalDocs} documents`);
+    console.log(`[VectorDBService] searchInMemory: Query embedding dimensions: ${query.embedding.length}`);
+    console.log(`[VectorDBService] searchInMemory: Filters:`, JSON.stringify(query.filters || {}));
+    console.log(`[VectorDBService] searchInMemory: minScore: ${query.minScore ?? 'none'}, topK: ${topK}`);
+
+    if (totalDocs === 0) {
+      console.warn('[VectorDBService] searchInMemory: Store is empty! No documents loaded.');
+      return [];
+    }
+
+    let filteredOut = 0;
+    let scoreFilteredOut = 0;
+    let processed = 0;
+
     // Calculate similarity for all documents
     for (const doc of this.inMemoryStore.values()) {
+      processed++;
+      
       // Apply filters
       if (query.filters && !this.matchesFilters(doc, query.filters)) {
+        filteredOut++;
+        continue;
+      }
+
+      // Validate embeddings
+      if (!doc.embedding || doc.embedding.length === 0) {
+        console.warn(`[VectorDBService] searchInMemory: Document ${doc.id} has no embedding!`);
+        continue;
+      }
+
+      if (doc.embedding.length !== query.embedding.length) {
+        console.warn(`[VectorDBService] searchInMemory: Document ${doc.id} embedding dimension mismatch: ${doc.embedding.length} vs ${query.embedding.length}`);
         continue;
       }
 
@@ -436,16 +478,27 @@ export class VectorDBService {
       const distance = 1 - score; // Convert to distance
 
       // Apply min score filter
-      if (query.minScore && score < query.minScore) {
+      if (query.minScore !== undefined && score < query.minScore) {
+        scoreFilteredOut++;
         continue;
       }
 
       results.push({ document: doc, score, distance });
     }
 
+    console.log(`[VectorDBService] searchInMemory: Processed ${processed} docs, ${filteredOut} filtered by metadata, ${scoreFilteredOut} filtered by minScore, ${results.length} passed all filters`);
+
     // Sort by score (descending) and return top K
     results.sort((a, b) => b.score - a.score);
-    return results.slice(0, topK);
+    const finalResults = results.slice(0, topK);
+    
+    if (finalResults.length > 0) {
+      console.log(`[VectorDBService] searchInMemory: Returning ${finalResults.length} results (top score: ${finalResults[0].score.toFixed(4)})`);
+    } else {
+      console.warn(`[VectorDBService] searchInMemory: No results after filtering!`);
+    }
+    
+    return finalResults;
   }
 
   /**

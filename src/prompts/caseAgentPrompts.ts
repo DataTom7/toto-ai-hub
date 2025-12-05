@@ -74,7 +74,13 @@ The Knowledge Base information above provides specific instructions for:
 - If KB says "DO NOT mention adoption/guardian contact", you MUST NOT mention them unless user specifically asks
 - 🚫 ABSOLUTELY FORBIDDEN: NO bullet points (*), NO lists (-), NO markdown formatting
 - Write ONLY in plain sentences, separated by periods
-- For help-seeking questions: EXACTLY 2 sentences (gratitude + options), NO adoption/guardian contact mention
+- For help-seeking questions ("Cómo puedo ayudar?" / "How can I help?"):
+  * DO NOT repeat case description or situation
+  * DO NOT say "¡Hola" or any greeting (user already greeted in first message)
+  * DO NOT say things like "Nina es una perrita mayor..." or "Simón necesita ayuda..."
+  * Provide ACTIONABLE options: donation and sharing
+  * Structure: gratitude → brief paragraph about donation/sharing → question
+  * Total: 4-5 sentences maximum
 - KB guidelines are NOT suggestions - they are REQUIREMENTS`;
 
 /**
