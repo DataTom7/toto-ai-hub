@@ -123,22 +123,32 @@ export class RAGService {
    * Add knowledge chunks to the RAG service
    * Now uses VectorDBService for unlimited storage (no 1,000 chunk limit)
    */
-  async addKnowledgeChunks(chunks: KnowledgeChunk[]): Promise<void> {
+  async addKnowledgeChunks(chunks: KnowledgeChunk[], knowledgeBaseService?: any): Promise<void> {
     try {
       // Convert KnowledgeChunks to VectorDocuments and generate embeddings
       const vectorDocuments: VectorDocument[] = [];
-      
+      const chunksNeedingEmbedding: Array<{ id: string; embedding: number[] }> = [];
+      let cachedCount = 0;
+      let generatedCount = 0;
+
       for (const chunk of chunks) {
         // Generate embedding if not already present
         let embedding = chunk.embedding;
         if (!embedding || embedding.length === 0) {
           embedding = await this.generateEmbedding(chunk.content);
+          generatedCount++;
+          // Track chunks that need embedding cached to Firestore
+          chunksNeedingEmbedding.push({ id: chunk.id, embedding });
+        } else {
+          cachedCount++;
         }
-        
+
         // Ensure embedding has correct dimensions
         if (embedding.length !== this.embeddingDimensions) {
           console.warn(`[RAGService] Embedding dimension mismatch for ${chunk.id}, regenerating...`);
           embedding = await this.generateEmbedding(chunk.content);
+          generatedCount++;
+          chunksNeedingEmbedding.push({ id: chunk.id, embedding });
         }
         
         // Convert to VectorDocument format
@@ -165,15 +175,28 @@ export class RAGService {
       
       // Batch upsert to VectorDBService
       const result = await this.vectorDB.upsertBatch(vectorDocuments);
-      
+
       if (result.success) {
-        console.log(`✅ Added ${result.processedCount} knowledge chunks to VectorDB (unlimited storage)`);
+        console.log(`✅ Added ${result.processedCount} knowledge chunks to VectorDB`);
+        console.log(`   📊 Embeddings: ${cachedCount} cached, ${generatedCount} generated`);
       } else {
         console.warn(`⚠️  Some chunks failed to add: ${result.failedCount} failed`);
         if (result.errors) {
           result.errors.forEach(err => {
             console.error(`  - ${err.id}: ${err.error}`);
           });
+        }
+      }
+
+      // Save newly generated embeddings back to Firestore for future use
+      if (chunksNeedingEmbedding.length > 0 && knowledgeBaseService) {
+        console.log(`💾 Caching ${chunksNeedingEmbedding.length} embeddings to Firestore...`);
+        try {
+          await knowledgeBaseService.cacheEmbeddings(chunksNeedingEmbedding);
+          console.log(`✅ Embeddings cached successfully`);
+        } catch (cacheError) {
+          console.warn('⚠️  Failed to cache embeddings (non-critical):', cacheError);
+          // Don't throw - caching is optimization, not critical
         }
       }
     } catch (error) {

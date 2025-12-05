@@ -1432,10 +1432,12 @@ IMPORTANT:
         agentTypes: item.agentTypes,
         audience: item.audience || [],
         lastUpdated: item.lastUpdated,
-        usageCount: item.usageCount
+        usageCount: item.usageCount,
+        embedding: item.embedding // Include cached embedding if available
       }));
 
-      await this.ragService.addKnowledgeChunks(knowledgeChunks);
+      // Pass knowledge base service so embeddings can be cached back to Firestore
+      await this.ragService.addKnowledgeChunks(knowledgeChunks, this.knowledgeBaseService);
       console.log('✅ RAG service initialized with knowledge base');
     } catch (error) {
       console.error('Error initializing RAG service:', error);

@@ -10,6 +10,7 @@ export interface KnowledgeItem {
   lastUpdated: string;
   usageCount: number;
   createdAt?: string;
+  embedding?: number[]; // Cached embedding vector for RAG performance
   metadata?: {
     guardianId?: string;
     guardianName?: string;
@@ -332,7 +333,7 @@ DONATION PROCESS - CRITICAL: NOT "THROUGH THE PLATFORM"
   async refreshCache(): Promise<void> {
     console.log('🔄 Refreshing knowledge base cache...');
     this.cache.clear();
-    
+
     const snapshot = await this.db.collection(this.COLLECTION).get();
     snapshot.forEach(doc => {
       const data = doc.data();
@@ -341,8 +342,43 @@ DONATION PROCESS - CRITICAL: NOT "THROUGH THE PLATFORM"
         ...data
       } as KnowledgeItem);
     });
-    
+
     console.log(`✅ Cache refreshed: ${this.cache.size} entries`);
+  }
+
+  /**
+   * Cache embeddings for KB entries to improve startup performance
+   * Only updates the embedding field, doesn't touch other fields
+   */
+  async cacheEmbeddings(embeddings: Array<{ id: string; embedding: number[] }>): Promise<void> {
+    const batch = this.db.batch();
+    let count = 0;
+
+    for (const { id, embedding } of embeddings) {
+      const docRef = this.db.collection(this.COLLECTION).doc(id);
+      batch.update(docRef, { embedding });
+      count++;
+
+      // Firestore batch limit is 500 operations
+      if (count % 500 === 0) {
+        await batch.commit();
+      }
+    }
+
+    // Commit remaining operations
+    if (count % 500 !== 0) {
+      await batch.commit();
+    }
+
+    // Update cache
+    for (const { id, embedding } of embeddings) {
+      const cached = this.cache.get(id);
+      if (cached) {
+        cached.embedding = embedding;
+      }
+    }
+
+    console.log(`✅ Cached ${embeddings.length} embeddings to Firestore`);
   }
 }
 
