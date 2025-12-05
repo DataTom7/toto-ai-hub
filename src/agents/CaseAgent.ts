@@ -18,6 +18,9 @@ import { normalizeCaseResponse } from '../utils/responseValidation';
 import { createErrorResponse, getUserErrorMessage } from '../utils/errorResponses';
 import { getActionMessageTemplate, getShareMessageConfig } from '../utils/actionConfig';
 import { buildCaseAgentSystemPrompt } from '../prompts/caseAgentPrompts';
+import { getTRFAlias, isValidBankingAlias } from '../config/banking.config';
+import { CASE_AGENT_CONSTANTS } from '../config/constants';
+import { hasAmount, hasAmountInHistory, extractAmount } from '../utils/amountDetection';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -34,7 +37,7 @@ export class CaseAgent extends BaseAgent {
   // Intent embeddings cache - pre-computed embeddings for multilingual intent detection
   private intentEmbeddingsCache: Map<string, number[][]> = new Map();
   // Default audience for KB retrieval - primarily serves donors
-  private readonly DEFAULT_AUDIENCE = 'donors';
+  private readonly DEFAULT_AUDIENCE = CASE_AGENT_CONSTANTS.DEFAULT_AUDIENCE;
   private analytics: AgentAnalytics = {
     totalInteractions: 0,
     successfulInteractions: 0,
@@ -94,7 +97,7 @@ export class CaseAgent extends BaseAgent {
     try {
       // Determine audience from user context (default to 'donors' for CaseAgent)
       // CaseAgent primarily serves donors, but adapts based on user role
-      let audience = this.DEFAULT_AUDIENCE;
+      let audience: string = this.DEFAULT_AUDIENCE;
       if (userContext?.userRole) {
         // Map user roles to audience types
         if (userContext.userRole === 'guardian' || userContext.userRole === 'admin') {
@@ -279,10 +282,8 @@ export class CaseAgent extends BaseAgent {
       // Post-process response to enforce KB rules (remove bullets, enforce help-seeking rules, etc.)
       if (result.message && result.success) {
         // Check if user has already selected a donation amount
-        const currentMessageHasAmount = /\$\d+/.test(message) || /\d+\s*(pesos|ars)/i.test(message) || /\d{3,}/.test(message);
-        const hasSelectedAmount = currentMessageHasAmount || memory.conversationHistory.some((entry: any) =>
-          (entry.user && (/\$\d+/.test(entry.user) || /\d+\s*(pesos|ars)/i.test(entry.user) || /\d{3,}/.test(entry.user)))
-        );
+        const currentMessageHasAmount = hasAmount(message);
+        const hasSelectedAmount = currentMessageHasAmount || hasAmountInHistory(memory);
         // Determine if banking alias or TRF alias will be shown (for Totitos question timing)
         const isAskingForAlternatives = /\b(otras?\s+formas?|other\s+ways?|alternativas?|alternative|múltiples?\s+casos?|multiple\s+cases?|más\s+urgentes?|most\s+urgent|donar\s+a\s+toto|donate\s+to\s+toto)\b/i.test(message);
         const willShowBankingAlias = intentAnalysis.intent === 'donate' &&
@@ -318,10 +319,8 @@ export class CaseAgent extends BaseAgent {
       
       // Determine quick action triggers explicitly
       // Check if user has already selected a donation amount (from conversation history or current message)
-      const currentMessageHasAmount = /\$\d+/.test(message) || /\d+\s*(pesos|ars)/i.test(message) || /\d{3,}/.test(message);
-      const hasSelectedAmount = currentMessageHasAmount || memory.conversationHistory.some((entry: any) =>
-        (entry.user && (/\$\d+/.test(entry.user) || /\d+\s*(pesos|ars)/i.test(entry.user) || /\d{3,}/.test(entry.user)))
-      );
+      const currentMessageHasAmount = hasAmount(message);
+      const hasSelectedAmount = currentMessageHasAmount || hasAmountInHistory(memory);
 
       // CORRECTED LOGIC: Show amount buttons when donation intent WITHOUT amount
       // Show banking alias when donation intent WITH amount
@@ -548,7 +547,7 @@ export class CaseAgent extends BaseAgent {
       
       // Include TRF alias if trigger is true (for alternative donations)
       if (shouldShowTRFAlias) {
-        metadata.trfBankingAlias = 'toto.fondo.rescate'; // TRF alias as confirmed by user
+        metadata.trfBankingAlias = getTRFAlias();
       }
       
       // Include social media URLs ONLY for share intent (not for help-seeking)
@@ -1363,7 +1362,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
 
       // Find best matching intent using cosine similarity
       let bestMatch: { intent: string; similarity: number } | null = null;
-      const SIMILARITY_THRESHOLD = 0.7; // Minimum similarity to consider a match
+      const SIMILARITY_THRESHOLD = CASE_AGENT_CONSTANTS.INTENT_SIMILARITY_THRESHOLD;
 
       for (const [intent, examples] of Object.entries(INTENT_EXAMPLES)) {
         const intentEmbeddings = this.intentEmbeddingsCache.get(intent);
@@ -1571,7 +1570,7 @@ English translation:`;
     if (memory.conversationHistory.length === 0) return '';
     
     return `\nConversation History:\n${memory.conversationHistory
-      .slice(-6) // Last 6 messages
+      .slice(-CASE_AGENT_CONSTANTS.MAX_CONVERSATION_HISTORY_ITEMS)
       .map(msg => `${msg.role === 'user' ? 'User' : 'Toto'}: ${msg.message}`)
       .join('\n')}`;
   }

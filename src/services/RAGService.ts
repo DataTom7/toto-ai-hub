@@ -535,7 +535,7 @@ English translation:`;
         embedding: queryEmbedding,
         topK: maxResults * 2, // Get more results to filter by agentType
         filters,
-        minScore: 0.0, // Minimum similarity threshold (disabled for debugging)
+        minScore: 0.3, // Minimum similarity threshold for relevant results
       };
       
       const vectorResults = await this.vectorDB.search(vectorSearchQuery);
