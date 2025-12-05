@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { VertexAISearchService, VertexAISearchResult } from './VertexAISearchService';
 import { VectorDBService, VectorDocument, VectorSearchQuery, VectorSearchResult } from './VectorDBService';
-// import { PredictionServiceClient } from '@google-cloud/aiplatform'; // TODO: Enable when Vertex AI embeddings are fully configured
+import { PredictionServiceClient } from '@google-cloud/aiplatform';
 
 export interface KnowledgeChunk {
   id: string;
@@ -43,9 +43,9 @@ export class RAGService {
   private vectorDB: VectorDBService;
   private embeddingModel: any;
   private vertexAISearchService?: VertexAISearchService;
-  // private predictionClient?: PredictionServiceClient; // TODO: Enable when Vertex AI embeddings are fully configured
+  private predictionClient?: PredictionServiceClient;
   private readonly VECTORDB_CONFIDENCE_THRESHOLD = 0.6; // Use Vertex AI Search if confidence below this
-  private embeddingDimensions: number = 768; // Standard embedding dimensions
+  private embeddingDimensions: number = 768; // text-embedding-004 dimensions
   private useVertexAIEmbeddings: boolean = false;
 
   constructor(vertexAISearchService?: VertexAISearchService, vectorDBConfig?: { backend?: 'vertex-ai' | 'in-memory' }) {
@@ -89,34 +89,29 @@ export class RAGService {
   }
 
   /**
-   * Initialize Vertex AI embeddings if configured
-   * Currently disabled - using translation-based multilingual embeddings
+   * Initialize Vertex AI text-embedding-004 for multilingual embeddings
+   * Supports 100+ languages with semantic understanding
    */
   private initializeVertexAIEmbeddings() {
-    // Vertex AI embeddings will be enabled when GCP setup is complete
-    // For now, we use translation-based approach which works immediately
-    this.useVertexAIEmbeddings = false;
-    console.log(`[RAGService] Using translation-based multilingual embeddings (Vertex AI can be enabled later)`);
-    
-    /* Future implementation:
     try {
       const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.VERTEX_AI_PROJECT_ID;
       const location = process.env.VERTEX_AI_LOCATION || 'us-central1';
-      
+
       if (projectId) {
         this.predictionClient = new PredictionServiceClient({
           apiEndpoint: `${location}-aiplatform.googleapis.com`,
         });
         this.useVertexAIEmbeddings = true;
-        console.log(`[RAGService] Vertex AI embeddings configured for project: ${projectId}, location: ${location}`);
+        console.log(`[RAGService] ✅ Vertex AI text-embedding-004 enabled (multilingual support)`);
+        console.log(`[RAGService]    Project: ${projectId}, Location: ${location}`);
       } else {
-        console.log(`[RAGService] Vertex AI not configured, using Gemini-based embeddings`);
+        console.log(`[RAGService] ⚠️  Vertex AI not configured, using Gemini-based embeddings`);
+        this.useVertexAIEmbeddings = false;
       }
     } catch (error) {
-      console.warn('[RAGService] Failed to initialize Vertex AI embeddings, using fallback:', error);
+      console.warn('[RAGService] ⚠️  Failed to initialize Vertex AI embeddings, using fallback:', error);
       this.useVertexAIEmbeddings = false;
     }
-    */
   }
 
   /**
@@ -241,18 +236,11 @@ export class RAGService {
 
   /**
    * Generate embedding using Vertex AI text-embedding-004 (multilingual)
-   * @param text The text to embed
+   * Supports 100+ languages natively - no translation needed!
+   * @param text The text to embed (any language)
    * @param taskType 'RETRIEVAL_DOCUMENT' for KB entries, 'RETRIEVAL_QUERY' for user queries
-   * Note: Vertex AI embedding implementation is commented out due to API complexity.
-   * Currently using translation-based approach which works immediately.
-   * TODO: Implement proper Vertex AI embeddings when GCP setup is complete.
    */
   private async generateVertexAIEmbedding(text: string, taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY' = 'RETRIEVAL_DOCUMENT'): Promise<number[]> {
-    // Vertex AI embedding implementation requires proper GCP setup
-    // For now, fall through to translation-based approach
-    throw new Error('Vertex AI embeddings not yet implemented - using translation-based approach');
-    
-    /* Future implementation:
     if (!this.predictionClient) {
       throw new Error('Vertex AI client not initialized');
     }
@@ -261,9 +249,42 @@ export class RAGService {
     const location = process.env.VERTEX_AI_LOCATION || 'us-central1';
     const endpoint = `projects/${projectId}/locations/${location}/publishers/google/models/text-embedding-004`;
 
-    // Proper Vertex AI API call would go here
-    // This requires additional GCP setup and API configuration
-    */
+    const instance = {
+      structValue: {
+        fields: {
+          content: { stringValue: text },
+          task_type: { stringValue: taskType },
+        },
+      },
+    };
+
+    const request = {
+      endpoint,
+      instances: [instance],
+    };
+
+    const [response] = await this.predictionClient.predict(request);
+    const predictions = response?.predictions || [];
+
+    if (!predictions || predictions.length === 0) {
+      throw new Error('No embeddings returned from Vertex AI');
+    }
+
+    // Extract embedding values from prediction
+    const prediction = predictions[0];
+    const embeddingValues = (prediction as any)?.structValue?.fields?.embeddings?.structValue?.fields?.values?.listValue?.values;
+
+    if (!embeddingValues) {
+      throw new Error('Invalid response format from Vertex AI');
+    }
+
+    const embedding = embeddingValues.map((v: any) => v.numberValue);
+
+    if (embedding.length !== this.embeddingDimensions) {
+      throw new Error(`Unexpected embedding dimensions: ${embedding.length}, expected ${this.embeddingDimensions}`);
+    }
+
+    return embedding;
   }
 
   /**
