@@ -522,10 +522,10 @@ export class VectorDBService {
       } else {
         // Otherwise, check if document has at least one matching audience
         const hasMatchingAudience = docAudience.some(a =>
-          filters.audience!.includes(a)
-        );
-        if (!hasMatchingAudience) {
-          return false;
+        filters.audience!.includes(a)
+      );
+      if (!hasMatchingAudience) {
+        return false;
         }
       }
     }

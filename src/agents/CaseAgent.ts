@@ -260,8 +260,8 @@ export class CaseAgent extends BaseAgent {
 
     // Use conversationContext.conversationId if available, otherwise create stable sessionId
     // This ensures conversation memory persists across multiple messages in the same conversation
-    const sessionId = conversationContext?.conversationId
-      ? conversationContext.conversationId
+    const sessionId = conversationContext?.conversationId 
+      ? conversationContext.conversationId 
       : `${validatedContext.userId}_${validatedCaseData.id}`;
 
     try {
@@ -270,7 +270,7 @@ export class CaseAgent extends BaseAgent {
 
       // Get or create conversation memory
       const memory = this.getOrCreateConversationMemory(sessionId, validatedContext.userId, validatedCaseData.id);
-
+      
       // Get or create user profile
       const userProfile = this.getOrCreateUserProfile(validatedContext.userId);
 
@@ -346,7 +346,7 @@ export class CaseAgent extends BaseAgent {
 
       // Generate formatting hints for better UI rendering
       const formattingHints = generateFormattingHints(result.message || '');
-
+      
       // Determine quick action triggers explicitly
       // Check if user has already selected a donation amount (from conversation history or current message)
       const currentMessageHasAmountCheck = hasAmount(validatedMessage);
@@ -1716,7 +1716,7 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
     cleaned = cleaned.replace(/\*([^*]+)\*/g, '$1'); // *italic* -> italic
     cleaned = cleaned.replace(/__([^_]+)__/g, '$1'); // __bold__ -> bold
     cleaned = cleaned.replace(/_([^_]+)_/g, '$1'); // _italic_ -> italic
-    
+
     // Remove bullet points and markdown lists
     // Replace "* " or "- " at start of lines with nothing
     cleaned = cleaned.replace(/^[\s]*[\*\-]\s+/gm, '');
