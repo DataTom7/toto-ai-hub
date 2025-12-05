@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { VertexAISearchService, VertexAISearchResult } from './VertexAISearchService';
 import { VectorDBService, VectorDocument, VectorSearchQuery, VectorSearchResult } from './VectorDBService';
 import { PredictionServiceClient } from '@google-cloud/aiplatform';
+import { RAG_SERVICE_CONSTANTS } from '../config/constants';
 
 export interface KnowledgeChunk {
   id: string;
@@ -251,54 +252,98 @@ export class RAGService {
   /**
    * Generate embedding using Vertex AI text-embedding-004 (multilingual)
    * Supports 100+ languages natively - no translation needed!
+   * Includes retry logic with exponential backoff for resilience against network failures.
    * @param text The text to embed (any language)
    * @param taskType 'RETRIEVAL_DOCUMENT' for KB entries, 'RETRIEVAL_QUERY' for user queries
    */
-  private async generateVertexAIEmbedding(text: string, taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY' = 'RETRIEVAL_DOCUMENT'): Promise<number[]> {
+  private async generateVertexAIEmbedding(
+    text: string,
+    taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY' = 'RETRIEVAL_DOCUMENT'
+  ): Promise<number[]> {
     if (!this.predictionClient) {
       throw new Error('Vertex AI client not initialized');
     }
 
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.VERTEX_AI_PROJECT_ID;
-    const location = process.env.VERTEX_AI_LOCATION || 'us-central1';
-    const endpoint = `projects/${projectId}/locations/${location}/publishers/google/models/text-embedding-004`;
+    const maxRetries = RAG_SERVICE_CONSTANTS.VERTEX_AI_MAX_RETRIES;
+    const baseDelay = RAG_SERVICE_CONSTANTS.VERTEX_AI_BASE_DELAY_MS;
+    const timeout = RAG_SERVICE_CONSTANTS.VERTEX_AI_TIMEOUT_MS;
 
-    const instance = {
-      structValue: {
-        fields: {
-          content: { stringValue: text },
-          task_type: { stringValue: taskType },
-        },
-      },
-    };
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.VERTEX_AI_PROJECT_ID;
+        const location = process.env.VERTEX_AI_LOCATION || 'us-central1';
+        const endpoint =
+          `projects/${projectId}/locations/${location}/publishers/google/models/text-embedding-004`;
 
-    const request = {
-      endpoint,
-      instances: [instance],
-    };
+        const instance = {
+          structValue: {
+            fields: {
+              content: { stringValue: text },
+              task_type: { stringValue: taskType },
+            },
+          },
+        };
 
-    const [response] = await this.predictionClient.predict(request);
-    const predictions = response?.predictions || [];
+        const request = {
+          endpoint,
+          instances: [instance],
+        };
 
-    if (!predictions || predictions.length === 0) {
-      throw new Error('No embeddings returned from Vertex AI');
+        // Add timeout wrapper
+        const [response] = await Promise.race([
+          this.predictionClient.predict(request),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Vertex AI timeout')), timeout)
+          )
+        ]) as any;
+
+        const predictions = response?.predictions || [];
+
+        if (!predictions || predictions.length === 0) {
+          throw new Error('No embeddings returned from Vertex AI');
+        }
+
+        // Extract embedding values from prediction
+        const prediction = predictions[0];
+        const embeddingValues = (prediction as
+          any)?.structValue?.fields?.embeddings?.structValue?.fields?.values?.listValue?.values;
+
+        if (!embeddingValues) {
+          throw new Error('Invalid response format from Vertex AI');
+        }
+
+        const embedding = embeddingValues.map((v: any) => v.numberValue);
+
+        if (embedding.length !== this.embeddingDimensions) {
+          throw new Error(`Unexpected embedding dimensions: ${embedding.length}, expected ${this.embeddingDimensions}`);
+        }
+
+        // Success! Log and return
+        if (attempt > 1) {
+          console.log(`[RAGService] ✅ Vertex AI succeeded on attempt ${attempt}/${maxRetries}`);
+        }
+
+        return embedding;
+
+      } catch (error) {
+        const isLastAttempt = attempt === maxRetries;
+
+        console.warn(`[RAGService] ⚠️  Vertex AI embedding attempt ${attempt}/${maxRetries} failed:`, error
+          instanceof Error ? error.message : String(error));
+
+        if (isLastAttempt) {
+          console.error(`[RAGService] ❌ All ${maxRetries} Vertex AI attempts failed`);
+          throw error;
+        }
+
+        // Exponential backoff with jitter
+        const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
+        console.log(`[RAGService] 🔄 Retrying in ${Math.round(delay)}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
 
-    // Extract embedding values from prediction
-    const prediction = predictions[0];
-    const embeddingValues = (prediction as any)?.structValue?.fields?.embeddings?.structValue?.fields?.values?.listValue?.values;
-
-    if (!embeddingValues) {
-      throw new Error('Invalid response format from Vertex AI');
-    }
-
-    const embedding = embeddingValues.map((v: any) => v.numberValue);
-
-    if (embedding.length !== this.embeddingDimensions) {
-      throw new Error(`Unexpected embedding dimensions: ${embedding.length}, expected ${this.embeddingDimensions}`);
-    }
-
-    return embedding;
+    throw new Error('Vertex AI embedding failed after retries');
   }
 
   /**
