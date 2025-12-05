@@ -1853,12 +1853,13 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
           lower.includes('what amount') ||
           lower.includes('monto') && (lower.includes('gustaría') || lower.includes('would you'));
         
-        // Check if sentence mentions alias or TRF (remove these)
+        // Check if sentence mentions alias or TRF (remove these) - MORE AGGRESSIVE
         const mentionsAliasOrTRF = 
           lower.includes('alias bancario') ||
-          (lower.includes('alias') && !asksForAmount) || // "alias" is OK if it's asking about amount
+          lower.includes('alias') || // Remove ALL alias mentions (not just "alias bancario")
           lower.includes('botones de acción rápida') ||
           lower.includes('botón que verás') ||
+          lower.includes('botones') && lower.includes('acción rápida') ||
           lower.includes('toto rescue fund') ||
           lower.includes('trf') ||
           lower.includes('fondo de rescate') ||
@@ -1866,7 +1867,15 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
           lower.includes('quick action buttons') ||
           lower.includes('button you\'ll see') ||
           lower.includes('disponible mediante') ||
-          lower.includes('available through');
+          lower.includes('available through') ||
+          lower.includes('transferencia') && lower.includes('directa') ||
+          lower.includes('direct transfer') ||
+          lower.includes('usando este alias') ||
+          lower.includes('using this alias') ||
+          lower.includes('el alias') ||
+          lower.includes('the alias') ||
+          lower.includes('puedes usar') && lower.includes('alias') ||
+          lower.includes('you can use') && lower.includes('alias');
         
         if (asksForAmount) {
           amountQuestionSentences.push(s);
