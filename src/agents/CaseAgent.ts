@@ -301,23 +301,23 @@ export class CaseAgent extends BaseAgent {
                                     hasSelectedAmount; // Show alias AFTER amount is selected
       
       const shouldShowSocialMedia = intentAnalysis.intent === 'share';
-      
-      // For help-seeking intent, show both donation and sharing quick actions
+
+      // For help-seeking intent, show generic donate and share buttons (not platform-specific)
       const shouldShowHelpActions = intentAnalysis.intent === 'help';
-      
+
       // Check if user is asking about foster care or adoption
       const isFosterCareOrAdoptionQuestion = this.isFosterCareOrAdoptionQuestion(message);
       const shouldShowGuardianContact = isFosterCareOrAdoptionQuestion && !!enhancedCaseData.guardianId;
-      
+
       // Fetch guardian contact info if needed for foster care/adoption questions
       let guardianContactInfo: { email?: string; phone?: string; whatsapp?: string } = {};
       if (shouldShowGuardianContact && enhancedCaseData.guardianId) {
         guardianContactInfo = await this.fetchGuardianContactInfo(enhancedCaseData.guardianId);
       }
-      
-      // Build social media URLs if sharing intent detected OR help-seeking (to show quick actions)
+
+      // Build social media URLs ONLY for explicit share intent (not for help-seeking)
       let socialUrls: any = {};
-      if (shouldShowSocialMedia || shouldShowHelpActions) {
+      if (shouldShowSocialMedia) {
         if (enhancedCaseData.guardianInstagram) {
           socialUrls.instagram = enhancedCaseData.guardianInstagram.startsWith('http') 
             ? enhancedCaseData.guardianInstagram 
@@ -443,10 +443,13 @@ export class CaseAgent extends BaseAgent {
           shownActions.push(`guardian_contact: ${contactChannels.join(', ')}`);
         }
       }
-      if (shouldShowAmountButtons || shouldShowHelpActions) {
+      if (shouldShowAmountButtons) {
         const suggestedAmounts = [500, 1000, 2500, 5000];
         const amounts = suggestedAmounts.map((a: number) => `$${a.toLocaleString('es-AR')}`).join(', ');
         shownActions.push(`donation_amounts: ${amounts}`);
+      }
+      if (shouldShowHelpActions) {
+        shownActions.push(`help_actions: Donate, Share`);
       }
       
       // Enhanced metadata with explicit quick action triggers
@@ -463,12 +466,14 @@ export class CaseAgent extends BaseAgent {
         // Explicit quick action triggers
         quickActions: {
           showBankingAlias: shouldShowBankingAlias,
-          showSocialMedia: (shouldShowSocialMedia || shouldShowHelpActions) && Object.keys(socialUrls).length > 0,
+          showSocialMedia: shouldShowSocialMedia && Object.keys(socialUrls).length > 0, // Only for share intent
           showAdoptionInfo: intentAnalysis.intent === 'adopt',
           showGuardianContact: shouldShowGuardianContact && Object.keys(guardianContactUrls).length > 0,
-          // Show donation amounts when user expresses donation intent WITHOUT amount, OR for help-seeking
-          showDonationIntent: shouldShowAmountButtons || shouldShowHelpActions,
-          suggestedDonationAmounts: (shouldShowAmountButtons || shouldShowHelpActions) ? [500, 1000, 2500, 5000] : undefined, // Suggested amounts in ARS
+          // Show donation amounts when user expresses donation intent WITHOUT amount
+          showDonationIntent: shouldShowAmountButtons,
+          suggestedDonationAmounts: shouldShowAmountButtons ? [500, 1000, 2500, 5000] : undefined, // Suggested amounts in ARS
+          // For help-seeking, show generic action buttons (donate/share text buttons)
+          showHelpActions: shouldShowHelpActions,
           actionTriggers: intentAnalysis.intent ? [intentAnalysis.intent] : []
         },
         
@@ -495,7 +500,7 @@ export class CaseAgent extends BaseAgent {
         metadata.guardianBankingAlias = enhancedCaseData.guardianBankingAlias;
       }
       
-      // Include social media URLs if trigger is true (for backward compatibility and quick access)
+      // Include social media URLs ONLY for share intent (not for help-seeking)
       if (shouldShowSocialMedia && Object.keys(socialUrls).length > 0) {
           metadata.socialMediaUrls = socialUrls;
         }
