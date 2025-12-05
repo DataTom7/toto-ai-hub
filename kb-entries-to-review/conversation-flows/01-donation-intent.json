@@ -2,7 +2,7 @@
   "id": "kb-flow-donation-intent",
   "title": "Donation Intent Response Flow",
   "language": "en",
-  "content": "WHEN USER SHOWS DONATION INTENT\nUser says: \"quiero donar\", \"donate\", \"donar\", \"I want to donate\", \"me gustaría donar\", etc.\n\nRESPONSE STRUCTURE (Step by step):\n1. ACKNOWLEDGE INTENT\n   - Express that it's wonderful they want to help\n   - Show genuine appreciation for their interest\n\n2. CLARIFY NO MINIMUM\n   - There's no minimum amount\n   - Every donation helps and is valuable\n   - Emphasize accessibility and inclusivity\n\n3. ASK ABOUT AMOUNT\n   - Ask how much they'd like to donate\n   - Present quick action amount options\n   - Keep it conversational and pressure-free\n\n4. WAIT FOR USER RESPONSE\n   - DO NOT explain the transfer process yet\n   - DO NOT provide banking alias yet\n   - Wait for user to select or mention an amount\n\nCRITICAL RULES:\n- NEVER include the actual banking alias value in your message text\n- The alias will be provided separately via quick action button\n- Keep response warm and encouraging\n- Focus on accessibility (no minimum emphasizes inclusivity)\n- Match user's language naturally",
+  "content": "WHEN USER SHOWS DONATION INTENT (WITHOUT AMOUNT)\nUser says: \"quiero donar\", \"donate\", \"donar\", \"I want to donate\", \"me gustaría donar\", etc.\n\n🚨 CRITICAL: User wants to donate but HASN'T chosen an amount yet\n\nRESPONSE STRUCTURE (STRICT - FOLLOW EXACTLY):\n1. ACKNOWLEDGE INTENT (1 sentence)\n   - Express that it's wonderful they want to help\n   - Example: \"¡Qué bueno que quieras ayudar a [name]!\"\n\n2. CLARIFY NO MINIMUM (1 sentence)\n   - There's no minimum amount, every donation helps\n   - Example: \"No hay un monto mínimo, cada ayuda cuenta.\"\n\n3. ASK ABOUT AMOUNT (1 sentence)\n   - Ask how much they'd like to donate\n   - Example: \"¿Cuánto te gustaría donar?\"\n   - Quick action amount buttons will appear automatically\n\n4. STOP - NO MORE TEXT\n   - Amount buttons will guide the user\n   - WAIT for user to select amount\n\nCORRECT RESPONSE LENGTH: EXACTLY 3 sentences (acknowledge + no minimum + ask amount)\n\nEXAMPLE GOOD RESPONSE:\n\"¡Qué bueno que quieras ayudar a Luna! No hay un monto mínimo, cada ayuda cuenta. ¿Cuánto te gustaría donar?\"\n\n🚫 ABSOLUTELY FORBIDDEN - DO NOT DO THIS:\n❌ Mention banking alias, transfer process, or payment methods\n❌ Say \"lo verás en el botón\" or reference buttons in your text\n❌ Mention TRF (Toto Rescue Fund) or alternative donation methods\n❌ Explain what happens after amount selection\n❌ Provide donation instructions or next steps\n❌ More than 3 sentences\n❌ Use bullet points, lists, or markdown formatting\n\nCRITICAL RULES:\n- EXACTLY 3 sentences: acknowledge + no minimum + ask amount\n- ONLY ask for amount - nothing else\n- DO NOT mention: alias, buttons, TRF, transfer process, next steps\n- NEVER include actual banking alias value\n- Quick action buttons will show amounts automatically\n- Keep it conversational and pressure-free\n- Trust the UI to show amount options",
   "category": "conversation_flows",
   "agentTypes": ["CaseAgent"],
   "audience": ["donors"],
@@ -10,12 +10,11 @@
     "culturalNotes": {
       "es": {
         "examples": [
-          "¡Qué bueno que quieras ayudar!",
-          "No hay un monto mínimo, ¡cada ayuda cuenta!",
-          "¿Cuánto te gustaría donar?"
+          "¡Qué bueno que quieras ayudar a Luna! No hay un monto mínimo, cada ayuda cuenta. ¿Cuánto te gustaría donar?",
+          "¡Qué lindo que quieras donar para Max! Cada ayuda suma, no hay mínimo. ¿Cuánto querés donar?"
         ],
-        "tone": "Warm and encouraging",
-        "note": "Use enthusiastic but not pressuring language when acknowledging donation intent"
+        "tone": "Warm, encouraging, and brief. Use 'vos' conjugation in Argentina. Exactly 3 sentences.",
+        "note": "STRICT: Exactly 3 sentences. Only ask amount. NO mention of alias, buttons, TRF, or next steps."
       }
     }
   }
