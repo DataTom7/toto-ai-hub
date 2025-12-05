@@ -25,7 +25,11 @@
     "convert-kb-to-english": "ts-node src/scripts/convert-kb-to-english.ts",
     "convert-kb-dry-run": "ts-node src/scripts/convert-kb-to-english.ts --dry-run",
     "update-kb-donations-013": "ts-node scripts/update-kb-donations-013.ts",
-    "update-kb-from-hardcoded": "ts-node scripts/update-kb-entries-from-hardcoded.ts"
+    "update-kb-flow-donation-intent": "ts-node scripts/update-kb-flow-donation-intent.ts",
+    "update-kb-from-hardcoded": "ts-node scripts/update-kb-entries-from-hardcoded.ts",
+    "add-flow-kb-entries": "ts-node scripts/add-flow-kb-entries.ts",
+    "update-trf-alias": "ts-node scripts/update-kb-trf-alias.ts",
+    "test-flows": "ts-node scripts/test-donation-sharing-flows.ts"
   },
   "keywords": [
     "ai",

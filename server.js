@@ -292,6 +292,14 @@ const apiGateway = new TotoAPIGateway(sharedKbFirestore);
     }
     await apiGateway.initialize();
     console.log('✅ API Gateway initialized with Knowledge Base Service');
+
+    // Get the initialized RAGService from apiGateway and update the standalone totoAI's CaseAgent
+    // This ensures all endpoints use the same initialized RAGService with documents
+    const initializedTotoAI = apiGateway.getTotoAI();
+    const initializedRAGService = initializedTotoAI.getRAGService();
+    const caseAgent = totoAI.getCaseAgent();
+    caseAgent.setRAGService(initializedRAGService);
+    console.log('✅ Updated CaseAgent to use initialized RAGService (documents loaded)');
   } catch (error) {
     console.error('❌ Error initializing API Gateway:', error);
     console.error('Error details:', {

@@ -31,6 +31,8 @@ export class CaseAgent extends BaseAgent {
   private userProfiles: Map<string, UserProfile> = new Map();
   private ragService?: RAGService;
   private translationCache: Map<string, string> = new Map(); // Cache for language-agnostic intent detection
+  // Intent embeddings cache - pre-computed embeddings for multilingual intent detection
+  private intentEmbeddingsCache: Map<string, number[][]> = new Map();
   // Default audience for KB retrieval - primarily serves donors
   private readonly DEFAULT_AUDIENCE = 'donors';
   private analytics: AgentAnalytics = {
@@ -123,10 +125,23 @@ export class CaseAgent extends BaseAgent {
         `**${chunk.title}**\n${chunk.content}`
       ).join('\n\n');
 
-      // Log KB retrieval for debugging
+      // Enhanced KB retrieval logging for flow verification
       console.log(`[CaseAgent] Retrieved ${result.chunks.length} KB entries for query: "${message.substring(0, 50)}..." (confidence: ${result.confidence?.toFixed(2) || 'N/A'})`);
       result.chunks.forEach((chunk, idx) => {
-        console.log(`  [${idx + 1}] ${chunk.title}`);
+        console.log(`  [${idx + 1}] ${chunk.title} (ID: ${chunk.id || 'N/A'})`);
+        // Log if critical flow entries are retrieved
+        if (chunk.id?.includes('flow-donation-intent')) {
+          console.log(`    ✅ Donation intent flow KB retrieved`);
+        }
+        if (chunk.id?.includes('flow-donation-amount-selected')) {
+          console.log(`    ✅ Donation amount selected flow KB retrieved`);
+        }
+        if (chunk.id?.includes('flow-help-seeking')) {
+          console.log(`    ✅ Help-seeking flow KB retrieved`);
+        }
+        if (chunk.id?.includes('flow-sharing-intent')) {
+          console.log(`    ✅ Sharing intent flow KB retrieved`);
+        }
       });
 
       return knowledgeContext;
@@ -263,7 +278,22 @@ export class CaseAgent extends BaseAgent {
 
       // Post-process response to enforce KB rules (remove bullets, enforce help-seeking rules, etc.)
       if (result.message && result.success) {
-        result.message = this.postProcessResponse(result.message, intentAnalysis.intent, knowledgeContext, kbTitles);
+        // Check if user has already selected a donation amount
+        const currentMessageHasAmount = /\$\d+/.test(message) || /\d+\s*(pesos|ars)/i.test(message) || /\d{3,}/.test(message);
+        const hasSelectedAmount = currentMessageHasAmount || memory.conversationHistory.some((entry: any) =>
+          (entry.user && (/\$\d+/.test(entry.user) || /\d+\s*(pesos|ars)/i.test(entry.user) || /\d{3,}/.test(entry.user)))
+        );
+        // Determine if banking alias or TRF alias will be shown (for Totitos question timing)
+        const isAskingForAlternatives = /\b(otras?\s+formas?|other\s+ways?|alternativas?|alternative|múltiples?\s+casos?|multiple\s+cases?|más\s+urgentes?|most\s+urgent|donar\s+a\s+toto|donate\s+to\s+toto)\b/i.test(message);
+        const willShowBankingAlias = intentAnalysis.intent === 'donate' &&
+                                    !!enhancedCaseData.guardianBankingAlias &&
+                                    hasSelectedAmount &&
+                                    !isAskingForAlternatives;
+        const willShowTRFAlias = intentAnalysis.intent === 'donate' &&
+                                hasSelectedAmount &&
+                                (!enhancedCaseData.guardianBankingAlias || isAskingForAlternatives);
+        const willShowAnyAlias = willShowBankingAlias || willShowTRFAlias;
+        result.message = this.postProcessResponse(result.message, intentAnalysis.intent, knowledgeContext, kbTitles, hasSelectedAmount, willShowAnyAlias);
       }
 
       const processingTime = Date.now() - startTime;
@@ -296,9 +326,24 @@ export class CaseAgent extends BaseAgent {
       // CORRECTED LOGIC: Show amount buttons when donation intent WITHOUT amount
       // Show banking alias when donation intent WITH amount
       const shouldShowAmountButtons = intentAnalysis.intent === 'donate' && !hasSelectedAmount;
+      
+      // Check if user is asking for alternative donation methods
+      const isAskingForAlternatives = /\b(otras?\s+formas?|other\s+ways?|alternativas?|alternative|múltiples?\s+casos?|multiple\s+cases?|más\s+urgentes?|most\s+urgent|donar\s+a\s+toto|donate\s+to\s+toto)\b/i.test(message);
+      
+      // Show guardian alias if available and amount selected, OR show TRF alias if:
+      // 1. Guardian alias is missing, OR
+      // 2. User explicitly asks for alternatives
       const shouldShowBankingAlias = intentAnalysis.intent === 'donate' &&
                                     !!enhancedCaseData.guardianBankingAlias &&
-                                    hasSelectedAmount; // Show alias AFTER amount is selected
+                                    hasSelectedAmount &&
+                                    !isAskingForAlternatives; // Don't show guardian alias if user wants alternatives
+      
+      // Show TRF alias when:
+      // 1. Guardian alias is missing AND amount selected, OR
+      // 2. User asks for alternatives AND amount selected
+      const shouldShowTRFAlias = intentAnalysis.intent === 'donate' &&
+                                 hasSelectedAmount &&
+                                 (!enhancedCaseData.guardianBankingAlias || isAskingForAlternatives);
       
       const shouldShowSocialMedia = intentAnalysis.intent === 'share';
 
@@ -466,6 +511,7 @@ export class CaseAgent extends BaseAgent {
         // Explicit quick action triggers
         quickActions: {
           showBankingAlias: shouldShowBankingAlias,
+          showTRFAlias: shouldShowTRFAlias, // TRF alias for alternative donations
           showSocialMedia: shouldShowSocialMedia && Object.keys(socialUrls).length > 0, // Only for share intent
           showAdoptionInfo: intentAnalysis.intent === 'adopt',
           showGuardianContact: shouldShowGuardianContact && Object.keys(guardianContactUrls).length > 0,
@@ -498,6 +544,11 @@ export class CaseAgent extends BaseAgent {
       // Include banking alias if trigger is true (for backward compatibility and quick access)
       if (shouldShowBankingAlias) {
         metadata.guardianBankingAlias = enhancedCaseData.guardianBankingAlias;
+      }
+      
+      // Include TRF alias if trigger is true (for alternative donations)
+      if (shouldShowTRFAlias) {
+        metadata.trfBankingAlias = 'toto.fondo.rescate'; // TRF alias as confirmed by user
       }
       
       // Include social media URLs ONLY for share intent (not for help-seeking)
@@ -836,11 +887,26 @@ export class CaseAgent extends BaseAgent {
       }
     }
     
-    // Language-agnostic intent detection using semantic patterns
-    // Translate message to English first for consistent matching, then use English keywords
-    // This approach scales to any language
-    // normalizedMessage is already computed at line 745, reuse it here
+    // Multilingual intent detection using semantic embeddings
+    // This approach works for any language supported by Vertex AI text-embedding-004 (100+ languages)
+    // No translation needed - embeddings capture semantic meaning across languages
     
+    try {
+      const semanticIntent = await this.detectIntentUsingEmbeddings(message);
+      if (semanticIntent) {
+        return {
+          intent: semanticIntent.intent,
+          confidence: semanticIntent.confidence,
+          suggestedActions: this.getSuggestedActionsForIntent(semanticIntent.intent),
+          emotionalTone: this.detectEmotionalTone(message),
+          urgency: this.detectUrgency(message)
+        };
+      }
+    } catch (error) {
+      console.warn('[CaseAgent] Semantic intent detection failed, falling back to keyword matching:', error);
+    }
+
+    // Fallback: Keyword-based intent detection (works but less robust)
     // Use English-only keywords for intent detection (language-agnostic)
     const intents = {
       donate: ['donate', 'donation', 'help financially', 'give money', 'contribute', 'payment'],
@@ -1214,8 +1280,180 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
   }
 
   /**
-   * Normalize message to English for language-agnostic intent detection
-   * This allows us to use English-only keywords while supporting any language
+   * Detect intent using semantic embeddings (multilingual)
+   * Uses Vertex AI text-embedding-004 which supports 100+ languages natively
+   * No translation needed - embeddings capture semantic meaning across languages
+   */
+  private async detectIntentUsingEmbeddings(message: string): Promise<{ intent: string; confidence: number } | null> {
+    if (!this.ragService) {
+      return null; // No RAG service available, fallback to keywords
+    }
+
+    try {
+      // Intent examples in multiple languages (add more languages as needed)
+      const INTENT_EXAMPLES: Record<string, string[]> = {
+        donate: [
+          'I want to donate',
+          'Quiero donar',
+          'Me gustaría donar',
+          'How can I donate?',
+          'Cómo puedo donar?',
+          'I want to help financially',
+          'Quiero ayudar económicamente',
+          'I want to contribute',
+          'Quiero contribuir',
+          'I want to give money',
+          'Quiero dar dinero'
+        ],
+        share: [
+          'I want to share',
+          'Quiero compartir',
+          'How can I share?',
+          'Cómo puedo compartir?',
+          'Share on social media',
+          'Compartir en redes sociales',
+          'I want to tell others',
+          'Quiero contar a otros',
+          'Spread the word',
+          'Difundir'
+        ],
+        adopt: [
+          'I want to adopt',
+          'Quiero adoptar',
+          'How can I adopt?',
+          'Cómo puedo adoptar?',
+          'I want to take home',
+          'Quiero llevarlo a casa',
+          'Forever home',
+          'Hogar permanente'
+        ],
+        contact: [
+          'I want to contact',
+          'Quiero contactar',
+          'Get in touch',
+          'Ponerse en contacto',
+          'Talk to guardian',
+          'Hablar con el guardián'
+        ],
+        learn: [
+          'I want to learn more',
+          'Quiero saber más',
+          'Tell me more',
+          'Cuéntame más',
+          'More information',
+          'Más información'
+        ],
+        help: [
+          'How can I help?',
+          'Cómo puedo ayudar?',
+          'I want to help',
+          'Quiero ayudar',
+          'What can I do?',
+          'Qué puedo hacer?'
+        ]
+      };
+
+      // Initialize intent embeddings cache if empty
+      if (this.intentEmbeddingsCache.size === 0) {
+        await this.initializeIntentEmbeddings(INTENT_EXAMPLES);
+      }
+
+      // Generate embedding for user message
+      const messageEmbedding = await this.ragService.generateEmbedding(message);
+
+      // Find best matching intent using cosine similarity
+      let bestMatch: { intent: string; similarity: number } | null = null;
+      const SIMILARITY_THRESHOLD = 0.7; // Minimum similarity to consider a match
+
+      for (const [intent, examples] of Object.entries(INTENT_EXAMPLES)) {
+        const intentEmbeddings = this.intentEmbeddingsCache.get(intent);
+        if (!intentEmbeddings) continue;
+
+        // Calculate average similarity across all examples for this intent
+        let totalSimilarity = 0;
+        let count = 0;
+        for (const exampleEmbedding of intentEmbeddings) {
+          const similarity = this.cosineSimilarity(messageEmbedding, exampleEmbedding);
+          totalSimilarity += similarity;
+          count++;
+        }
+        const avgSimilarity = count > 0 ? totalSimilarity / count : 0;
+
+        if (avgSimilarity >= SIMILARITY_THRESHOLD && (!bestMatch || avgSimilarity > bestMatch.similarity)) {
+          bestMatch = { intent, similarity: avgSimilarity };
+        }
+      }
+
+      if (bestMatch) {
+        return {
+          intent: bestMatch.intent,
+          confidence: Math.min(bestMatch.similarity, 0.95) // Cap confidence at 0.95
+        };
+      }
+
+      return null; // No match found, fallback to keyword matching
+    } catch (error) {
+      console.warn('[CaseAgent] Error in semantic intent detection:', error);
+      return null; // Fallback to keyword matching
+    }
+  }
+
+  /**
+   * Initialize intent embeddings cache
+   * Pre-computes embeddings for all intent examples (cached for performance)
+   */
+  private async initializeIntentEmbeddings(intentExamples: Record<string, string[]>): Promise<void> {
+    if (!this.ragService) {
+      console.warn('[CaseAgent] Cannot initialize intent embeddings: RAG service not available');
+      return;
+    }
+
+    console.log('[CaseAgent] Initializing multilingual intent embeddings...');
+    for (const [intent, examples] of Object.entries(intentExamples)) {
+      const embeddings: number[][] = [];
+      for (const example of examples) {
+        try {
+          const embedding = await this.ragService.generateEmbedding(example);
+          embeddings.push(embedding);
+        } catch (error) {
+          console.warn(`[CaseAgent] Failed to generate embedding for intent "${intent}" example "${example}":`, error);
+        }
+      }
+      if (embeddings.length > 0) {
+        this.intentEmbeddingsCache.set(intent, embeddings);
+        console.log(`[CaseAgent] Cached ${embeddings.length} embeddings for intent "${intent}"`);
+      }
+    }
+    console.log(`[CaseAgent] ✅ Initialized intent embeddings for ${this.intentEmbeddingsCache.size} intents`);
+  }
+
+  /**
+   * Calculate cosine similarity between two embeddings
+   */
+  private cosineSimilarity(a: number[], b: number[]): number {
+    if (a.length !== b.length) {
+      throw new Error('Embeddings must have the same dimensions');
+    }
+
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+
+    for (let i = 0; i < a.length; i++) {
+      dotProduct += a[i] * b[i];
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
+    }
+
+    const denominator = Math.sqrt(normA) * Math.sqrt(normB);
+    if (denominator === 0) return 0;
+
+    return dotProduct / denominator;
+  }
+
+  /**
+   * Normalize message to English for keyword-based fallback intent detection
+   * @deprecated Use detectIntentUsingEmbeddings instead (multilingual, no translation needed)
    */
   private async normalizeMessageForIntentDetection(message: string): Promise<string> {
     try {
@@ -1225,7 +1463,7 @@ Remember: Be conversational, empathetic, and contextually aware. Use the convers
         return message.toLowerCase();
       }
 
-      // For non-English, translate to English using Gemini
+      // For non-English, translate to English using Gemini (fallback only)
       // Cache translations to avoid repeated API calls
       const cacheKey = `intent_translation_${message}`;
       if (this.translationCache.has(cacheKey)) {
@@ -1440,7 +1678,7 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
    * - Enforce help-seeking response rules (2 sentences, no adoption/guardian contact)
    * - Convert lists to plain sentences
    */
-  private postProcessResponse(response: string, intent: string, knowledgeContext?: string, kbTitles?: string): string {
+  private postProcessResponse(response: string, intent: string, knowledgeContext?: string, kbTitles?: string, hasSelectedAmount?: boolean, willShowBankingAlias?: boolean): string {
     let cleaned = response;
 
     // Remove bullet points and markdown lists
@@ -1454,16 +1692,36 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
     const helpSeekingInContext = knowledgeContext?.toLowerCase().includes('help-seeking') || 
                                   kbTitles?.toLowerCase().includes('help-seeking') ||
                                   knowledgeContext?.toLowerCase().includes('help-seeking intent') ||
-                                  kbTitles?.toLowerCase().includes('help-seeking intent');
+                                  kbTitles?.toLowerCase().includes('help-seeking intent') ||
+                                  knowledgeContext?.toLowerCase().includes('ways to help') ||
+                                  kbTitles?.toLowerCase().includes('ways to help');
     const isHelpSeeking = intent === 'help' || helpSeekingInContext;
     
     if (isHelpSeeking) {
       // Split into sentences (handle Spanish and English punctuation)
       const sentences = cleaned.split(/[.!?]+/).filter(s => s.trim().length > 0);
       
-      // Remove sentences that mention adoption, guardian contact, foster care, or follow-up questions
+      // Remove sentences that:
+      // 1. Repeat case information (name, location, medical condition, description)
+      // 2. Mention adoption, guardian contact, foster care
+      // 3. Include greetings
       const filteredSentences = sentences.filter(s => {
         const lower = s.toLowerCase().trim();
+        
+        // Remove sentences that repeat case information
+        const repeatsCaseInfo = 
+          /es un (perro|perrita|gato|gatito|animal)/i.test(s) ||
+          /(necesita|requiere|sufrió|tiene) (ayuda|cirugía|tratamiento|fractura|condición)/i.test(s) ||
+          /(en|de) (córdoba|rosario|argentina|buenos aires)/i.test(s) ||
+          /(joven|mayor|adulto|joven) (perro|perrita|gato|gatito)/i.test(s) ||
+          lower.includes('es un perro') ||
+          lower.includes('es una perrita') ||
+          lower.includes('es un gato') ||
+          lower.includes('necesita ayuda para') ||
+          lower.includes('requiere intervención') ||
+          lower.includes('sufrió una fractura') ||
+          lower.includes('necesita tratamiento');
+        
         // Remove sentences with forbidden content
         const hasForbiddenContent = 
           lower.includes('adopt') || 
@@ -1478,17 +1736,16 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
           lower.includes('dar hogar') ||
           lower.includes('proceso de adopción') ||
           lower.includes('adoption process') ||
-          lower.startsWith('¿qué te parece') ||
-          lower.startsWith('what do you think') ||
-          lower.startsWith('cuál te gustaría') ||
-          lower.startsWith('which would you like');
+          lower.startsWith('¡hola') ||
+          lower.startsWith('hola') ||
+          lower.startsWith('hello');
         
-        return !hasForbiddenContent;
+        return !repeatsCaseInfo && !hasForbiddenContent;
       });
 
-      // Keep only first 2 sentences (gratitude + options)
-      if (filteredSentences.length > 2) {
-        cleaned = filteredSentences.slice(0, 2).join('. ').trim();
+      // Keep only first 2-3 sentences (gratitude + options)
+      if (filteredSentences.length > 3) {
+        cleaned = filteredSentences.slice(0, 3).join('. ').trim();
         if (!cleaned.endsWith('.') && !cleaned.endsWith('!') && !cleaned.endsWith('?')) {
           cleaned += '.';
         }
@@ -1500,6 +1757,128 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
       } else {
         // If all sentences were filtered, use a default help-seeking response
         cleaned = '¡Qué bueno que quieras ayudar! Podés donar para los gastos médicos o compartir su historia en redes sociales.';
+      }
+    }
+
+    // For donation intent WITH amount selected AND alias being shown, ensure Totitos question is asked AFTER alias explanation
+    // Totitos question should only appear AFTER alias is explained, not immediately after amount selection
+    if (intent === 'donate' && hasSelectedAmount && willShowBankingAlias) {
+      const lowerResponse = cleaned.toLowerCase();
+      const mentionsAlias = 
+        lowerResponse.includes('alias') ||
+        lowerResponse.includes('banking alias') ||
+        lowerResponse.includes('alias bancario') ||
+        lowerResponse.includes('button you\'ll see') ||
+        lowerResponse.includes('botón que verás');
+      
+      const mentionsTotitos = 
+        lowerResponse.includes('totitos') ||
+        lowerResponse.includes('totito') ||
+        lowerResponse.includes('verificar') ||
+        lowerResponse.includes('verification') ||
+        lowerResponse.includes('verificar tu donación') ||
+        lowerResponse.includes('verify your donation');
+      
+      // Only add Totitos question if alias is mentioned (alias explanation has occurred)
+      // AND Totitos question is missing
+      if (mentionsAlias && !mentionsTotitos) {
+        const isSpanish = /[áéíóúñü]/.test(cleaned) || cleaned.toLowerCase().includes('donación') || cleaned.toLowerCase().includes('donar');
+        const totitosQuestion = isSpanish 
+          ? '¿Querés verificar tu donación y ganar Totitos?'
+          : 'Would you like to verify your donation and earn Totitos?';
+        
+        // Add question at the end, ensuring proper punctuation
+        if (cleaned.trim().endsWith('.')) {
+          cleaned = cleaned.trim().slice(0, -1) + '. ' + totitosQuestion;
+        } else if (cleaned.trim().endsWith('!')) {
+          cleaned = cleaned.trim().slice(0, -1) + '! ' + totitosQuestion;
+        } else {
+          cleaned = cleaned.trim() + '. ' + totitosQuestion;
+        }
+      }
+    }
+
+    // For donation intent WITHOUT amount selected, remove alias/TRF mentions and ask for amount
+    if (intent === 'donate' && !hasSelectedAmount) {
+      const sentences = cleaned.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      
+      // Separate sentences that ask for amount from those that mention alias/TRF
+      const amountQuestionSentences: string[] = [];
+      const validSentences: string[] = [];
+      
+      sentences.forEach(s => {
+        const lower = s.toLowerCase().trim();
+        
+        // Check if this sentence asks for amount (keep these!)
+        const asksForAmount = 
+          lower.includes('cuánto') ||
+          lower.includes('how much') ||
+          lower.includes('qué monto') ||
+          lower.includes('what amount') ||
+          lower.includes('monto') && (lower.includes('gustaría') || lower.includes('would you'));
+        
+        // Check if sentence mentions alias or TRF (remove these)
+        const mentionsAliasOrTRF = 
+          lower.includes('alias bancario') ||
+          (lower.includes('alias') && !asksForAmount) || // "alias" is OK if it's asking about amount
+          lower.includes('botones de acción rápida') ||
+          lower.includes('botón que verás') ||
+          lower.includes('toto rescue fund') ||
+          lower.includes('trf') ||
+          lower.includes('fondo de rescate') ||
+          lower.includes('banking alias') ||
+          lower.includes('quick action buttons') ||
+          lower.includes('button you\'ll see') ||
+          lower.includes('disponible mediante') ||
+          lower.includes('available through');
+        
+        if (asksForAmount) {
+          amountQuestionSentences.push(s);
+        } else if (!mentionsAliasOrTRF) {
+          validSentences.push(s);
+        }
+        // Sentences with alias/TRF that don't ask for amount are filtered out
+      });
+      
+      // Build response: valid sentences + amount question (if exists)
+      const responseParts: string[] = [];
+      
+      // Add valid sentences (acknowledgment, no minimum, etc.)
+      if (validSentences.length > 0) {
+        responseParts.push(validSentences.join('. ').trim());
+      }
+      
+      // Always include amount question (from KB or add if missing)
+      if (amountQuestionSentences.length > 0) {
+        responseParts.push(amountQuestionSentences.join('. ').trim());
+      } else {
+        // No amount question found - add it
+        const isSpanish = /[áéíóúñü]/.test(cleaned) || cleaned.toLowerCase().includes('donación') || cleaned.toLowerCase().includes('donar');
+        if (isSpanish) {
+          responseParts.push('¿Cuánto te gustaría donar?');
+        } else {
+          responseParts.push('How much would you like to donate?');
+        }
+      }
+      
+      if (responseParts.length > 0) {
+        cleaned = responseParts.join('. ').trim();
+        // Ensure it ends with proper punctuation
+        if (!cleaned.endsWith('.') && !cleaned.endsWith('!') && !cleaned.endsWith('?')) {
+          cleaned += '.';
+        }
+        // Ensure it ends with a question if we added the amount question
+        if (amountQuestionSentences.length === 0 && !cleaned.endsWith('?')) {
+          cleaned = cleaned.replace(/[.!]$/, '') + '?';
+        }
+      } else {
+        // Fallback: provide a simple response asking for amount
+        const isSpanish = /[áéíóúñü]/.test(response) || response.toLowerCase().includes('donación') || response.toLowerCase().includes('donar');
+        if (isSpanish) {
+          cleaned = '¡Qué bien que quieras ayudar! No hay un monto mínimo, cada ayuda cuenta. ¿Cuánto te gustaría donar?';
+        } else {
+          cleaned = 'That\'s great that you want to help! There\'s no minimum amount - every donation helps! How much would you like to donate?';
+        }
       }
     }
 

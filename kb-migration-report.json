@@ -1,0 +1,472 @@
+{
+  "generatedAt": "2025-12-05T06:39:49.475Z",
+  "summary": {
+    "total": 32,
+    "new": 3,
+    "needsUpdate": 14,
+    "conflicts": 0,
+    "exists": 15
+  },
+  "entries": [
+    {
+      "id": "kb-donations-001",
+      "title": "Banking Alias System",
+      "category": "donations",
+      "status": "exists"
+    },
+    {
+      "id": "kb-donations-002",
+      "title": "Donation Verification Process",
+      "category": "donations",
+      "status": "exists"
+    },
+    {
+      "id": "kb-donations-003",
+      "title": "Totitos Loyalty System - Complete Guide",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-donations-004",
+      "title": "Donation Allocation Rules",
+      "category": "donations",
+      "status": "exists"
+    },
+    {
+      "id": "kb-donations-005",
+      "title": "Donor Experience Overview",
+      "category": "donations",
+      "status": "exists"
+    },
+    {
+      "id": "kb-donations-006",
+      "title": "Donation Amounts and Minimums",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-donations-007",
+      "title": "Toto Rescue Fund (TRF)",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-donations-008",
+      "title": "Donation Flow and Conversation Guidance",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-donations-009",
+      "title": "User Rating and Totitos Calculation System",
+      "category": "donations",
+      "status": "exists"
+    },
+    {
+      "id": "kb-donations-010",
+      "title": "Donor Inbox and Case Communication - Complete Post-Donation Experience",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-donations-011",
+      "title": "Donation Refunds and Corrections",
+      "category": "donations",
+      "status": "exists"
+    },
+    {
+      "id": "kb-donations-012",
+      "title": "Donation Allocation to Guardians",
+      "category": "donations",
+      "status": "exists"
+    },
+    {
+      "id": "kb-donations-013",
+      "title": "Banking Alias Provision and Retrieval",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-donations-014",
+      "title": "Missing Alias Scenarios and Alternative Donation Methods",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-donations-015",
+      "title": "Donation Transparency and Verification Details",
+      "category": "donations",
+      "status": "exists"
+    },
+    {
+      "id": "kb-cases-001",
+      "title": "Case Creation Process",
+      "category": "case_management",
+      "status": "exists"
+    },
+    {
+      "id": "kb-cases-002",
+      "title": "Case Status Workflow",
+      "category": "case_management",
+      "status": "exists"
+    },
+    {
+      "id": "kb-cases-003",
+      "title": "Case Documentation",
+      "category": "case_management",
+      "status": "exists"
+    },
+    {
+      "id": "kb-cases-004",
+      "title": "Case Updates & Communication",
+      "category": "case_management",
+      "status": "exists"
+    },
+    {
+      "id": "kb-cases-005",
+      "title": "Case Categories",
+      "category": "case_management",
+      "status": "exists"
+    },
+    {
+      "id": "kb-cases-006",
+      "title": "Emergency Cases",
+      "category": "case_management",
+      "status": "exists"
+    },
+    {
+      "id": "kb-cases-007",
+      "title": "Agent Conversation Behavior Guidelines",
+      "category": "case_management",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-cases-008",
+      "title": "Agent Identity and Communication Voice",
+      "category": "case_management",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-cases-009",
+      "title": "CRITICAL: Use ONLY Provided Case Data - No Hallucination",
+      "category": "case_management",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-cases-010",
+      "title": "Ways to Help - Donation, Sharing, and Adoption Options",
+      "category": "case_management",
+      "status": "new"
+    },
+    {
+      "id": "kb-donations-017",
+      "title": "How to Explain Donation Process - Direct Transfer Only",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-donations-016",
+      "title": "Payment Methods and Feature Accuracy",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content"
+      ]
+    },
+    {
+      "id": "kb-social-001",
+      "title": "Social Media Integration",
+      "category": "social_media",
+      "status": "exists"
+    },
+    {
+      "id": "kb-social-002",
+      "title": "Case Sharing Process - How to Share",
+      "category": "social_media",
+      "status": "needs-update",
+      "differences": [
+        "content",
+        "title"
+      ]
+    },
+    {
+      "id": "kb-conversation-001",
+      "title": "Conversation Progression and Avoiding Repetition",
+      "category": "conversation",
+      "status": "new"
+    },
+    {
+      "id": "kb-conversation-002",
+      "title": "Handling Affirmative Responses",
+      "category": "conversation",
+      "status": "new"
+    },
+    {
+      "id": "kb-donations-015",
+      "title": "Donation Verification Step-by-Step Guide",
+      "category": "donations",
+      "status": "needs-update",
+      "differences": [
+        "content",
+        "title"
+      ]
+    }
+  ],
+  "newEntries": [
+    {
+      "id": "kb-cases-010",
+      "title": "Ways to Help - Donation, Sharing, and Adoption Options",
+      "category": "case_management",
+      "agentTypes": [
+        "CaseAgent"
+      ],
+      "audience": [
+        "donors"
+      ]
+    },
+    {
+      "id": "kb-conversation-001",
+      "title": "Conversation Progression and Avoiding Repetition",
+      "category": "conversation",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ]
+    },
+    {
+      "id": "kb-conversation-002",
+      "title": "Handling Affirmative Responses",
+      "category": "conversation",
+      "agentTypes": [
+        "CaseAgent",
+        "DonationAgent"
+      ],
+      "audience": [
+        "donors"
+      ]
+    }
+  ],
+  "needsUpdate": [
+    {
+      "id": "kb-donations-003",
+      "title": "Totitos Loyalty System - Complete Guide",
+      "category": "donations",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-11-05T23:28:14.994Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-donations-006",
+      "title": "Donation Amounts and Minimums",
+      "category": "donations",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-11-05T23:28:15.868Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-donations-007",
+      "title": "Toto Rescue Fund (TRF)",
+      "category": "donations",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-12-03T22:29:15.793Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-donations-008",
+      "title": "Donation Flow and Conversation Guidance",
+      "category": "donations",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-11-05T23:28:16.407Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-donations-010",
+      "title": "Donor Inbox and Case Communication - Complete Post-Donation Experience",
+      "category": "donations",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-12-03T22:40:12.874Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-donations-013",
+      "title": "Banking Alias Provision and Retrieval",
+      "category": "donations",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-12-03T22:29:16.071Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-donations-014",
+      "title": "Missing Alias Scenarios and Alternative Donation Methods",
+      "category": "donations",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-12-03T22:29:16.348Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-cases-007",
+      "title": "Agent Conversation Behavior Guidelines",
+      "category": "case_management",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-12-03T22:29:14.980Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-cases-008",
+      "title": "Agent Identity and Communication Voice",
+      "category": "case_management",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-12-03T22:29:15.250Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-cases-009",
+      "title": "CRITICAL: Use ONLY Provided Case Data - No Hallucination",
+      "category": "case_management",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-12-03T22:29:15.523Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-donations-017",
+      "title": "How to Explain Donation Process - Direct Transfer Only",
+      "category": "donations",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-12-03T22:29:16.922Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-donations-016",
+      "title": "Payment Methods and Feature Accuracy",
+      "category": "donations",
+      "differences": [
+        "content"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-12-03T22:29:16.662Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-social-002",
+      "title": "Case Sharing Process - How to Share",
+      "category": "social_media",
+      "differences": [
+        "content",
+        "title"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-11-05T23:28:22.163Z",
+        "newer": "hardcoded"
+      }
+    },
+    {
+      "id": "kb-donations-015",
+      "title": "Donation Verification Step-by-Step Guide",
+      "category": "donations",
+      "differences": [
+        "content",
+        "title"
+      ],
+      "lastUpdated": {
+        "hardcoded": "2025-12-05T06:39:45.128Z",
+        "firestore": "2025-11-05T23:28:18.318Z",
+        "newer": "hardcoded"
+      }
+    }
+  ],
+  "conflicts": []
+}

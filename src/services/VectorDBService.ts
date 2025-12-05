@@ -513,12 +513,20 @@ export class VectorDBService {
     }
 
     // Audience filter (OR logic - document must match at least one audience)
+    // Special case: "all" audience matches everything
     if (filters.audience && filters.audience.length > 0) {
-      const hasMatchingAudience = doc.metadata.audience.some(a =>
-        filters.audience!.includes(a)
-      );
-      if (!hasMatchingAudience) {
-        return false;
+      const docAudience = doc.metadata.audience || [];
+      // If document has "all" audience, it matches any filter
+      if (docAudience.includes('all')) {
+        // Document with "all" audience matches any filter - don't filter it out
+      } else {
+        // Otherwise, check if document has at least one matching audience
+        const hasMatchingAudience = docAudience.some(a =>
+          filters.audience!.includes(a)
+        );
+        if (!hasMatchingAudience) {
+          return false;
+        }
       }
     }
 

@@ -77,10 +77,17 @@ The Knowledge Base information above provides specific instructions for:
 - For help-seeking questions ("Cómo puedo ayudar?" / "How can I help?"):
   * DO NOT repeat case description or situation
   * DO NOT say "¡Hola" or any greeting (user already greeted in first message)
-  * DO NOT say things like "Nina es una perrita mayor..." or "Simón necesita ayuda..."
+  * DO NOT say things like "Nina es una perrita mayor..." or "Simón necesita ayuda..." or "Toby es un perro joven..."
+  * DO NOT mention case name, location, medical condition, or any case details
   * Provide ACTIONABLE options: donation and sharing
   * Structure: gratitude → brief paragraph about donation/sharing → question
   * Total: 4-5 sentences maximum
+- For donation intent WITHOUT amount selected ("Quiero donar" / "I want to donate"):
+  * DO NOT mention banking alias or TRF (Toto Rescue Fund) yet
+  * DO NOT say "alias bancario" or "botones de acción rápida" or "TRF" or "Fondo de Rescate"
+  * FIRST ask: "¿Cuánto te gustaría donar?" or "How much would you like to donate?"
+  * ONLY after user mentions/selects an amount, THEN provide the alias
+  * After providing alias, ask if they want to know about totitos
 - KB guidelines are NOT suggestions - they are REQUIREMENTS`;
 
 /**

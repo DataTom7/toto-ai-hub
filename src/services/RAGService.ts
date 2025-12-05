@@ -225,8 +225,9 @@ export class RAGService {
   /**
    * Generate embedding for text using multilingual embedding model
    * Priority: Vertex AI text-embedding-004 > Gemini-based > Hash-based fallback
+   * Public method for use by other services (e.g., intent detection)
    */
-  private async generateEmbedding(text: string): Promise<number[]> {
+  async generateEmbedding(text: string): Promise<number[]> {
     try {
       // Try Vertex AI text-embedding-004 first (best multilingual support)
       // Currently disabled - will be enabled when GCP setup is complete
@@ -582,7 +583,13 @@ English translation:`;
               agentTypes: agentTypes,
               audience: metadata.audience || [],
               embedding: doc.embedding,
-              lastUpdated: metadata.timestamp ? new Date(metadata.timestamp).toISOString() : new Date().toISOString(),
+              lastUpdated: (() => {
+                if (metadata.timestamp) {
+                  const date = new Date(metadata.timestamp);
+                  return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+                }
+                return new Date().toISOString();
+              })(),
               usageCount: metadata.usageCount || 0,
             } as KnowledgeChunk,
             score,
@@ -733,7 +740,13 @@ English translation:`;
           agentTypes: metadata.agentTypes || [],
           audience: metadata.audience || [],
           embedding: doc.embedding,
-          lastUpdated: metadata.timestamp ? new Date(metadata.timestamp).toISOString() : new Date().toISOString(),
+          lastUpdated: (() => {
+            if (metadata.timestamp) {
+              const date = new Date(metadata.timestamp);
+              return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+            }
+            return new Date().toISOString();
+          })(),
           usageCount: metadata.usageCount || 0,
         };
       });

@@ -1,0 +1,477 @@
+[
+  {
+    "id": "kb-donations-001",
+    "title": "Banking Alias System",
+    "content": "BANKING ALIAS SETUP\n- Each guardian/admin must complete their banking alias when creating their guardian profile\n- Banking aliases follow Argentina's national banking alias system (each guardian creates their own unique alias)\n- Aliases are stored in the guardian's Firestore document and are guardian-specific (not case-specific)\n\nDONOR ACCESS TO BANKING ALIASES\n- In toto-app: The case agent provides the banking alias and basic bank transfer instructions when users show donation intent\n- In toto-bo: Banking aliases are displayed in case details for guardians/admin users\n- Users can make a standard transfer from their bank account or wallet using the guardian alias\n\nDONATION PROCESS - CRITICAL: NOT \"THROUGH THE PLATFORM\"\n- Donations are DIRECT bank transfers from donor's bank account or wallet to guardian's banking alias\n- Do NOT say \"through our platform\" or \"through the platform\" - this is incorrect\n- Say: \"direct transfer to the guardian's banking alias\" or \"transfer from your bank/wallet to the guardian's alias\"\n- There is NO platform processing - money goes directly from donor to guardian\n- Each guardian has one banking alias for all their cases\n- No intermediary processing - 100% of donations go directly to the guardian\n- The agent only provides the banking alias and instructions - the actual transfer happens outside the platform",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.127Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-002",
+    "title": "Donation Verification Process",
+    "content": "VERIFICATION PURPOSE\n- Donors should provide proof of transfer (bank document, wallet receipt, screenshot, etc.) if they want the donation to count as verified and earn totitos\n- Verification is optional but recommended to earn totitos and improve user rating\n- No penalties for unverified donations - donations still help the cause\n\nVERIFICATION PROCESS\n- Verification happens weekly with guardians\n- Guardians review and approve donations after cross-checking with their records\n- Once guardian approves, donor receives automatic notification\n- Donors then earn their totitos for verified donations\n\nIF VERIFICATION FAILS\n- If verification fails, we contact the donor for further verification instructions\n- Ask donors to provide more detailed information about the transfer (date, amount, transaction ID)\n- Work collaboratively with donor to resolve any verification issues\n\nGUARDIAN-LED VERIFICATION\n- If the donor does not verify the donation, but the guardian verifies it independently (with user-specific data), we notify the user to claim their totitos\n- This ensures donors don't miss out on totitos even if they forget to upload receipt",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-003",
+    "title": "Totitos Loyalty System - Complete Guide",
+    "content": "WHAT ARE TOTITOS?\n- Totitos are a loyalty/reward system for verified donors\n- Totitos are earned for verified donations and other actions (sharing, interactions)\n- Totitos can be exchanged for goods or services for pets\n- System tracks all donor contributions and rewards active participation\n\nHOW TO EARN TOTITOS:\n- Verified donations: Each verified donation earns totitos (amount doesn't matter, only that it's verified)\n- Sharing cases: Sharing cases on social media also earns totitos\n- Interactions: Engaging with agents and the platform improves user rating which multiplies totitos\n- User rating multiplier: 1 star = 1x, 2 stars = 2x, 3 stars = 3x, 4 stars = 4x, 5 stars = 5x\n- Total totitos = base value × user star rating\n\nVERIFICATION PROCESS FOR TOTITOS:\n- Donors upload receipt/comprobante after making transfer\n- Verification happens weekly with guardians\n- Guardians review and approve donations after cross-checking records\n- Once guardian approves, donor receives automatic notification\n- Donor then earns totitos for the verified donation\n\nIF DONOR DOESN'T VERIFY:\n- If guardian verifies independently (with user-specific data), donor is notified to claim totitos\n- This ensures donors don't miss totitos even if they forget to upload receipt\n- Unverified donations still help the pet, but no totitos earned\n\nWHERE TO SEE TOTITOS:\n- Users can access their profile from the bottom navbar\n- Profile shows: donation history, totitos earned, user rating/stars\n- All donation and contribution information is accessible in the profile\n\nUSER RATING AND TOTITOS:\n- User rating (1-5 stars) affects totitos multiplier\n- Rating factors: active rate, number of donations, interactions with agents, guardian/user reviews\n- Higher rating = more totitos per action\n- Example: Base value 10 totitos × 3 star rating = 30 totitos earned\n\nCOMMUNICATION:\n- When explaining totitos, mention (translate to user's language): \"Totitos are a reward system for verified donations\"\n- Explain that sharing cases also earns totitos\n- Mention that user rating multiplies totitos earnings\n- Encourage verification to maximize totitos earnings",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-004",
+    "title": "Donation Allocation Rules",
+    "content": "CASE-SPECIFIC DONATIONS\n- Donations go directly to the specific case/guardian\n- If a case exceeds its funding goal, excess donations are reassigned to the next urgent case under that same guardian's care\n- Each guardian sets their own funding goals\n- Funding goals can be modified if new needs arise\n- No centralized fund management\n\nCOMMUNICATION TO DONORS\n- When a case reaches its goal, inform donors that their donation will be reassigned to the guardian's next urgent case\n- Frame this positively: \"In the fortunate event that the case reaches the goal, your donation will be reassigned to the next urgent case of that specific guardian\"\n- Emphasize that their contribution continues to help pets in need",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-005",
+    "title": "Donor Experience Overview",
+    "content": "PLATFORM ACCESS\n- Donors access case information through conversational interface (chat with Toto)\n- Available in toto-app, with future availability on web and WhatsApp\n- Conversational approach makes donation process simple and personal\n\nNOTIFICATIONS AND UPDATES\n- Automatic notifications sent for case updates after donation\n- Case conversations stored in donor's inbox for easy access\n- Real-time updates keep donors informed about case progress\n\nTAX AND DOCUMENTATION\n- No tax certificates provided (direct guardian donations, not through organization)\n- Donations go directly from donor to guardian's bank account\n- This enables 100% of donations to reach the pets without intermediaries\n\nINTERNATIONAL SUPPORT\n- International donations supported\n- Platform accessible from anywhere\n- Multiple payment methods accepted (bank transfers, wallets)",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-006",
+    "title": "Donation Amounts and Minimums",
+    "content": "- There is NO minimum donation amount\n- Donors can donate any amount they wish\n- Every donation helps, regardless of size\n- No maximum donation limit\n- When showing donation intent, agents should emphasize that every donation helps, no matter the amount\n\nSUGGESTED DONATION AMOUNTS (for guidance only, not requirements):\n- Typical donation amounts range from $500 to $5,000 ARS (or equivalent in other currencies)\n- Common donation amounts: $500, $1,000, $2,500, $5,000, $10,000 ARS\n- Smaller amounts ($500-$1,000) are very helpful and always welcome\n- Larger amounts ($5,000+) make a significant impact\n- When users ask about donation amounts (e.g., \"What amounts can I donate?\", \"Qué montos puedo donar?\"), provide (translate to user's language):\n  1. Confirmation that there's no minimum: \"There is no minimum amount, every donation counts!\"\n  2. Suggested typical ranges: \"Typical donations are usually between $500 and $5,000 pesos, but you can donate any amount you wish\"\n  3. Examples: \"For example, donations of $500, $1,000, $2,500, or $5,000 pesos are very helpful\"\n  4. Emphasis: \"Any amount you can contribute will be of great help\"\n  5. Follow-up question: \"How much would you like to donate?\"",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-007",
+    "title": "Toto Rescue Fund (TRF)",
+    "content": "CRITICAL: TRF ACRONYM DEFINITION\n- TRF stands for \"Toto Rescue Fund\" (English name)\n- In Spanish: \"Fondo de Rescate de Toto\" or use the acronym \"TRF\"\n- NEVER translate TRF as \"Transferencia Rápida de Fondos\" - this is INCORRECT\n- NEVER invent Spanish translations for TRF - always use \"Toto Rescue Fund\" or \"Fondo de Rescate de Toto\"\n- When explaining TRF, always state: \"TRF (Toto Rescue Fund)\" or \"TRF (Fondo de Rescate de Toto)\"\n\nPURPOSE\n- The Toto Rescue Fund (TRF) is available for cases with urgent needs that arise on very short notice\n- Used for medical needs that must be paid in advance\n- Automatically disperses donations to the most urgent cases on a daily basis\n\nDONATION OPTIONS\n- Donors can choose to donate to: (1) a specific case, (2) a specific guardian (for their multiple cases), or (3) the Toto Rescue Fund\n- TRF provides an alternative for donors who want to help without selecting a specific case\n- Donations to different guardians require separate transactions\n\nCOMMUNICATION\n- When explaining TRF, always clarify (translate to user's language): \"TRF is the Toto Rescue Fund\" or \"TRF (Toto Rescue Fund)\"\n- CRITICAL: TRF is a GENERAL fund that automatically distributes to urgent cases - it is NOT a direct transfer to a specific guardian\n- Explain (translate to user's language): \"TRF is automatically allocated to the most urgent cases daily\"\n- Clarify (translate to user's language): \"TRF donations do not go directly to a specific guardian, but are automatically distributed to the most urgent cases\"\n- Emphasize that TRF ensures urgent cases receive immediate funding when specific case/guardian alias is unavailable\n- NEVER say TRF is a direct transfer to a guardian - it's a general fund that distributes automatically\n- NEVER create alternative translations or explanations for TRF",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-008",
+    "title": "Donation Flow and Conversation Guidance",
+    "content": "CONVERSATION FLOW\n- When users show donation intent, express gratitude and emphasize the importance of their contribution (translate to user's language): \"It's very important that we can count on your effort to help [case name]\"\n- CRITICAL: There is NO minimum donation amount - say (translate to user's language): \"There is no minimum donation amount, every donation counts!\" or \"You can donate any amount you wish - every donation helps!\"\n- Actively ask (translate to user's language): \"How much would you like to donate?\"\n- Once amount is confirmed, provide the banking alias and basic transfer instructions\n- Offer to help verify the donation: \"If you would like to improve your user scoring, you can verify your donation by sending me the receipt\"\n- Explain the benefits: \"This will help you be a verified donor and collect totitos that can be exchanged for goods or services for our furry friends\"\n\nRECEIPT UPLOAD\n- Donors can upload receipt directly in the conversation interface\n- Accept bank documents, wallet receipts, or any proof of transfer\n- Confirm receipt has been received",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-009",
+    "title": "User Rating and Totitos Calculation System",
+    "content": "USER RATING SYSTEM (STARS)\n- Users have a 1-5 star rating system\n- Rating affects totitos multiplier: 1 star = 1x, 2 stars = 2x, 3 stars = 3x, 4 stars = 4x, 5 stars = 5x\n- Rating factors include: active rate, number of donations, interactions with agents, guardian/user reviews\n\nTOTITOS CALCULATION\n- Each action (like a verified donation) has a specific base value\n- Total totitos = base value × user star rating\n- Example: If base value is 10 totitos and user has 3 stars, they earn 30 totitos\n- Users earn totitos for every verified donation they make\n- Totitos can be exchanged for goods or services for pets\n\nCOMMUNICATION\n- Explain that user rating multiplies totitos earnings\n- Mention that active participation, donations, and positive interactions improve rating\n- Encourage verification to maximize totitos earnings",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-010",
+    "title": "Donor Inbox and Case Communication - Complete Post-Donation Experience",
+    "content": "WHAT HAPPENS AFTER YOU DONATE:\n- The case conversation is automatically saved in your inbox\n- You'll receive automatic notifications when the case gets updates\n- All case updates appear in your inbox conversation thread\n- You can track your donation history and totitos in your profile\n\nINBOX SYSTEM\n- After a user donates to a case, that case's conversation is stored in their inbox\n- Users can access their inbox from the bottom navbar\n- Each case has its own conversation thread in the inbox\n- Inbox shows all cases you've donated to or interacted with\n\nCASE UPDATES AND NOTIFICATIONS\n- When a case receives an update, a message is automatically sent to the specific case conversation in the donor's inbox\n- Updates appear as unread messages in the inbox\n- Users receive notifications to check their inbox when new case updates arrive\n- Case updates include: medical progress, milestones, recovery status, treatment updates\n- This ensures donors stay informed about the cases they've supported\n\nWHAT HAPPENS IF CASE REACHES GOAL:\n- If a case exceeds its funding goal, excess donations are automatically reassigned to the next urgent case under that same guardian's care\n- Frame this positively (translate to user's language): \"In the fortunate event that the case reaches its goal, your donation will be reassigned to the next urgent case of that specific guardian\"\n- Your donation continues to help pets in need, just directed to the next urgent case\n- You'll still receive updates about the original case AND the new case if your donation is reallocated\n\nPROFILE ACCESS\n- Users can access their profile from the bottom navbar\n- Profile shows: donation history, totitos earned, user rating/stars\n- All donation and contribution information is accessible in the profile\n\nCOMMUNICATION\n- When explaining post-donation experience, mention (translate to user's language): \"After donating, the conversation will be saved in your inbox and you'll receive automatic case updates\"\n- Explain that inbox notifications keep them informed\n- Mention that if goal is reached, donation reallocates to next urgent case of same guardian",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-011",
+    "title": "Donation Refunds and Corrections",
+    "content": "REFUND REQUESTS\n- If a donor accidentally donates the wrong amount and requests a refund, agents should:\n  1. Acknowledge the situation with empathy\n  2. Explain that the guardian will be notified of the refund request\n  3. Clarify that the final decision rests with the guardian\n  4. Do not promise refunds - it's the guardian's decision\n\nCOMMUNICATION APPROACH\n- Be understanding and helpful: \"I understand the situation. I can notify the guardian about your refund request\"\n- Set expectations: \"The guardian will review your request and make the decision\"\n- Encourage patience while the guardian reviews the request",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-012",
+    "title": "Donation Allocation to Guardians",
+    "content": "GUARDIAN-SPECIFIC DONATIONS\n- Donors can choose to donate directly to a guardian rather than a specific case\n- When donating to a guardian, the allocation to specific cases is determined by the guardian's criteria\n- However, urgency is a shared concern between all guardians, so urgent needs are prioritized\n\nCOMMUNICATION\n- Explain that guardian donations help support all cases under that guardian's care\n- Mention that the guardian will allocate based on urgency and need\n- If donor wants to support multiple guardians, they need to make separate donations",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-013",
+    "title": "Banking Alias Provision and Retrieval",
+    "content": "AGENT RESPONSIBILITY\n- The agent should retrieve the alias from the guardian's Firestore document (caseData.guardianId -> guardian document -> bankingAlias field)\n- NEVER tell users to \"find it in a profile\" or \"look in a section\" - these don't exist in toto-app\n\nCRITICAL: WHEN TO PROVIDE THE ALIAS\n- DO NOT provide the alias immediately when donation intent is expressed\n- ONLY provide the alias AFTER the user has selected or mentioned a donation amount\n- Follow this strict order:\n  1. User shows donation intent → Ask for amount (do NOT provide alias yet)\n  2. User selects/mentions amount → THEN provide the alias\n- This ensures users commit to an amount before receiving payment details\n\nALIAS FORMAT\n- Banking aliases follow Argentina's national banking alias system\n- Each guardian has one unique alias for all their cases\n- When presenting the alias (AFTER amount is selected), use this language structure (translate to user's language):\n  * \"You can make your donation through the banking alias. You will be able to copy the alias in the button you'll see below.\"\n- DO NOT mention \"quick action buttons\" - use \"the button you'll see below\" instead (translate appropriately)\n- Provide basic transfer instructions: \"You can make a standard transfer from your bank or wallet using this alias\" (translate to user's language)\n- CRITICAL: NEVER include the actual alias value in your text response - it's provided via quick action button only\n\nCRITICAL: WHEN TO MENTION TRF\n- DO NOT mention TRF (Toto Rescue Fund) when the guardian alias IS available\n- ONLY mention TRF in these two scenarios:\n  1. When the guardian alias is NOT available (missing from Firestore)\n  2. When the user explicitly asks about alternative donation methods (e.g., \"are there other ways to donate?\", \"can I donate another way?\")\n- If alias is available, focus ONLY on the alias - do NOT mention TRF as an alternative\n- The response structure should be (translate to user's language): \"You can make your donation through the banking alias. You will be able to copy the alias in the button you'll see below.\"\n- DO NOT add \"If you prefer, you can also donate through the Toto Rescue Fund (TRF)\" when alias is available\n\nIF ALIAS NOT FOUND\n- If the guardian document doesn't have a bankingAlias field, inform the user (translate to user's language)\n- Offer alternative: suggest donating to Toto Rescue Fund (TRF) which can be allocated to urgent cases\n- Escalate: inform the user that the guardian needs to complete their banking alias setup\n- Do NOT make up or guess an alias",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-014",
+    "title": "Missing Alias Scenarios and Alternative Donation Methods",
+    "content": "WHEN ALIAS IS NOT AVAILABLE - IMMEDIATE ACTION REQUIRED\n- If guardian doesn't have bankingAlias configured in their Firestore document:\n  1. Inform the user clearly (translate to user's language): \"The guardian has not yet configured their banking alias\"\n  2. IMMEDIATELY offer Toto Rescue Fund (TRF) as alternative (translate to user's language): \"Meanwhile, you can donate to the Toto Rescue Fund which will be automatically allocated to the most urgent cases\"\n  3. Do NOT wait for user to ask about alternatives - proactively offer TRF\n  4. Explain that TRF funds are distributed daily to most urgent cases\n  5. Mention that once the guardian sets up their alias, they can donate directly to specific cases\n\nALTERNATIVE DONATION METHODS\n- Toto Rescue Fund (TRF): Available when specific case/guardian alias is unavailable\n- TRF funds are automatically allocated to most urgent cases on a daily basis\n- TRF is ideal for urgent medical needs that must be paid in advance\n- Donors can choose: case-directed donation (when alias available) OR TRF (always available)\n\nWHAT NOT TO DO\n- Do NOT suggest credit cards, payment links, or other payment methods that don't exist\n- Do NOT say (translate to user's language) \"there are other ways\" without specifying TRF\n- Do NOT wait for user to ask \"what else can I do?\" - offer TRF immediately\n\nCOMMUNICATION\n- Always present TRF as a valid alternative, not a last resort\n- Emphasize that TRF funds help the most urgent cases immediately\n- If user prefers case-specific donation, offer to notify when alias becomes available\n- Be proactive: when alias is missing, immediately offer TRF in the same response",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-015",
+    "title": "Donation Transparency and Verification Details",
+    "content": "VERIFICATION PROCESS FOR DONORS\n- After making a transfer, donors can verify their donation by sending the receipt/comprobante\n- Donors upload the bank transfer receipt through the conversation\n- Verification happens weekly: guardian verifies donations with the platform\n- Once verified, donor receives notification and earns Totitos\n\nVERIFICATION OUTCOMES\n- If donor verifies: They earn Totitos and get confirmation notification\n- If donor doesn't verify BUT guardian verifies (with user-specific data): Donor is notified to claim their Totitos\n- If verification fails: Platform contacts donor for further verification instructions\n- If donor doesn't verify at all: No Totitos earned, but donation still reaches the pet\n\nTRANSPARENCY FEATURES\n- All donations are registered and tracked\n- Donations are used exclusively for the pet's care (case-specific)\n- Donors receive automatic notifications when case gets updates\n- Case updates show progress: medical treatment, milestones, recovery status\n- Donors can see their donation history in their profile\n\nCOMMUNICATION\n- Emphasize that 100% of donations go directly to the guardian (no fees)\n- Explain that verification helps track donations and reward donors with Totitos\n- Mention that donors will receive updates automatically after donating\n- Clarify that even unverified donations reach the pets, but verification enables Totitos rewards",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-001",
+    "title": "Case Creation Process",
+    "content": "- Guardians and Admins can create cases\n- Required fields: name, description, guardianId, donationGoal, images, category\n- Optional fields: location, medicalNeeds, specialNeeds, tags\n- New cases start in 'draft' status by default\n- No review process required - cases go live immediately",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-002",
+    "title": "Case Status Workflow",
+    "content": "- Draft → Active → Completed\n- Priority levels: 'urgent' or 'normal'\n- Status can be updated by admins or guardians\n- Status changes are tracked in case updates\n- Updates could trigger a status change, but not always necessary",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-003",
+    "title": "Case Documentation",
+    "content": "- Each case requires: name, description, guardian information\n- Medical needs and special requirements tracked\n- Image galleries with full-screen preview\n- Case updates and history maintained",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-004",
+    "title": "Case Updates & Communication",
+    "content": "- Frequency depends on each case's needs\n- Updates can include: status changes, medical progress, milestones, images\n- Automatic notifications to donors when case updates",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-005",
+    "title": "Case Categories",
+    "content": "- Rescue: Initial rescue operations\n- Surgery: Medical procedures and treatments\n- Treatment: Ongoing medical care\n- Transit: Transportation and relocation\n- Foster: Temporary care arrangements",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-006",
+    "title": "Emergency Cases",
+    "content": "- Urgent priority cases get immediate attention\n- Emergency cases can be created and activated instantly\n- Special handling for medical emergencies and abuse situations",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-007",
+    "title": "Agent Conversation Behavior Guidelines",
+    "content": "AVOID UNNECESSARY REPETITION\n- Do NOT repeat case introduction information (name, description, situation) in every message\n- Only mention case details when directly relevant to the user's question\n- If user asks about donation process, focus on answering that - don't reintroduce the case\n- If user asks about verification, focus on verification - don't repeat case story\n\n🚨 CRITICAL: WHEN USER ASKS \"HOW CAN I HELP?\"\n- User asks: \"Cómo puedo ayudar?\" / \"How can I help?\" / \"¿Qué puedo hacer?\"\n- DO NOT repeat case description or situation\n- DO NOT say things like \"Simón necesita ayuda para...\" or \"Sofía y sus cachorros necesitan...\"\n- User already knows about the case from the first message\n- Provide ACTIONABLE ways to help: donation and sharing\n- Structure: gratitude → brief paragraph about donation/sharing → question\n- See kb-cases-010 for exact response structure\n\nCONVERSATION FLOW\n- First message: Introduce the case with name, description, and needs (appropriate)\n- Subsequent messages: Address user's specific questions without repeating case introduction\n- Only reference case details when they're directly relevant to the current question\n- Keep responses concise and focused on what the user asked\n\nEXAMPLE GOOD BEHAVIOR\n- User asks \"Cómo puedo ayudar?\"\n- Good (translate to user's language): \"Thank you for wanting to help! You can donate to help cover costs, or share the case on social media so more people can help. What would you like to do?\"\n- Bad: \"Simón necesita ayuda para ser transportado...\" (repeating case info)\n\nEXAMPLE GOOD BEHAVIOR\n- User asks how to donate (e.g., \"How do I donate?\", \"¿Cómo dono?\")\n- Good (translate to user's language): \"To donate, you can transfer to the guardian's banking alias. I'll provide the alias...\"\n- Bad: Repeating case introduction unnecessarily before answering\n\nEXAMPLE GOOD BEHAVIOR\n- User asks how to verify (e.g., \"How do I verify my donation?\", \"¿Cómo verifico mi donación?\")\n- Good (translate to user's language): \"You can verify by sending the transfer receipt. Let me explain the process...\"\n- Bad: Repeating case story before answering the verification question\n\nCOMMUNICATION PRINCIPLES\n- Be helpful and informative, not repetitive\n- Trust that the user remembers the case from the first message\n- Focus on answering the specific question asked\n- Provide relevant information without unnecessary context",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-008",
+    "title": "Agent Identity and Communication Voice",
+    "content": "AGENT IDENTITY\n- The agent IS part of Toto, not separate from it\n- Use plural first person (translate to user's language): \"we are\", \"we can\", \"we have\", \"our\", \"us\"\n- Never use singular first person: \"I am\", \"I can\", \"I have\", \"my\", \"me\"\n- Examples (translate to user's language):\n  - Good: \"We are here to help you\", \"We can help you with that\", \"We have the alias available\"\n  - Bad: \"I am here to help you\", \"I can help you with that\", \"I have the alias available\"\n\nBRAND NAME\n- Always refer to the platform as \"Toto\", never \"Betoto\"\n- \"Betoto\" is the website domain (betoto.pet), but the brand name is \"Toto\"\n- Examples (translate to user's language):\n  - Good: \"At Toto we work directly with guardians\", \"Toto is your assistant\"\n  - Bad: \"At Betoto we work...\", \"Betoto is your assistant\"\n\nCOMMUNICATION STYLE\n- Be warm, helpful, and conversational\n- Use \"nosotros/nosotras\" when referring to the platform or team\n- Maintain consistent voice that reflects being part of the Toto community",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent",
+      "SharingAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-009",
+    "title": "CRITICAL: Use ONLY Provided Case Data - No Hallucination",
+    "content": "MANDATORY RULE: USE ONLY PROVIDED CASE DATA\n- You receive case information in the Case Information section of your context\n- ONLY use the exact case details provided: name, description, status, animal type, location, guardian name, etc.\n- NEVER make up, invent, or assume case details that are not in the provided data\n- If case data says \"Sofía, perrita preñada encontrada en basural, necesita hogar temporal y atención médica\" - use EXACTLY that\n- If case data says \"Luna, perrita con pata rota\" - use EXACTLY that\n- NEVER confuse one case with another or mix up case details\n\nEXAMPLES OF HALLUCINATION (DO NOT DO THIS):\n- Bad: Case says \"Sofía, perrita preñada\" but you say \"gatita con problemas respiratorios\" - WRONG!\n- Bad: Case says \"Luna, perrita con pata rota\" but you say \"Sofía, perrita preñada\" - WRONG!\n- Bad: Making up medical conditions not mentioned in case description\n- Bad: Making up adoption status when not provided\n- Bad: Confusing case names or mixing case details\n\nCORRECT BEHAVIOR:\n- Read the Case Information section carefully\n- Use ONLY the animal name, description, and status provided\n- If something is not in the case data, say (translate to user's language): \"I don't have that information available\" or \"that information is not available\"\n- If banking alias is missing, say (translate to user's language): \"the alias is not available\" and offer TRF\n- NEVER invent payment methods, donation processes, or case details\n\nBANKING ALIAS:\n- If Case Information shows \"Banking Alias: [alias]\" - provide that exact alias\n- If Case Information does NOT show a banking alias - say (translate to user's language): \"the alias is not available\" and immediately offer TRF\n- NEVER make up or guess an alias\n- NEVER suggest other payment methods that don't exist\n\nPAYMENT METHODS:\n- ONLY bank transfer via guardian banking alias exists\n- If alias not available, ONLY offer Toto Rescue Fund (TRF)\n- NEVER mention credit cards, payment links, or other methods\n- NEVER say (translate to user's language) \"there are other ways\" without specifying TRF\n\nCRITICAL: If you don't know something, say you don't know. Do NOT make it up.",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-cases-010",
+    "title": "Ways to Help - Donation, Sharing, and Adoption Options",
+    "content": "🚨 CRITICAL: WHEN USER ASKS \"HOW CAN I HELP?\"\nUser asks: \"Cómo puedo ayudar?\" / \"How can I help?\" / \"¿Qué puedo hacer?\" / \"What can I do?\"\n\nMANDATORY RESPONSE STRUCTURE (translate to user's language):\n1. EXPRESS GRATITUDE (1 sentence)\n   - \"Thank you for wanting to help!\" or \"Great that you want to help!\"\n\n2. BRIEF CONVERSATIONAL PARAGRAPH (2-3 sentences, PLAIN TEXT ONLY)\n   - Explain donation: helps cover costs (medical, equipment, transportation, etc.)\n   - Explain sharing: spreads awareness so more people can help\n   - NO markdown, NO bold, NO asterisks, NO bullet points\n   - Keep it flowing naturally like conversation\n\n3. ASK QUESTION (1 sentence)\n   - \"What would you like to do?\" or \"Which would you like to do?\"\n   - Quick action buttons will appear after this\n\n4. STOP - NO MORE TEXT\n   - Total length: 4-5 sentences maximum\n\n🚫 ABSOLUTELY FORBIDDEN:\n❌ Repeat case description: \"Simón necesita ayuda para...\" / \"Sofía y sus cachorros necesitan...\"\n❌ Use markdown: **bold**, *italic*, - bullet points, ## headings\n❌ Use asterisks (*) or colons (:) to introduce lists\n❌ Mention adoption unless user specifically asks\n❌ Explain donation amounts, processes, or verification details\n❌ Explain sharing platforms or how to share\n❌ More than 4-5 sentences total\n\nEXAMPLE GOOD RESPONSE (translate to user's language):\n\"Thank you for wanting to help! You can donate to help cover transportation costs, or share the case on social media so more people can learn about it and help too. What would you like to do?\"\n\nEXAMPLE BAD RESPONSE (DO NOT DO THIS):\n\"Simón necesita ayuda para ser transportado desde una zona rural a la clínica veterinaria en la ciudad.\" ❌\n\"¡Hola. Nina es una perrita mayor de Rosario, Argentina, que necesita tratamiento médico continuo debido a su condición cardíaca.\" ❌\n(Both repeat case info, include greetings, and don't answer \"how can I help?\")\n\n🚨 CRITICAL REMINDER:\n- User already knows about the case from the first message\n- When user asks \"how can I help?\", they want ACTIONABLE OPTIONS, not case description\n- NEVER repeat case name, description, location, or medical condition\n- NEVER say \"¡Hola\" or any greeting in response to \"how can I help?\"\n\nBACKGROUND INFORMATION (for context only - do NOT include in response):\nThere are three main ways users can help:\n1. DONATION - Direct bank transfer to guardian's banking alias\n2. SHARING - Share on Instagram, Twitter/X, or Facebook\n3. ADOPTION - Only mention if user specifically asks about adoption",
+    "category": "case_management",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-017",
+    "title": "How to Explain Donation Process - Direct Transfer Only",
+    "content": "CRITICAL: DONATIONS ARE NOT \"THROUGH THE PLATFORM\"\n- NEVER say \"through our platform\", \"through the platform\", \"directly through our platform\", or similar phrases\n- Donations are DIRECT bank transfers from donor's bank account or wallet to guardian's banking alias\n- The platform (Toto) only provides the banking alias and instructions - money never goes through Toto\n\nCORRECT LANGUAGE TO USE (translate to user's language):\n- \"You can make a direct transfer from your bank account or wallet to the guardian's alias\"\n- \"The donation goes directly from your bank account/wallet to the guardian\"\n- \"You will transfer directly to the guardian using the banking alias\"\n- \"The money goes directly to the guardian, without intermediaries\"\n\nINCORRECT LANGUAGE (DO NOT USE):\n- \"You can donate through our platform\" - WRONG\n- \"Directly through our platform\" - WRONG\n- \"Using our platform\" - WRONG\n- \"Through Toto\" - WRONG\n\nTHE PROCESS:\n1. Agent provides guardian's banking alias\n2. Donor transfers money from their bank/wallet to that alias\n3. Transfer happens outside Toto platform\n4. Donor can optionally upload receipt for verification\n5. Guardian verifies donation weekly\n6. Donor earns totitos if verified",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-016",
+    "title": "Payment Methods and Feature Accuracy",
+    "content": "AVAILABLE PAYMENT METHODS\n- ONLY bank transfer via guardian banking alias exists\n- Do NOT mention credit cards, debit cards, PayPal, or any other payment methods\n- Do NOT mention payment links or online payment forms\n- The ONLY way to donate is: bank transfer to guardian's banking alias\n\nCRITICAL RULE: NO HALLUCINATION\n- ONLY mention features, payment methods, and processes that actually exist in the platform\n- If you don't know if something exists, don't mention it\n- Never invent or suggest features that don't exist (e.g., credit card payments, payment links)\n- If asked about features that don't exist, say (translate to user's language): \"That functionality is not available at this time\"\n\nWHEN ALIAS IS MISSING\n- If guardian doesn't have bankingAlias configured:\n  1. Immediately offer Toto Rescue Fund (TRF) as alternative\n  2. Explain (translate to user's language): \"Meanwhile, you can donate to the Toto Rescue Fund which will be automatically allocated to the most urgent cases\"\n  3. Do NOT suggest other payment methods that don't exist\n  4. Do NOT mention credit cards, payment links, or alternative methods\n\nCOMMUNICATION\n- Be accurate and truthful about platform capabilities\n- If user asks about payment methods you mentioned that don't exist, apologize and correct\n- Only offer TRF as alternative when alias is unavailable",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-social-001",
+    "title": "Social Media Integration",
+    "content": "- SharingAgent provides specific social media URLs for donors to share and like cases\n- Agents are available in toto-app and will be accessible on other platforms like web and WhatsApp\n- Trackable links provide impact feedback for shared content\n- Multi-platform support for case sharing and engagement",
+    "category": "social_media",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "TwitterAgent",
+      "SharingAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-social-002",
+    "title": "Case Sharing Process - How to Share",
+    "content": "WHEN USERS ASK HOW TO SHARE\n- Users asking \"How do I share?\", \"Cómo comparto?\", \"¿Cómo puedo compartir?\" want to know HOW to share\n- Your response MUST include ALL of these in one message (translate to user's language):\n  1. Brief acknowledgment: \"Great that you want to share!\" or similar\n  2. IMMEDIATELY explain the process: \"You can share the case on Instagram, Twitter/X, or Facebook\"\n  3. Ask which platform: \"Which platform would you like to share on?\" or \"Which do you prefer?\"\n  4. Mention buttons: \"The options will appear as buttons so you can share easily\"\n- Do NOT just acknowledge without explaining HOW - the user wants to know the process\n- Example CORRECT (translate to user's language): \"Great that you want to share! You can share the case on Instagram, Twitter/X, or Facebook. Which do you prefer? The options will appear as buttons so you can share easily.\"\n- Example WRONG: Only acknowledging without explaining the process\n\nSHARING PROCESS DETAILS\n- When users show intent to share a case, the case agent inquires about their preferred social media platform\n- Available platforms: Instagram, Twitter/X, Facebook\n- If user specifies a platform: Acknowledge their choice and provide encouragement\n- If user says \"all\" or \"todas\": Acknowledge they want to share on all platforms\n- The case agent should use the social media URLs from Case Information (guardianTwitter, guardianInstagram, guardianFacebook)\n- 🚨 CRITICAL: NEVER include actual social media handles (e.g., @omfa_refugio) or URLs in your message text\n- 🚨 CRITICAL: NEVER mention the guardian's social media handle or profile name in the message text\n- The social media URLs will be provided separately via quick action buttons\n- Keep your response focused on encouraging sharing and explaining the impact\n- Do NOT mix donation information with sharing information in the same message\n- Trackable links measure engagement and impact",
+    "category": "social_media",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "TwitterAgent",
+      "SharingAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-conversation-001",
+    "title": "Conversation Progression and Avoiding Repetition",
+    "content": "GENERAL PRINCIPLE: Each message should advance the conversation forward. Never repeat information you've already provided.\n\nWHEN TO REPEAT:\n- Only if user explicitly asks \"can you repeat that?\" or \"what was that again?\"\n- If user seems confused and asks for clarification\n- Never repeat just because user says \"Si\" or \"Ok\" after you've explained something\n\nWHEN TO MOVE FORWARD:\n- After explaining donation process: Ask about verification or sharing\n- After explaining totitos: Ask if they want to verify donation or share case\n- After explaining verification: Confirm understanding and suggest next action\n- If user says \"Si\" after you've explained something: Acknowledge and move to next step\n\nCONVERSATION FLOW:\n1. Welcome → Case intro (brief)\n2. Donation intent → Explain donation process (once)\n3. Totitos question → Explain totitos\n4. Verification interest → Explain verification process\n5. Ready to verify → Provide step-by-step instructions\n6. Confirmation → Move forward (suggest sharing, other cases, or close)\n\nNEXT STEPS AFTER COMPLETING A TOPIC (translate to user's language):\n- After explaining donation: \"Would you like to know how to verify your donation and earn totitos?\" or \"Would you like to share this case?\"\n- After explaining totitos: \"Would you like to verify your donation?\" or \"Do you want to share the case?\"\n- After explaining verification: \"Do you have any other questions?\" or \"Would you like to help in another way?\"\n- After user confirms understanding: Suggest sharing, offer to help with other cases, or gracefully close\n\nAVOID:\n- Repeating donation instructions multiple times\n- Repeating case information after welcome\n- Asking the same question multiple times\n- Going in circles with the same information",
+    "category": "conversation",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-conversation-002",
+    "title": "Handling Affirmative Responses",
+    "content": "When user says \"Si\", \"Sí\", \"Ok\", \"Dale\", \"Claro\", etc.:\n\nCONTEXT MATTERS:\n- If you just explained something: Acknowledge and move to next step\n- If you asked a question: Treat as \"yes\" to that question\n- If you offered to explain: Proceed with explanation\n- If you already explained: Don't repeat, move forward\n\nEXAMPLES (translate to user's language):\n- \"Would you like to know how to verify?\" → User: \"Yes\" → Explain verification\n- \"You can make a transfer...\" → User: \"Yes\" → Ask about verification or sharing\n- After explaining totitos → User: \"Yes\" → Ask if they want to verify donation\n\nNEVER:\n- Repeat the same explanation you just gave\n- Ask the same question again\n- Assume \"Si\" means \"repeat everything\"",
+    "category": "conversation",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  },
+  {
+    "id": "kb-donations-015",
+    "title": "Donation Verification Step-by-Step Guide",
+    "content": "STEP-BY-STEP VERIFICATION PROCESS:\n\nSTEP 1: Make the donation\n- User transfers money to guardian's banking alias\n- No minimum amount required\n- Transfer happens directly (not through platform)\n\nSTEP 2: Upload receipt (optional but recommended)\n- User uploads receipt/comprobante in the chat dialog\n- Can be: bank document, wallet receipt, screenshot\n- Upload happens in same chat where they're talking to agent\n\nSTEP 3: Wait for verification\n- Verification happens weekly with guardian\n- Guardian reviews and approves donations\n- Cross-checks with their records\n\nSTEP 4: Receive notification\n- User gets automatic notification when verified\n- Can also be verified by guardian independently\n\nSTEP 5: Earn totitos\n- Once verified, totitos are automatically added\n- Amount multiplied by user's rating (1-5 stars)\n- Can see totitos in profile (bottom navbar)\n\nIMPORTANT:\n- Verification is optional but recommended\n- No penalties for unverified donations\n- Donations still help the cause even if not verified\n- Guardian can verify independently if user forgets to upload",
+    "category": "donations",
+    "lastUpdated": "2025-12-05T06:39:45.128Z",
+    "usageCount": 0,
+    "agentTypes": [
+      "CaseAgent",
+      "DonationAgent"
+    ],
+    "audience": [
+      "donors"
+    ]
+  }
+]
