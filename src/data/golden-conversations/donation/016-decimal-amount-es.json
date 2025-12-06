@@ -5,18 +5,30 @@
     "language": "es",
     "category": "rescue",
     "complexity": "simple",
-    "hasContext": false,
-    "multiTurn": false,
+    "hasContext": true,
+    "multiTurn": true,
     "reviewed": false
   },
   "conversation": [
     {
       "role": "user",
-      "message": "Quiero donar $1.500"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
-      "message": "¡Gracias por tu generosidad! Para donar $1.500 a Luna:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $1.500\n3. Enviá el comprobante\n\nTu ayuda hace una diferencia real. ❤️"
+      "message": "¡Qué bueno que quieras ayudar a Luna! ¿Qué monto te gustaría donar?"
+    },
+    {
+      "role": "user",
+      "message": "1500"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias por tu generosidad! Para donar $1.500 a Luna, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -37,11 +49,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.95,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $1.500", "data": { "amount": 1500 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Gracias por tu generosidad! Para donar $1.500 a Luna, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Decimal amount format ($1.500 instead of $1500). Agent should handle both."
+  "notes": "User clicks 'Otro monto' and types 1500 (no dollar sign, no separator - realistic user input). Agent should interpret as $1.500 and proceed with donation."
 }
 

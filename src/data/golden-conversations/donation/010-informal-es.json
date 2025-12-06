@@ -37,11 +37,19 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "$500", "data": { "amount": 500 } },
-      { "type": "donation_amount", "label": "$1.000", "data": { "amount": 1000 } },
-      { "type": "donation_amount", "label": "$2.000", "data": { "amount": 2000 } },
-      { "type": "donation_amount", "label": "Otro monto", "data": { "amount": null } }
+    "messages": [
+      {
+        "message": "¡Hola! Me alegra que quieras ayudar a Luna. ¿Qué monto te gustaría donar?",
+        "quickActions": {
+          "showAmountOptions": true,
+          "amountOptions": [
+            { "label": "$500", "amount": 500 },
+            { "label": "$1.000", "amount": 1000 },
+            { "label": "$2.000", "amount": 2000 },
+            { "label": "Otro monto", "amount": null }
+          ]
+        }
+      }
     ]
   },
   "notes": "Informal greeting + donation intent. Shows natural conversation flow."

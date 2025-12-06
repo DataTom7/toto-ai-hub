@@ -37,13 +37,25 @@
   "expectedResponse": {
     "intent": "information",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "more_info", "label": "Más detalles" }
+    "messages": [
+      {
+        "message": "Bella necesita tratamiento para una infección. El tratamiento incluye medicación y seguimiento veterinario.\n\nYa llevamos $2.000 recaudados. Cada aporte ayuda a que Bella se recupere pronto.\n\n¿Te gustaría ayudar?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        }
+      }
     ],
-    "shouldIncludeKB": true
+    "shouldIncludeKB": false
   },
-  "notes": "Medical details question. Should use KB for accurate treatment information."
+  "notes": "Medical details question. Agent provides basic treatment info from caseData, no KB needed."
 }
-

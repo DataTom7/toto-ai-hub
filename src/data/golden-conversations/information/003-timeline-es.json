@@ -37,13 +37,25 @@
   "expectedResponse": {
     "intent": "information",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "more_info", "label": "Más detalles" }
+    "messages": [
+      {
+        "message": "La cirugía de Max está programada para cuando alcancemos la meta de $30.000. Actualmente llevamos $15.000 recaudados, faltan $15.000.\n\nCuanto antes alcancemos la meta, antes podrá ser operado.\n\n¿Te gustaría ayudar a acelerar el proceso?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        }
+      }
     ],
-    "shouldIncludeKB": true
+    "shouldIncludeKB": false
   },
-  "notes": "Timeline question. Agent explains dependency on funding goal."
+  "notes": "Timeline question. Agent explains dependency on funding goal from caseData, no KB needed."
 }
-

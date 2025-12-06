@@ -5,18 +5,30 @@
     "language": "es",
     "category": "treatment",
     "complexity": "simple",
-    "hasContext": false,
-    "multiTurn": false,
+    "hasContext": true,
+    "multiTurn": true,
     "reviewed": false
   },
   "conversation": [
     {
       "role": "user",
-      "message": "Quiero donar $1500 para el tratamiento"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
-      "message": "¡Gracias por ayudar con el tratamiento de Bella! Para donar $1.500:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $1.500\n3. Enviá el comprobante\n\nTu aporte ayudará a que Bella se recupere pronto. ❤️"
+      "message": "¡Qué bueno que quieras ayudar a Bella! ¿Qué monto te gustaría donar?"
+    },
+    {
+      "role": "user",
+      "message": "$1500"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias por ayudar con el tratamiento de Bella! Para donar $1.500, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -37,11 +49,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.95,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $1.500", "data": { "amount": 1500 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Gracias por ayudar con el tratamiento de Bella! Para donar $1.500, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Donation for treatment category. User mentions treatment explicitly."
+  "notes": "Donation for treatment category. User clicks 'Otro monto' and types $1500 (no separator - user typed format). Agent should interpret and format correctly in response."
 }
 

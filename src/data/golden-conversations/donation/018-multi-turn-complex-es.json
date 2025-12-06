@@ -24,11 +24,11 @@
     },
     {
       "role": "agent",
-      "message": "Podés ayudar de varias formas:\n\n• Donar para su tratamiento\n• Compartir su caso en redes sociales\n• Contactar al guardián\n\n¿Qué te gustaría hacer?"
+      "message": "Podés donar para su tratamiento o compartir su caso en redes sociales. ¿Qué te gustaría hacer?"
     },
     {
       "role": "user",
-      "message": "Donar"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
@@ -36,11 +36,15 @@
     },
     {
       "role": "user",
-      "message": "$3000"
+      "message": "$3,000"
     },
     {
       "role": "agent",
-      "message": "¡Increíble! Tu donación de $3.000 va a ayudar muchísimo a Luna. Para completarla:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $3.000\n3. Enviá el comprobante\n\nGracias por tu generosidad! ❤️"
+      "message": "¡Increíble! Tu donación de $3.000 va a ayudar muchísimo a Luna. Para completarla, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -61,11 +65,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.95,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $3.000", "data": { "amount": 3000 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Increíble! Tu donación de $3.000 va a ayudar muchísimo a Luna. Para completarla, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Complex multi-turn conversation with greeting, information request, then donation."
+  "notes": "Complex multi-turn conversation. User clicks 'Otro monto' and types $3,000 (comma separator - English style, realistic user input). Agent interprets as $3.000 (Spanish format)."
 }
 

@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "Luna está bajo el cuidado de un guardián experimentado que la rescató y está coordinando su tratamiento veterinario.\n\nSi querés contactar al guardián o conocer más sobre el caso, podés hacerlo a través de las opciones disponibles.\n\n¿Te gustaría ayudar de alguna forma?"
+      "message": "Luna está bajo el cuidado de un guardián experimentado que la rescató y está coordinando su tratamiento veterinario.\n\n¿Te gustaría ayudar donando para su tratamiento o compartiendo su caso?"
     }
   ],
   "caseData": {
@@ -37,14 +37,25 @@
   "expectedResponse": {
     "intent": "information",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "contact", "label": "Contactar guardián" },
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "more_info", "label": "Más información" }
+    "messages": [
+      {
+        "message": "Luna está bajo el cuidado de un guardián experimentado que la rescató y está coordinando su tratamiento veterinario.\n\n¿Te gustaría ayudar donando para su tratamiento o compartiendo su caso?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        }
+      }
     ],
     "shouldIncludeKB": false
   },
   "notes": "Guardian information question. Agent provides general info and suggests contact option."
 }
-

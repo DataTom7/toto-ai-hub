@@ -37,13 +37,25 @@
   "expectedResponse": {
     "intent": "information",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donate", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Share case" },
-      { "type": "more_info", "label": "More details" }
+    "messages": [
+      {
+        "message": "Max suffered a hip fracture and needs urgent surgery. He was hit by a car a week ago and has been under veterinary care since then.\n\nThe surgery is necessary for him to be able to walk again. We've already raised $15,000 of the $30,000 we need.\n\nWould you like to help Max?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donate"
+            },
+            {
+              "type": "share",
+              "label": "Share case"
+            }
+          ]
+        }
+      }
     ],
-    "shouldIncludeKB": true
+    "shouldIncludeKB": false
   },
-  "notes": "English version - information about case details."
+  "notes": "English version - information about case details from caseData, no KB needed."
 }
-

@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "Great! Sharing Luna's case helps a lot. Here's the message you can use:\n\n---\n🆘 URGENT: Luna needs help\n\nLuna was rescued with serious injuries and needs immediate veterinary care.\n\nYou can help by donating to: toto.fondo.rescate\n\nEvery contribution counts! 🙏❤️\n---"
+      "message": "Great! Sharing Luna's case helps a lot. Which platform would you like to share on?"
     }
   ],
   "caseData": {
@@ -37,12 +37,30 @@
   "expectedResponse": {
     "intent": "share",
     "confidence": 0.95,
-    "suggestedActions": [
-      { "type": "share", "label": "Share on WhatsApp", "data": { "platform": "whatsapp" } },
-      { "type": "share", "label": "Share on Instagram", "data": { "platform": "instagram" } },
-      { "type": "share", "label": "Copy message", "data": { "platform": "clipboard" } }
-    ]
+    "messages": [
+      {
+        "message": "Great! Sharing Luna's case helps a lot. Which platform would you like to share on?",
+        "quickActions": {
+          "showShareActions": true,
+          "shareButtons": [
+            {
+              "platform": "instagram",
+              "label": "Share on Instagram"
+            },
+            {
+              "platform": "twitter",
+              "label": "Share on Twitter"
+            },
+            {
+              "platform": "facebook",
+              "label": "Share on Facebook"
+            }
+          ]
+        },
+        "shouldIncludeKB": true
+      }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "English version of share intent."
 }
-

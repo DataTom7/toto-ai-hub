@@ -16,11 +16,11 @@
     },
     {
       "role": "agent",
-      "message": "¡Qué bueno que quieras ayudar a Luna! Podés:\n\n• Donar para su tratamiento\n• Compartir su caso\n• Contactar al guardián\n\n¿Qué te gustaría hacer?"
+      "message": "¡Qué bueno que quieras ayudar a Luna! Podés donar para su tratamiento o compartir su caso en redes sociales. ¿Qué te gustaría hacer?"
     },
     {
       "role": "user",
-      "message": "Donar"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
@@ -28,11 +28,15 @@
     },
     {
       "role": "user",
-      "message": "$2000"
+      "message": "Quiero donar $2.000"
     },
     {
       "role": "agent",
-      "message": "¡Increíble! Tu donación de $2.000 va a ayudar muchísimo a Luna. Para completarla:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $2.000\n3. Enviá el comprobante\n\nGracias por tu generosidad! ❤️"
+      "message": "¡Increíble! Tu donación de $2.000 va a ayudar muchísimo a Luna. Para completarla, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -53,11 +57,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.95,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $2.000", "data": { "amount": 2000 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Increíble! Tu donación de $2.000 va a ayudar muchísimo a Luna. Para completarla, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Multi-turn conversation showing context awareness. Agent remembers previous exchanges."
+  "notes": "Multi-turn conversation: user clicks 'Donar' button (sends 'Quiero donar'), then clicks '$2.000' button (sends 'Quiero donar $2.000'). Shows context awareness."
 }
 

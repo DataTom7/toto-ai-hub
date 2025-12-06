@@ -48,10 +48,20 @@ export interface GoldenConversation {
   expectedResponse: {
     intent: string;
     confidence: number;
-    suggestedActions: Array<{
-      type: 'donation_amount' | 'donation_proof' | 'share' | 'help' | 'contact' | 'more_info';
-      label: string;
-      data?: any;
+    messages: Array<{
+      message: string;
+      quickActions?: {
+        showBankingAlias?: boolean;
+        guardianBankingAlias?: string;
+        showAmountOptions?: boolean;
+        amountOptions?: Array<{label: string; amount: number | null}>;
+        showShareActions?: boolean;
+        shareButtons?: Array<{platform: string; label: string}>;
+        showHelpActions?: boolean;
+        helpButtons?: Array<{type: string; label: string}>;
+      };
+      shouldIncludeKB?: boolean;
+      kbQuery?: string;
     }>;
     shouldIncludeKB?: boolean;
   };
@@ -77,6 +87,11 @@ export function validateGoldenConversation(conv: any): conv is GoldenConversatio
   // Valid intent
   const validIntents = ['donation', 'share', 'help', 'information', 'unknown'];
   if (!validIntents.includes(conv.metadata.intent)) {
+    return false;
+  }
+
+  // Must have messages array
+  if (!conv.expectedResponse.messages || conv.expectedResponse.messages.length === 0) {
     return false;
   }
 

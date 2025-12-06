@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "Max está bajo cuidado veterinario y necesita cirugía urgente por una fractura de cadera. Podés ayudar:\n\n💰 **Donar**: Cada aporte ayuda con la cirugía\n📱 **Compartir**: Difundí su caso para que más personas puedan ayudar\n📞 **Contactar**: Hablá con el guardián para más detalles\n\n¿Qué te gustaría hacer?"
+      "message": "Max está bajo cuidado veterinario y necesita cirugía urgente por una fractura de cadera. Podés ayudar donando para su cirugía o compartiendo su caso para que más personas puedan ayudar. ¿Qué te gustaría hacer?"
     }
   ],
   "caseData": {
@@ -37,13 +37,26 @@
   "expectedResponse": {
     "intent": "help",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "contact", "label": "Contactar guardián" },
-      { "type": "more_info", "label": "Más información" }
-    ]
+    "messages": [
+      {
+        "message": "Max está bajo cuidado veterinario y necesita cirugía urgente por una fractura de cadera. Podés ayudar donando para su cirugía o compartiendo su caso para que más personas puedan ayudar. ¿Qué te gustaría hacer?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        },
+        "shouldIncludeKB": true
+      }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "User asks 'how is' the animal. Agent provides status and suggests ways to help."
 }
-

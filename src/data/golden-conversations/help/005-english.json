@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "There are several ways you can help Luna:\n\n💰 **Donate**: Every contribution helps with her treatment\n📱 **Share**: Spread her case on social media\n📞 **Contact**: Talk to the guardian\n📋 **More info**: Learn more about her situation\n\nWhat would you like to do?"
+      "message": "There are several ways you can help Luna. You can donate for her treatment or share her case on social media. What would you like to do?"
     }
   ],
   "caseData": {
@@ -37,13 +37,26 @@
   "expectedResponse": {
     "intent": "help",
     "confidence": 0.9,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donate", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Share case" },
-      { "type": "contact", "label": "Contact guardian" },
-      { "type": "more_info", "label": "More information" }
-    ]
+    "messages": [
+      {
+        "message": "There are several ways you can help Luna. You can donate for her treatment or share her case on social media. What would you like to do?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donate"
+            },
+            {
+              "type": "share",
+              "label": "Share case"
+            }
+          ]
+        },
+        "shouldIncludeKB": true
+      }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "English version of help intent."
 }
-

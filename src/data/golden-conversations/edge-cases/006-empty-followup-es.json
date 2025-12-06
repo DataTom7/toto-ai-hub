@@ -12,20 +12,36 @@
   "conversation": [
     {
       "role": "user",
-      "message": "Quiero donar $1000"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
-      "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $1.000\n3. Enviá el comprobante por este chat\n\nTu ayuda hace una diferencia real. ❤️"
+      "message": "¡Qué bueno que quieras ayudar a Luna! ¿Qué monto te gustaría donar?"
     },
     {
       "role": "user",
-      "message": "ok"
+      "message": "Quiero donar $1.000"
     },
     {
       "role": "agent",
-      "message": "¡Perfecto! Cuando hagas la transferencia, no olvides enviar el comprobante por este chat para que podamos confirmar tu donación.\n\n¡Gracias por ayudar a Luna! ❤️"
-    }
+      "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
+    },
+      {
+        "role": "user",
+        "message": "ok"
+      },
+      {
+        "role": "agent",
+        "message": "[KB content about donation verification and totitos]"
+      },
+      {
+        "role": "agent",
+        "message": "¡Gracias por ayudar a Luna! ❤️"
+      }
   ],
   "caseData": {
     "id": "case-luna-001",
@@ -45,11 +61,41 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.7,
-    "suggestedActions": [
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } },
-      { "type": "more_info", "label": "Más información" }
-    ]
+    "messages": [
+      {
+        "message": "¡Qué bueno que quieras ayudar a Luna! ¿Qué monto te gustaría donar?",
+        "quickActions": {
+          "showAmountOptions": true,
+          "amountOptions": [
+            { "label": "$500", "amount": 500 },
+            { "label": "$1.000", "amount": 1000 },
+            { "label": "$2.000", "amount": 2000 },
+            { "label": "Otro monto", "amount": null }
+          ]
+        }
+      },
+      {
+        "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": false
+      },
+      {
+        "message": "[KB content about donation verification and totitos]",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      },
+      {
+        "message": "¡Gracias por ayudar a Luna! ❤️"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Empty follow-up 'ok' or 'gracias'. Agent should acknowledge and remind about next steps."
+  "notes": "Empty follow-up 'ok' after verification question. Agent provides KB content about verification/totitos, then acknowledges. Multi-turn flow: 'Quiero donar' → agent asks → user says amount → agent provides alias → user says 'ok' → agent provides KB → agent acknowledges."
 }
 

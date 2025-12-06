@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "Podés ayudar a Coco de varias formas:\n\n💰 **Donar**: Cada aporte ayuda con su cuidado temporal\n📱 **Compartir**: Difundí su caso para que encuentre un hogar\n📞 **Contactar**: Hablá con el guardián\n📋 **Más info**: Conocé más sobre su situación\n\n¿Qué te gustaría hacer?"
+      "message": "Podés ayudar a Coco donando para su cuidado temporal o compartiendo su caso para que encuentre un hogar. ¿Qué te gustaría hacer?"
     }
   ],
   "caseData": {
@@ -37,13 +37,26 @@
   "expectedResponse": {
     "intent": "help",
     "confidence": 0.9,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "contact", "label": "Contactar guardián" },
-      { "type": "more_info", "label": "Más información" }
-    ]
+    "messages": [
+      {
+        "message": "Podés ayudar a Coco donando para su cuidado temporal o compartiendo su caso para que encuentre un hogar. ¿Qué te gustaría hacer?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        },
+        "shouldIncludeKB": true
+      }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "Help for foster category. User mentions animal name."
 }
-

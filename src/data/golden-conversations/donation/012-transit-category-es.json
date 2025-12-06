@@ -5,18 +5,30 @@
     "language": "es",
     "category": "transit",
     "complexity": "simple",
-    "hasContext": false,
-    "multiTurn": false,
+    "hasContext": true,
+    "multiTurn": true,
     "reviewed": false
   },
   "conversation": [
     {
       "role": "user",
-      "message": "Donar $800"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
-      "message": "¡Gracias! Tu donación de $800 ayudará con el traslado de Rocky. Para completarla:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $800\n3. Enviá el comprobante\n\nCada aporte facilita el transporte seguro de Rocky. ❤️"
+      "message": "¡Qué bueno que quieras ayudar a Rocky! ¿Qué monto te gustaría donar?"
+    },
+    {
+      "role": "user",
+      "message": "800"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias! Tu donación de $800 ayudará con el traslado de Rocky. Para completarla, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -37,11 +49,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.9,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $800", "data": { "amount": 800 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Gracias! Tu donación de $800 ayudará con el traslado de Rocky. Para completarla, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Transit category donation. Short form 'Donar $800'."
+  "notes": "Transit category donation. User clicks 'Otro monto' and types 800 (no dollar sign - realistic user input). Agent interprets as $800."
 }
 

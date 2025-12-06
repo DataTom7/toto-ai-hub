@@ -37,13 +37,25 @@
   "expectedResponse": {
     "intent": "information",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "more_info", "label": "Más detalles" }
+    "messages": [
+      {
+        "message": "Max sufrió una fractura de cadera y necesita cirugía urgente. Fue atropellado hace una semana y desde entonces está bajo cuidado veterinario.\n\nLa cirugía es necesaria para que pueda volver a caminar. Ya llevamos $15.000 recaudados de los $30.000 que necesitamos.\n\n¿Te gustaría ayudar a Max?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        }
+      }
     ],
-    "shouldIncludeKB": true
+    "shouldIncludeKB": false
   },
-  "notes": "Information request about case details. Should use KB to provide accurate medical info."
+  "notes": "Information request about case details. Agent provides information from caseData, no KB needed for basic case info."
 }
-

@@ -12,7 +12,7 @@
   "conversation": [
     {
       "role": "user",
-      "message": "Donar"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
@@ -37,11 +37,19 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.9,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "$500", "data": { "amount": 500 } },
-      { "type": "donation_amount", "label": "$1.000", "data": { "amount": 1000 } },
-      { "type": "donation_amount", "label": "$2.000", "data": { "amount": 2000 } },
-      { "type": "donation_amount", "label": "Otro monto", "data": { "amount": null } }
+    "messages": [
+      {
+        "message": "¡Qué bueno que quieras donar para ayudar a Luna! ¿Qué monto te gustaría donar?",
+        "quickActions": {
+          "showAmountOptions": true,
+          "amountOptions": [
+            { "label": "$500", "amount": 500 },
+            { "label": "$1.000", "amount": 1000 },
+            { "label": "$2.000", "amount": 2000 },
+            { "label": "Otro monto", "amount": null }
+          ]
+        }
+      }
     ]
   },
   "notes": "Shortest form - just 'Donar'. Agent should ask for amount."

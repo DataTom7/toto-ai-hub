@@ -20,11 +20,15 @@
     },
     {
       "role": "user",
-      "message": "$1000"
+      "message": "Quiero donar $1.000"
     },
     {
       "role": "agent",
-      "message": "Perfecto! Para donar $1.000 ahora:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $1.000\n3. Enviá el comprobante\n\nPodés hacer más donaciones cuando quieras. ¡Gracias por tu apoyo! ❤️"
+      "message": "Perfecto! Para donar $1.000 ahora, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -45,11 +49,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.95,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $1.000", "data": { "amount": 1000 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "Perfecto! Para donar $1.000 ahora, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "User asks about installments. Agent explains flexibility and proceeds with donation."
+  "notes": "User asks about installments. Agent explains flexibility and proceeds with donation. When user confirms donation after asking about installments, system should create 2 donation intents: one for current donation and one inferred for next donation (same amount, 30 days from now)."
 }
 

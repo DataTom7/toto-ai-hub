@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "¡Perfecto! Compartir el caso de Rocky ayuda a que más personas puedan ayudar. Acá está el mensaje:\n\n---\n🆘 Rocky necesita ayuda\n\nRocky necesita ser trasladado a un refugio especializado.\n\nPodés ayudar donando a: toto.fondo.rescate\n\nCada aporte facilita el transporte seguro! 🙏❤️\n---"
+      "message": "¡Perfecto! Compartir el caso de Rocky ayuda a que más personas puedan ayudar. ¿En qué plataforma querés compartirlo?"
     }
   ],
   "caseData": {
@@ -37,12 +37,30 @@
   "expectedResponse": {
     "intent": "share",
     "confidence": 0.95,
-    "suggestedActions": [
-      { "type": "share", "label": "Compartir en WhatsApp", "data": { "platform": "whatsapp" } },
-      { "type": "share", "label": "Compartir en Instagram", "data": { "platform": "instagram" } },
-      { "type": "share", "label": "Copiar mensaje", "data": { "platform": "clipboard" } }
-    ]
+    "messages": [
+      {
+        "message": "¡Perfecto! Compartir el caso de Rocky ayuda a que más personas puedan ayudar. ¿En qué plataforma querés compartirlo?",
+        "quickActions": {
+          "showShareActions": true,
+          "shareButtons": [
+            {
+              "platform": "instagram",
+              "label": "Compartir en Instagram"
+            },
+            {
+              "platform": "twitter",
+              "label": "Compartir en Twitter"
+            },
+            {
+              "platform": "facebook",
+              "label": "Compartir en Facebook"
+            }
+          ]
+        },
+        "shouldIncludeKB": true
+      }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "Transit category share."
 }
-

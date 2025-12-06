@@ -5,19 +5,31 @@
     "language": "es",
     "category": "rescue",
     "complexity": "simple",
-    "hasContext": false,
-    "multiTurn": false,
+    "hasContext": true,
+    "multiTurn": true,
     "reviewed": false,
     "reviewNotes": ""
   },
   "conversation": [
     {
       "role": "user",
-      "message": "Quiero donar $1000"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
-      "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $1.000\n3. Enviá el comprobante por este chat\n\nTu ayuda hace una diferencia real en la vida de Luna. ❤️"
+      "message": "¡Qué bueno que quieras ayudar a Luna! ¿Qué monto te gustaría donar?"
+    },
+    {
+      "role": "user",
+      "message": "Quiero donar $1.000"
+    },
+    {
+      "role": "agent",
+      "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -39,20 +51,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.95,
-    "suggestedActions": [
+    "messages": [
       {
-        "type": "donation_amount",
-        "label": "Confirmar $1.000",
-        "data": { "amount": 1000 }
+        "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
       },
       {
-        "type": "donation_proof",
-        "label": "Enviar comprobante",
-        "data": { "showUpload": true }
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
       }
     ],
-    "shouldIncludeKB": false
+    "shouldIncludeKB": true
   },
-  "notes": "Simple donation with explicit amount. Clear intent, actionable response."
+  "notes": "Simple donation flow: user clicks '$1.000' button which sends 'Quiero donar $1.000' (matches implementation). Agent provides guardian alias and asks about verification/totitos."
 }
 

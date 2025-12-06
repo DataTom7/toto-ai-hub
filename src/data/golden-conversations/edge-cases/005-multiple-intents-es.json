@@ -6,7 +6,7 @@
     "category": "rescue",
     "complexity": "medium",
     "hasContext": false,
-    "multiTurn": false,
+    "multiTurn": true,
     "reviewed": false
   },
   "conversation": [
@@ -17,6 +17,30 @@
     {
       "role": "agent",
       "message": "¡Genial! Podés hacer ambas cosas. Primero, ¿qué monto te gustaría donar? Luego te ayudo a compartir el caso.\n\n¿Qué monto querés donar?"
+    },
+    {
+      "role": "user",
+      "message": "Quiero donar $1.000"
+    },
+    {
+      "role": "agent",
+      "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
+    },
+    {
+      "role": "user",
+      "message": "Sí"
+    },
+    {
+      "role": "agent",
+      "message": "[KB content about donation verification and totitos]"
+    },
+    {
+      "role": "agent",
+      "message": "Ahora, ¿en qué plataforma querés compartir el caso de Luna?"
     }
   ],
   "caseData": {
@@ -37,13 +61,50 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.8,
+    "messages": [
+      {
+        "message": "¡Genial! Podés hacer ambas cosas. Primero, ¿qué monto te gustaría donar? Luego te ayudo a compartir el caso.\n\n¿Qué monto querés donar?",
+        "quickActions": {
+          "showAmountOptions": true,
+          "amountOptions": [
+            { "label": "$500", "amount": 500 },
+            { "label": "$1.000", "amount": 1000 },
+            { "label": "$2.000", "amount": 2000 },
+            { "label": "Otro monto", "amount": null }
+          ]
+        }
+      },
+      {
+        "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": false
+      },
+      {
+        "message": "[KB content about donation verification and totitos]",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      },
+      {
+        "message": "Ahora, ¿en qué plataforma querés compartir el caso de Luna?",
+        "quickActions": {
+          "showShareActions": true,
+          "sharePlatform": "instagram"
+        }
+      }
+    ],
     "suggestedActions": [
-      { "type": "donation_amount", "label": "$500", "data": { "amount": 500 } },
-      { "type": "donation_amount", "label": "$1.000", "data": { "amount": 1000 } },
-      { "type": "donation_amount", "label": "$2.000", "data": { "amount": 2000 } },
-      { "type": "donation_amount", "label": "Otro monto", "data": { "amount": null } }
-    ]
+      { "type": "share", "label": "Compartir en Instagram", "data": { "platform": "instagram" } },
+      { "type": "share", "label": "Compartir en Twitter", "data": { "platform": "twitter" } },
+      { "type": "share", "label": "Compartir en Facebook", "data": { "platform": "facebook" } }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Multiple intents in one message. Agent should prioritize donation and handle sequentially."
+  "notes": "Multiple intents in one message. Agent prioritizes donation first, completes donation flow (amount → alias → verification), then helps with sharing (asks for platform). Full sequential handling of both intents."
 }
 

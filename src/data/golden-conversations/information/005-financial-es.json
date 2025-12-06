@@ -37,13 +37,25 @@
   "expectedResponse": {
     "intent": "information",
     "confidence": 0.9,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "more_info", "label": "Más detalles" }
+    "messages": [
+      {
+        "message": "Para la cirugía de Max necesitamos $30.000 y ya llevamos $15.000 recaudados. Faltan $15.000.\n\nCada aporte nos acerca más a la meta.\n\n¿Te gustaría ayudar?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        }
+      }
     ],
     "shouldIncludeKB": false
   },
   "notes": "Financial question - how much is left. Short form question."
 }
-

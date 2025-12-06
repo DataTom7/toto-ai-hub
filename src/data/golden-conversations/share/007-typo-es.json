@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "¡Genial! Compartir el caso de Luna ayuda muchísimo. Acá está el mensaje:\n\n---\n🆘 URGENTE: Luna necesita ayuda\n\nLuna fue rescatada con heridas graves y necesita atención veterinaria inmediata.\n\nPodés ayudar donando a: toto.fondo.rescate\n\nCada aporte suma! 🙏❤️\n---"
+      "message": "¡Genial! Compartir el caso de Luna ayuda muchísimo. ¿En qué plataforma querés compartirlo?"
     }
   ],
   "caseData": {
@@ -37,12 +37,30 @@
   "expectedResponse": {
     "intent": "share",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "share", "label": "Compartir en WhatsApp", "data": { "platform": "whatsapp" } },
-      { "type": "share", "label": "Compartir en Instagram", "data": { "platform": "instagram" } },
-      { "type": "share", "label": "Copiar mensaje", "data": { "platform": "clipboard" } }
-    ]
+    "messages": [
+      {
+        "message": "¡Genial! Compartir el caso de Luna ayuda muchísimo. ¿En qué plataforma querés compartirlo?",
+        "quickActions": {
+          "showShareActions": true,
+          "shareButtons": [
+            {
+              "platform": "instagram",
+              "label": "Compartir en Instagram"
+            },
+            {
+              "platform": "twitter",
+              "label": "Compartir en Twitter"
+            },
+            {
+              "platform": "facebook",
+              "label": "Compartir en Facebook"
+            }
+          ]
+        },
+        "shouldIncludeKB": true
+      }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "Typo in 'comaprtir' instead of 'compartir'. Agent should still understand."
 }
-

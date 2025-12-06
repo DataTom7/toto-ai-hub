@@ -5,18 +5,30 @@
     "language": "es",
     "category": "treatment",
     "complexity": "simple",
-    "hasContext": false,
-    "multiTurn": false,
+    "hasContext": true,
+    "multiTurn": true,
     "reviewed": false
   },
   "conversation": [
     {
       "role": "user",
-      "message": "donar 100"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
-      "message": "¡Gracias por tu generosidad! Cada aporte cuenta, incluso $100. Para donar a Bella:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $100\n3. Enviá el comprobante\n\nTu ayuda es valiosa. ❤️"
+      "message": "¡Qué bueno que quieras ayudar a Bella! ¿Qué monto te gustaría donar?"
+    },
+    {
+      "role": "user",
+      "message": "$100"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias por tu generosidad! Cada aporte cuenta. Para donar $100 a Bella, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -37,11 +49,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.9,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $100", "data": { "amount": 100 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Gracias por tu generosidad! Cada aporte cuenta. Para donar $100 a Bella, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Small amount donation with lowercase. Shows agent accepts informal language."
+  "notes": "Small amount donation ($100). User clicks 'Donar' button, then clicks 'Otro monto' and types $100 (no separator for small amounts). Agent interprets as donation intent."
 }
 

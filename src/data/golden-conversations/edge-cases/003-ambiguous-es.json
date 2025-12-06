@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "¡Qué bueno que quieras ayudar a Luna! Podés hacerlo de varias formas:\n\n• Donar para su tratamiento\n• Compartir su caso\n• Contactar al guardián\n\n¿Qué te gustaría hacer?"
+      "message": "¡Qué bueno que quieras ayudar a Luna! Podés donar para su tratamiento o compartir su caso en redes sociales. ¿Qué te gustaría hacer?"
     }
   ],
   "caseData": {
@@ -37,12 +37,19 @@
   "expectedResponse": {
     "intent": "unknown",
     "confidence": 0.6,
+    "messages": [
+      {
+        "message": "¡Qué bueno que quieras ayudar a Luna! Podés donar para su tratamiento o compartir su caso en redes sociales. ¿Qué te gustaría hacer?",
+        "quickActions": {
+          "showHelpActions": true
+        }
+      }
+    ],
     "suggestedActions": [
       { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "contact", "label": "Contactar guardián" },
-      { "type": "more_info", "label": "Más información" }
-    ]
+      { "type": "share", "label": "Compartir caso" }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "Ambiguous message 'ayudar' - could be donate or share. Agent should ask for clarification."
 }

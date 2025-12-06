@@ -50,12 +50,19 @@ describe('Golden Conversations', () => {
       });
     });
 
-    it('should validate all have suggested actions', () => {
+    it('should validate all have messages array', () => {
       const conversations = loadGoldenConversations();
 
       conversations.forEach((conv) => {
-        expect(conv.expectedResponse.suggestedActions).toBeDefined();
-        expect(conv.expectedResponse.suggestedActions.length).toBeGreaterThan(0);
+        expect(conv.expectedResponse.messages).toBeDefined();
+        expect(conv.expectedResponse.messages.length).toBeGreaterThan(0);
+
+        // Each message should have required fields
+        conv.expectedResponse.messages.forEach((msg) => {
+          expect(msg.message).toBeDefined();
+          expect(typeof msg.message).toBe('string');
+          expect(msg.message.length).toBeGreaterThan(0);
+        });
       });
     });
   });

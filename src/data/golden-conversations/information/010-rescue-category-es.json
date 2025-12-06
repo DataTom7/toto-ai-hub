@@ -37,13 +37,25 @@
   "expectedResponse": {
     "intent": "information",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "more_info", "label": "Más detalles" }
+    "messages": [
+      {
+        "message": "Luna fue encontrada en la calle con heridas graves. Fue rescatada y está recibiendo atención veterinaria urgente.\n\nLas heridas requieren tratamiento inmediato para asegurar su recuperación. Cada aporte ayuda a cubrir los costos del tratamiento.\n\n¿Te gustaría ayudar a Luna?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        }
+      }
     ],
-    "shouldIncludeKB": true
+    "shouldIncludeKB": false
   },
-  "notes": "Information request for rescue category. User asks what happened."
+  "notes": "Information request for rescue category. Agent provides information from caseData, no KB needed."
 }
-

@@ -12,11 +12,23 @@
   "conversation": [
     {
       "role": "user",
-      "message": "Quiero donar $1000"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
-      "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $1.000\n3. Enviá el comprobante por este chat\n\nTu ayuda hace una diferencia real. ❤️"
+      "message": "¡Qué bueno que quieras ayudar a Luna! ¿Qué monto te gustaría donar?"
+    },
+    {
+      "role": "user",
+      "message": "Quiero donar $1.000"
+    },
+    {
+      "role": "agent",
+      "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     },
     {
       "role": "user",
@@ -24,7 +36,7 @@
     },
     {
       "role": "agent",
-      "message": "¡De nada! Nosotros te agradecemos por querer ayudar a Luna. Cuando hagas la transferencia, no olvides enviar el comprobante.\n\n¡Que tengas un lindo día! ❤️"
+      "message": "¡De nada! Nosotros te agradecemos por querer ayudar a Luna. Cuando hagas la transferencia, recordá que podés verificar tu donación y recibir tus totitos.\n\n¡Que tengas un lindo día! ❤️"
     }
   ],
   "caseData": {
@@ -45,10 +57,27 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.6,
-    "suggestedActions": [
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      },
+      {
+        "message": "¡De nada! Nosotros te agradecemos por querer ayudar a Luna. Cuando hagas la transferencia, recordá que podés verificar tu donación y recibir tus totitos.\n\n¡Que tengas un lindo día! ❤️",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "User says 'gracias' as follow-up. Agent should acknowledge and remind about receipt."
+  "notes": "User says 'gracias' as follow-up. Agent should acknowledge and remind about verification/totitos (KB). Multi-turn flow: 'Quiero donar' → agent asks → user says amount → agent provides alias → user says 'gracias' → agent acknowledges."
 }
 

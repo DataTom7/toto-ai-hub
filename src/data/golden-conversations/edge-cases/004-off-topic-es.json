@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "No tengo información sobre ubicaciones de veterinarias. Pero podés ayudar a Luna de otras formas:\n\n• Donar para su tratamiento\n• Compartir su caso\n• Contactar al guardián para más información\n\n¿Te gustaría ayudar a Luna?"
+      "message": "¿Te referís a la ubicación de Luna? Luna está en Buenos Aires, bajo cuidado veterinario. Si necesitás información sobre veterinarias en general, no tengo esa información disponible.\n\n¿Te gustaría ayudar a Luna donando para su tratamiento o compartiendo su caso?"
     }
   ],
   "caseData": {
@@ -37,13 +37,20 @@
   "expectedResponse": {
     "intent": "unknown",
     "confidence": 0.3,
+    "messages": [
+      {
+        "message": "¿Te referís a la ubicación de Luna? Luna está en Buenos Aires, bajo cuidado veterinario. Si necesitás información sobre veterinarias en general, no tengo esa información disponible.\n\n¿Te gustaría ayudar a Luna donando para su tratamiento o compartiendo su caso?",
+        "quickActions": {
+          "showHelpActions": true
+        }
+      }
+    ],
     "suggestedActions": [
       { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "contact", "label": "Contactar guardián" },
-      { "type": "more_info", "label": "Más información" }
-    ]
+      { "type": "share", "label": "Compartir caso" }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Off-topic question. Agent should politely redirect to case-related actions."
+  "notes": "Off-topic question about vet location. Agent interprets as potentially asking about Luna's location and provides case location from caseData, then redirects to case-related actions."
 }
 

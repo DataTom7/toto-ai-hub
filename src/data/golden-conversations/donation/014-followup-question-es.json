@@ -16,15 +16,19 @@
     },
     {
       "role": "agent",
-      "message": "Para la cirugía de Max necesitamos $30.000 y ya llevamos $15.000 recaudados. Faltan $15.000.\n\n¿Te gustaría ayudar con una donación?"
+      "message": "Para la cirugía de Max se necesitan $30.000 y ya se han recaudado $15.000. Faltan $15.000.\n\n¿Te gustaría ayudar con una donación?"
     },
     {
       "role": "user",
-      "message": "Sí, dono $2000"
+      "message": "Sí, dono $2.000"
     },
     {
       "role": "agent",
-      "message": "¡Excelente! Tu donación de $2.000 nos acerca más a la meta. Para completarla:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $2.000\n3. Enviá el comprobante\n\nCon tu ayuda, Max podrá recibir la cirugía pronto. ¡Gracias! ❤️"
+      "message": "¡Excelente! Tu donación de $2.000 ayudará muchísimo a Max. Para completarla, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -45,11 +49,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.95,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $2.000", "data": { "amount": 2000 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Excelente! Tu donación de $2.000 ayudará muchísimo a Max. Para completarla, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "Follow-up question about progress, then donation. Shows natural conversation flow."
+  "notes": "Follow-up question about progress, then donation. Agent provides information from case details (cost and raised amount from caseData). Note: We use donation milestones, not goals. Information should only be mentioned if available in case description or updates."
 }
 

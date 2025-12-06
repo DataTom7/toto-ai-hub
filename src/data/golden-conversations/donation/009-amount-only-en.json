@@ -12,11 +12,15 @@
   "conversation": [
     {
       "role": "user",
-      "message": "$500"
+      "message": "I want to donate $500"
     },
     {
       "role": "agent",
-      "message": "Thank you for your $500 contribution for Max's surgery! To complete the donation:\n\n1. Transfer to: toto.fondo.rescate\n2. Amount: $500\n3. Send the receipt\n\nEvery contribution brings us closer to saving Max."
+      "message": "Thank you for your $500 contribution for Max's surgery! To complete the donation, transfer to the guardian's alias."
+    },
+    {
+      "role": "agent",
+      "message": "Would you like to know how to verify your donation and receive your totitos?"
     }
   ],
   "caseData": {
@@ -37,10 +41,21 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirm $500", "data": { "amount": 500 } },
-      { "type": "donation_proof", "label": "Send receipt", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "Thank you for your $500 contribution for Max's surgery! To complete the donation, transfer to the guardian's alias.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "Would you like to know how to verify your donation and receive your totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "how to verify donation totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "English - amount only message."
 }

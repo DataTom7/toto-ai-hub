@@ -16,7 +16,7 @@
     },
     {
       "role": "agent",
-      "message": "Luna necesita atención veterinaria urgente por las heridas que tiene. Podés ayudar de varias formas:\n\n💰 **Donar**: Cada aporte ayuda con su tratamiento\n📱 **Compartir**: Difundí su caso para que más personas puedan ayudar\n📞 **Contactar**: Hablá con el guardián si tenés preguntas\n\n¿Qué te gustaría hacer?"
+      "message": "Luna necesita atención veterinaria urgente por las heridas que tiene. Podés ayudar donando para su tratamiento o compartiendo su caso para que más personas puedan ayudar. ¿Qué te gustaría hacer?"
     }
   ],
   "caseData": {
@@ -37,13 +37,26 @@
   "expectedResponse": {
     "intent": "help",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "contact", "label": "Contactar guardián" },
-      { "type": "more_info", "label": "Más información" }
-    ]
+    "messages": [
+      {
+        "message": "Luna necesita atención veterinaria urgente por las heridas que tiene. Podés ayudar donando para su tratamiento o compartiendo su caso para que más personas puedan ayudar. ¿Qué te gustaría hacer?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        },
+        "shouldIncludeKB": true
+      }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "Specific question about what's needed. Agent provides info and suggests actions."
 }
-

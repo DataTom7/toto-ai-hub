@@ -12,11 +12,15 @@
   "conversation": [
     {
       "role": "user",
-      "message": "$500"
+      "message": "Quiero donar $500"
     },
     {
       "role": "agent",
-      "message": "¡Gracias por tu aporte de $500 para la cirugía de Max! Para completar la donación:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $500\n3. Enviá el comprobante\n\nCada aporte nos acerca más a salvar a Max."
+      "message": "¡Gracias por tu aporte de $500 para la cirugía de Max! Para completar la donación, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -37,11 +41,22 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $500", "data": { "amount": 500 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Gracias por tu aporte de $500 para la cirugía de Max! Para completar la donación, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
-  "notes": "User sends just an amount. Agent should interpret as donation intent."
+  "notes": "User clicks '$500' button which sends 'Quiero donar $500' (matches implementation). Agent interprets as donation intent."
 }
 

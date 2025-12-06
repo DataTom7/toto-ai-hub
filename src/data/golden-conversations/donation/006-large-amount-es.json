@@ -5,18 +5,30 @@
     "language": "es",
     "category": "surgery",
     "complexity": "simple",
-    "hasContext": false,
-    "multiTurn": false,
+    "hasContext": true,
+    "multiTurn": true,
     "reviewed": false
   },
   "conversation": [
     {
       "role": "user",
-      "message": "Quiero donar $5000"
+      "message": "Quiero donar"
     },
     {
       "role": "agent",
-      "message": "¡Increíble! Tu donación de $5.000 para la cirugía de Max es muy generosa. Para completarla:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $5.000\n3. Enviá el comprobante\n\nCon tu ayuda, Max podrá recibir la cirugía que necesita. ¡Gracias! ❤️"
+      "message": "¡Qué bueno que quieras ayudar a Max! ¿Qué monto te gustaría donar?"
+    },
+    {
+      "role": "user",
+      "message": "Quiero donar $5.000"
+    },
+    {
+      "role": "agent",
+      "message": "¡Increíble! Tu donación de $5.000 para la cirugía de Max es muy generosa. Para completarla, transferí al alias del guardián."
+    },
+    {
+      "role": "agent",
+      "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     }
   ],
   "caseData": {
@@ -37,10 +49,21 @@
   "expectedResponse": {
     "intent": "donation",
     "confidence": 0.95,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Confirmar $5.000", "data": { "amount": 5000 } },
-      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
-    ]
+    "messages": [
+      {
+        "message": "¡Increíble! Tu donación de $5.000 para la cirugía de Max es muy generosa. Para completarla, transferí al alias del guardián.",
+        "quickActions": {
+          "showBankingAlias": true
+        },
+        "guardianBankingAlias": "[guardian-alias]"
+      },
+      {
+        "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?",
+        "shouldIncludeKB": true,
+        "kbQuery": "cómo verificar donación totitos"
+      }
+    ],
+    "shouldIncludeKB": true
   },
   "notes": "Large donation amount. Agent should acknowledge generosity appropriately."
 }

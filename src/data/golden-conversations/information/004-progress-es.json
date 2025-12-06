@@ -37,13 +37,25 @@
   "expectedResponse": {
     "intent": "information",
     "confidence": 0.85,
-    "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" },
-      { "type": "more_info", "label": "Más detalles" }
+    "messages": [
+      {
+        "message": "Max está bajo cuidado veterinario mientras esperamos la cirugía. Una vez que alcancemos la meta de $30.000, podrá ser operado y comenzar su recuperación.\n\nActualmente llevamos $15.000 recaudados, faltan $15.000.\n\n¿Te gustaría ayudar a que Max pueda operarse pronto?",
+        "quickActions": {
+          "showHelpActions": true,
+          "helpButtons": [
+            {
+              "type": "donation_amount",
+              "label": "Donar"
+            },
+            {
+              "type": "share",
+              "label": "Compartir caso"
+            }
+          ]
+        }
+      }
     ],
-    "shouldIncludeKB": true
+    "shouldIncludeKB": false
   },
-  "notes": "Progress question. Agent explains current status and funding progress."
+  "notes": "Progress question. Agent explains current status and funding progress from caseData, no KB needed."
 }
-
