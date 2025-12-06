@@ -32,7 +32,8 @@
     "update-kb-from-hardcoded": "ts-node scripts/update-kb-entries-from-hardcoded.ts",
     "add-flow-kb-entries": "ts-node scripts/add-flow-kb-entries.ts",
     "update-trf-alias": "ts-node scripts/update-kb-trf-alias.ts",
-    "test-flows": "ts-node scripts/test-donation-sharing-flows.ts"
+    "test-flows": "ts-node scripts/test-donation-sharing-flows.ts",
+    "test-conversations-db": "ts-node scripts/test-conversations-with-db.ts"
   },
   "keywords": [
     "ai",
