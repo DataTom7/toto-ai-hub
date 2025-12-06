@@ -2,7 +2,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { VertexAISearchService, VertexAISearchResult } from './VertexAISearchService';
 import { VectorDBService, VectorDocument, VectorSearchQuery, VectorSearchResult } from './VectorDBService';
 import { PredictionServiceClient } from '@google-cloud/aiplatform';
-import { RAG_SERVICE_CONSTANTS } from '../config/constants';
+import { RAG_SERVICE_CONSTANTS, CASE_AGENT_CONSTANTS } from '../config/constants';
+import { assertValidEmbedding } from '../utils/embeddingValidator';
 
 export interface KnowledgeChunk {
   id: string;
@@ -318,11 +319,26 @@ export class RAGService {
           throw new Error(`Unexpected embedding dimensions: ${embedding.length}, expected ${this.embeddingDimensions}`);
         }
 
+        // Validate embedding before returning
+        try {
+          assertValidEmbedding(
+            embedding,
+            this.embeddingDimensions,
+            'RAGService.generateVertexAIEmbedding'
+          );
+        } catch (validationError) {
+          console.error('[RAGService] ❌ Generated invalid embedding:', validationError);
+          throw new Error(
+            `Embedding validation failed: ${validationError instanceof Error ? validationError.message : 'Unknown error'}`
+          );
+        }
+
         // Success! Log and return
         if (attempt > 1) {
           console.log(`[RAGService] ✅ Vertex AI succeeded on attempt ${attempt}/${maxRetries}`);
         }
 
+        console.log(`[RAGService] ✅ Generated valid ${embedding.length}D embedding`);
         return embedding;
 
       } catch (error) {
@@ -406,10 +422,26 @@ Return format: [0.123, -0.456, 0.789, ...] (768 numbers total)`;
         if (Array.isArray(embedding) && embedding.length === this.embeddingDimensions) {
           // Normalize the embedding
           const magnitude = Math.sqrt(embedding.reduce((sum: number, val: number) => sum + val * val, 0));
-          if (magnitude > 0) {
-            return embedding.map((val: number) => val / magnitude);
+          const normalizedEmbedding = magnitude > 0
+            ? embedding.map((val: number) => val / magnitude)
+            : embedding;
+
+          // Validate embedding before returning
+          try {
+            assertValidEmbedding(
+              normalizedEmbedding,
+              this.embeddingDimensions,
+              'RAGService.generateGeminiMultilingualEmbedding'
+            );
+          } catch (validationError) {
+            console.error('[RAGService] ❌ Generated invalid embedding:', validationError);
+            throw new Error(
+              `Embedding validation failed: ${validationError instanceof Error ? validationError.message : 'Unknown error'}`
+            );
           }
-          return embedding;
+
+          console.log(`[RAGService] ✅ Generated valid ${normalizedEmbedding.length}D embedding`);
+          return normalizedEmbedding;
         }
       }
 
@@ -454,7 +486,23 @@ English translation:`;
 
       // Now use the English text with improved hash-based embedding
       // This ensures Spanish "Cómo puedo ayudar?" → English "How can I help?" → same embedding space
-      return this.generateImprovedHashEmbedding(englishText);
+      const embedding = this.generateImprovedHashEmbedding(englishText);
+      
+      // Validate embedding before returning
+      try {
+        assertValidEmbedding(
+          embedding,
+          this.embeddingDimensions,
+          'RAGService.generateTranslationBasedEmbedding'
+        );
+      } catch (validationError) {
+        console.error('[RAGService] ❌ Generated invalid embedding:', validationError);
+        throw new Error(
+          `Embedding validation failed: ${validationError instanceof Error ? validationError.message : 'Unknown error'}`
+        );
+      }
+
+      return embedding;
     } catch (error) {
       console.warn('[RAGService] Translation-based embedding failed, using basic hash:', error);
       return this.generateFallbackEmbedding(text);
@@ -488,11 +536,24 @@ English translation:`;
     
     // Normalize the embedding vector
     const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-    if (magnitude > 0) {
-      return embedding.map(val => val / magnitude);
+    const normalizedEmbedding = magnitude > 0
+      ? embedding.map(val => val / magnitude)
+      : embedding;
+
+    // Validate embedding before returning
+    try {
+      assertValidEmbedding(
+        normalizedEmbedding,
+        this.embeddingDimensions,
+        'RAGService.generateImprovedHashEmbedding'
+      );
+    } catch (validationError) {
+      console.error('[RAGService] ❌ Generated invalid embedding:', validationError);
+      // For hash-based embeddings, we'll still return but log the error
+      console.warn('[RAGService] ⚠️  Returning embedding despite validation failure (hash-based mode)');
     }
-    
-    return embedding;
+
+    return normalizedEmbedding;
   }
 
   /**
@@ -531,11 +592,25 @@ English translation:`;
     
     // Normalize the embedding vector
     const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-    if (magnitude > 0) {
-      return embedding.map(val => val / magnitude);
+    const normalizedEmbedding = magnitude > 0
+      ? embedding.map(val => val / magnitude)
+      : embedding;
+
+    // Validate embedding before returning
+    try {
+      assertValidEmbedding(
+        normalizedEmbedding,
+        this.embeddingDimensions,
+        'RAGService.generateFallbackEmbedding'
+      );
+    } catch (validationError) {
+      console.error('[RAGService] ❌ Generated invalid fallback embedding:', validationError);
+      // For fallback, we'll still return but log the error
+      // This prevents infinite loops if validation itself fails
+      console.warn('[RAGService] ⚠️  Returning embedding despite validation failure (fallback mode)');
     }
-    
-    return embedding;
+
+    return normalizedEmbedding;
   }
 
   /**

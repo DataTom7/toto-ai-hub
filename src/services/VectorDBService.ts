@@ -17,6 +17,7 @@
 
 import { GoogleAuth } from 'google-auth-library';
 import { VECTOR_DB_CONSTANTS } from '../config/constants';
+import { assertValidEmbedding, validateEmbeddingBatch } from '../utils/embeddingValidator';
 
 // Conditional import for HNSW - requires native compilation
 // Note: On Windows, requires Visual Studio build tools for installation
@@ -175,6 +176,18 @@ export class VectorDBService {
    * Upsert a single vector document
    */
   async upsert(document: VectorDocument): Promise<void> {
+    // Validate embedding before storage
+    try {
+      assertValidEmbedding(
+        document.embedding,
+        this.config.dimensions,
+        `VectorDB.upsert(${document.id})`
+      );
+    } catch (error) {
+      console.error(`[VectorDBService] ❌ Invalid embedding for document ${document.id}:`, error);
+      throw error;
+    }
+
     if (this.config.backend === 'vertex-ai') {
       await this.upsertVertexAI([document]);
     } else {
@@ -196,6 +209,30 @@ export class VectorDBService {
    * Upsert multiple vector documents (batch operation)
    */
   async upsertBatch(documents: VectorDocument[]): Promise<BatchOperationResult> {
+    // Validate all embeddings before batch operation
+    const embeddings = documents.map(doc => doc.embedding);
+    const validationResults = validateEmbeddingBatch(embeddings, this.config.dimensions);
+
+    if (validationResults.invalidCount > 0) {
+      console.error(`[VectorDBService] ❌ Batch contains ${validationResults.invalidCount} invalid embeddings`);
+      validationResults.errors.forEach(({ index, error }) => {
+        console.error(`  - Document ${documents[index]?.id || index}: ${error}`);
+      });
+
+      // Return batch operation result with errors
+      return {
+        success: false,
+        processedCount: 0,
+        failedCount: documents.length,
+        errors: validationResults.errors.map(({ index, error }) => ({
+          id: documents[index]?.id || `index_${index}`,
+          error,
+        })),
+      };
+    }
+
+    console.log(`[VectorDBService] ✅ All ${documents.length} embeddings validated`);
+
     try {
       if (this.config.backend === 'vertex-ai') {
         await this.upsertVertexAI(documents);
@@ -260,6 +297,18 @@ export class VectorDBService {
    * Search for similar vectors
    */
   async search(query: VectorSearchQuery): Promise<VectorSearchResult[]> {
+    // Validate query embedding
+    try {
+      assertValidEmbedding(
+        query.embedding,
+        this.config.dimensions,
+        'VectorDB.search'
+      );
+    } catch (error) {
+      console.error('[VectorDBService] ❌ Invalid query embedding:', error);
+      throw error;
+    }
+
     console.log(`[VectorDBService] search() called with backend: ${this.config.backend} (instance: ${this.instanceId})`);
     if (this.config.backend === 'vertex-ai') {
       return await this.searchVertexAI(query);

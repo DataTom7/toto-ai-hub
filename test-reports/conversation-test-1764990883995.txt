@@ -1,0 +1,209 @@
+
+================================================================================
+📊 DETAILED TEST CONVERSATION REPORT
+================================================================================
+
+Total Conversations: 10
+✅ Passed: 4
+❌ Failed: 6
+Success Rate: 40.0%
+
+❌ Conversation 1: Donation Flow - Standard
+   Conversation ID: 
+   Test Session ID: test-1764990786964-0-zuc6rj8qz
+   Status: FAILED
+   Steps: 2/3 passed (66.7%)
+
+   ❌ Step 1: "Cómo puedo ayudar?"
+      Intent: help
+      Response: Hay varias maneras en que puedes ayudar: Donar: Puedes contribuir directamente a su atención médica ...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":true,"actionTriggers":["help"]}
+      KB Entries: kb-kb-case-management-emotional-support, kb-kb-case-management-incomplete-info, kb-kb-case-management-status-types, kb-kb-cases-001, kb-kb-cases-002, kb-kb-cases-003, kb-kb-cases-004, kb-kb-cases-005, kb-kb-cases-006, kb-kb-cases-007, kb-kb-cases-008, kb-kb-cases-009, kb-kb-cases-010, kb-kb-conversation-001, kb-kb-conversation-002, kb-kb-donations-001, kb-kb-donations-002, kb-kb-donations-003, kb-kb-donations-004, kb-kb-donations-005, kb-kb-donations-006, kb-kb-donations-007, kb-kb-donations-008, kb-kb-donations-009, kb-kb-donations-010, kb-kb-donations-011, kb-kb-donations-012, kb-kb-donations-013, kb-kb-donations-014, kb-kb-donations-015, kb-kb-donations-016, kb-kb-donations-017, kb-kb-donations-totitos-complete-guide, kb-kb-donations-trf-guide, kb-kb-donations-verification, kb-kb-flow-donation-amount-selected, kb-kb-flow-donation-intent, kb-kb-flow-help-seeking, kb-kb-flow-sharing-intent, kb-kb-social-001, kb-kb-social-002, kb-kb-social-media-sharing-guide, kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+      Failures:
+        - Response should NOT contain "alias"
+
+   ✅ Step 2: "Quiero donar"
+      Intent: donate
+      Response: ¡Qué bien que quieras donar. Cada donación, por pequeña que sea, hace una gran diferencia para Luna....
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":true,"suggestedDonationAmounts":[500,1000,2500,5000],"showHelpActions":false,"actionTriggers":["donate"]}
+      KB Entries: kb-kb-case-management-emotional-support, kb-kb-case-management-incomplete-info, kb-kb-case-management-status-types, kb-kb-cases-001, kb-kb-cases-002, kb-kb-cases-003, kb-kb-cases-004, kb-kb-cases-005, kb-kb-cases-006, kb-kb-cases-007, kb-kb-cases-008, kb-kb-cases-009, kb-kb-cases-010, kb-kb-conversation-001, kb-kb-conversation-002, kb-kb-donations-001, kb-kb-donations-002, kb-kb-donations-003, kb-kb-donations-004, kb-kb-donations-005, kb-kb-donations-006, kb-kb-donations-007, kb-kb-donations-008, kb-kb-donations-009, kb-kb-donations-010, kb-kb-donations-011, kb-kb-donations-012, kb-kb-donations-013, kb-kb-donations-014, kb-kb-donations-015, kb-kb-donations-016, kb-kb-donations-017, kb-kb-donations-totitos-complete-guide, kb-kb-donations-trf-guide, kb-kb-donations-verification, kb-kb-flow-donation-amount-selected, kb-kb-flow-donation-intent, kb-kb-flow-help-seeking, kb-kb-flow-sharing-intent, kb-kb-social-001, kb-kb-social-002, kb-kb-social-media-sharing-guide, kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+
+   ✅ Step 3: "Quiero donar $1000"
+      Intent: donate
+      Response: ¡Excelente. Con $1000, Luna podrá recibir una atención médica muy completa. Puedes realizar tu donac...
+      Quick Actions: {"showBankingAlias":true,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["donate"]}
+      KB Entries: kb-kb-case-management-emotional-support, kb-kb-case-management-incomplete-info, kb-kb-case-management-status-types, kb-kb-cases-001, kb-kb-cases-002, kb-kb-cases-003, kb-kb-cases-004, kb-kb-cases-005, kb-kb-cases-006, kb-kb-cases-007, kb-kb-cases-008, kb-kb-cases-009, kb-kb-cases-010, kb-kb-conversation-001, kb-kb-conversation-002, kb-kb-donations-001, kb-kb-donations-002, kb-kb-donations-003, kb-kb-donations-004, kb-kb-donations-005, kb-kb-donations-006, kb-kb-donations-007, kb-kb-donations-008, kb-kb-donations-009, kb-kb-donations-010, kb-kb-donations-011, kb-kb-donations-012, kb-kb-donations-013, kb-kb-donations-014, kb-kb-donations-015, kb-kb-donations-016, kb-kb-donations-017, kb-kb-donations-totitos-complete-guide, kb-kb-donations-trf-guide, kb-kb-donations-verification, kb-kb-flow-donation-amount-selected, kb-kb-flow-donation-intent, kb-kb-flow-help-seeking, kb-kb-flow-sharing-intent, kb-kb-social-001, kb-kb-social-002, kb-kb-social-media-sharing-guide, kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+
+
+❌ Conversation 2: Donation Flow - Amount $500
+   Conversation ID: 
+   Test Session ID: test-1764990818228-1-e9k9ehent
+   Status: FAILED
+   Steps: 2/3 passed (66.7%)
+
+   ✅ Step 1: "Cómo puedo ayudar?"
+      Intent: help
+      Response: ¡Qué bueno que quieras ayudar! Podés donar para los gastos médicos o compartir su historia en redes ...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":true,"actionTriggers":["help"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+
+   ✅ Step 2: "Quiero donar"
+      Intent: donate
+      Response: ¡Excelente. ¿Cuánto te gustaría donar?
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":true,"suggestedDonationAmounts":[500,1000,2500,5000],"showHelpActions":false,"actionTriggers":["donate"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+
+   ❌ Step 3: "$500"
+      Intent: learn
+      Response: ¡Genial. Con $500 estarías contribuyendo enormemente a la cirugía urgente que necesita Max. Si desea...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["learn"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+      Failures:
+        - Expected intent "donate", got "learn"
+        - Expected showBankingAlias = true, got false
+
+
+✅ Conversation 3: Donation Flow - Direct Amount
+   Conversation ID: 
+   Test Session ID: test-1764990828951-2-l9eo7015b
+   Status: PASSED
+   Steps: 1/1 passed (100.0%)
+
+   ✅ Step 1: "Quiero donar $2500"
+      Intent: donate
+      Response: ¡Claro que sí. Agradezco mucho tu generosidad para ayudar a Bella. Puedes realizar una donación de $...
+      Quick Actions: {"showBankingAlias":true,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["donate"]}
+      KB Entries: kb-flow-donation-intent, kb-flow-donation-amount-selected, kb-flow-help-seeking
+
+
+❌ Conversation 4: Donation Flow - Help to Donate
+   Conversation ID: 
+   Test Session ID: test-1764990832208-3-5kgnepm7b
+   Status: FAILED
+   Steps: 1/3 passed (33.3%)
+
+   ✅ Step 1: "Cómo puedo ayudar?"
+      Intent: help
+      Response: Rocky necesita un hogar en Mendoza. ¿Qué te parece mejor.
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":true,"actionTriggers":["help"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+
+   ❌ Step 2: "Donar"
+      Intent: learn
+      Response: ¡Qué bueno que quieres ayudar a Rocky. Puedes hacer una donación a través del alias bancario (dispon...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["learn"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+      Failures:
+        - Expected intent "donate", got "learn"
+
+   ❌ Step 3: "1000"
+      Intent: learn
+      Response: ¡Genial. Con 1000 puedes ayudar mucho a Rocky. Puedes hacer tu donativo a través del alias bancario ...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["learn"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+      Failures:
+        - Expected intent "donate", got "learn"
+
+
+✅ Conversation 5: Donation Flow - Large Amount
+   Conversation ID: 
+   Test Session ID: test-1764990845954-4-0tinaiivr
+   Status: PASSED
+   Steps: 1/1 passed (100.0%)
+
+   ✅ Step 1: "Quiero donar $5000"
+      Intent: donate
+      Response: ¡Qué bueno que quieres ayudar a Sofía. Tu donativo de $5000 será de gran ayuda. Puedes realizar tu d...
+      Quick Actions: {"showBankingAlias":true,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["donate"]}
+      KB Entries: kb-flow-donation-intent, kb-flow-donation-amount-selected, kb-flow-help-seeking
+
+
+✅ Conversation 6: Sharing Flow - Standard
+   Conversation ID: 
+   Test Session ID: test-1764990849728-5-0ry6ph2iu
+   Status: PASSED
+   Steps: 2/2 passed (100.0%)
+
+   ✅ Step 1: "Cómo puedo ayudar?"
+      Intent: help
+      Response: Para colaborar, tienes estas opciones: Donar: Puedes hacer una donación a través del botón "Donar". ...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":true,"actionTriggers":["help"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+
+   ✅ Step 2: "Quiero compartir"
+      Intent: share
+      Response: ¡Excelente. Compartir es una manera fantástica de ayudar a Luna (test-case-006). ¡Cada vez que compa...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":true,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["share"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected, kb-flow-sharing-intent
+
+
+❌ Conversation 7: Sharing Flow - Direct Share
+   Conversation ID: 
+   Test Session ID: test-1764990857468-6-r8yfvd15k
+   Status: FAILED
+   Steps: 0/1 passed (0.0%)
+
+   ❌ Step 1: "Quiero compartir este caso"
+      Intent: learn
+      Response: ¡Qué bueno que quieres compartir el caso de Max. Puedes usar los botones que aparecen abajo para com...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["learn"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-sharing-intent, kb-flow-donation-amount-selected
+      Failures:
+        - Expected intent "share", got "learn"
+
+
+❌ Conversation 8: Sharing Flow - Help to Share
+   Conversation ID: 
+   Test Session ID: test-1764990863621-7-e0wbveizv
+   Status: FAILED
+   Steps: 1/2 passed (50.0%)
+
+   ✅ Step 1: "Cómo puedo ayudar?"
+      Intent: help
+      Response: Para ayudar, puedes hacer una donación a través del alias bancario (disponible mediante los botones ...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":true,"actionTriggers":["help"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+
+   ❌ Step 2: "Compartir"
+      Intent: learn
+      Response: ¡Excelente. Compartir la historia de Bella (test-case-008) es una manera fantástica de ayudarla a re...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["learn"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected, kb-flow-sharing-intent
+      Failures:
+        - Expected intent "share", got "learn"
+
+
+✅ Conversation 9: Sharing Flow - Share on Social
+   Conversation ID: 
+   Test Session ID: test-1764990872372-8-bkrqcuj1y
+   Status: PASSED
+   Steps: 1/1 passed (100.0%)
+
+   ✅ Step 1: "Quiero compartir en redes sociales"
+      Intent: share
+      Response: ¡Claro que sí. Puedes compartir la información de Rocky en tus redes sociales para ayudarle a encont...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":true,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["share"]}
+      KB Entries: kb-flow-sharing-intent, kb-flow-help-seeking, kb-flow-donation-amount-selected
+
+
+❌ Conversation 10: Sharing Flow - Spread the Word
+   Conversation ID: 
+   Test Session ID: test-1764990874833-9-jydn9gfcz
+   Status: FAILED
+   Steps: 1/2 passed (50.0%)
+
+   ✅ Step 1: "Cómo puedo ayudar?"
+      Intent: help
+      Response: ¡Qué bueno que quieras ayudar! Podés donar para los gastos médicos o compartir su historia en redes ...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":true,"actionTriggers":["help"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected
+
+   ❌ Step 2: "Compartir su historia"
+      Intent: learn
+      Response: ¡Excelente. Compartir la historia de Sofía (test-case-010) es una gran manera de ayudarla a encontra...
+      Quick Actions: {"showBankingAlias":false,"showTRFAlias":false,"showSocialMedia":false,"showAdoptionInfo":false,"showGuardianContact":false,"showDonationIntent":false,"showHelpActions":false,"actionTriggers":["learn"]}
+      KB Entries: kb-flow-help-seeking, kb-flow-donation-intent, kb-flow-donation-amount-selected, kb-flow-sharing-intent
+      Failures:
+        - Expected intent "share", got "learn"
+
+

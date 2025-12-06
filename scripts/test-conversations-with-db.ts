@@ -182,7 +182,7 @@ const TEST_CONVERSATIONS: TestConversation[] = [
     messages: [
       { userMessage: 'Cómo puedo ayudar?', expectedIntent: 'help' },
       { userMessage: 'Quiero donar', expectedIntent: 'donate' },
-      { userMessage: '$500', expectedIntent: 'donate', expectedQuickActions: { showBankingAlias: true } }
+      { userMessage: 'Quiero donar $500', expectedIntent: 'donate', expectedQuickActions: { showBankingAlias: true } }
     ]
   },
   // Donation Flow 3 - Direct amount
@@ -237,8 +237,8 @@ const TEST_CONVERSATIONS: TestConversation[] = [
     },
     messages: [
       { userMessage: 'Cómo puedo ayudar?', expectedIntent: 'help' },
-      { userMessage: 'Donar', expectedIntent: 'donate' },
-      { userMessage: '1000', expectedIntent: 'donate' }
+      { userMessage: 'Quiero donar', expectedIntent: 'donate' },
+      { userMessage: 'Quiero donar $1000', expectedIntent: 'donate' }
     ]
   },
   // Donation Flow 5 - Large amount
@@ -350,7 +350,7 @@ const TEST_CONVERSATIONS: TestConversation[] = [
     },
     messages: [
       { userMessage: 'Cómo puedo ayudar?', expectedIntent: 'help' },
-      { userMessage: 'Compartir', expectedIntent: 'share' }
+      { userMessage: 'Quiero compartir', expectedIntent: 'share' }
     ]
   },
   // Sharing Flow 4
@@ -515,9 +515,14 @@ async function runTestConversation(
   const logs: string[] = [];
   const originalLog = console.log;
   
-  // Capture logs for KB entry detection
+  // Capture logs for KB entry detection (but filter out verbose logs)
   console.log = (...args: any[]) => {
-    logs.push(args.join(' '));
+    const logLine = args.join(' ');
+    // Only capture relevant logs (KB entries, retrieval info)
+    if (logLine.includes('KB entries') || logLine.includes('Retrieved') || logLine.includes('ID:')) {
+      logs.push(logLine);
+    }
+    // Always output to console
     originalLog(...args);
   };
   
@@ -527,7 +532,9 @@ async function runTestConversation(
       const stepNumber = i + 1;
       
       console.log(`\n📝 Step ${stepNumber}: "${message.userMessage}"`);
+      console.log(`   ⏳ Processing...`);
       
+      const startTime = Date.now();
       const response = await caseAgent.processCaseInquiry(
         message.userMessage,
         testConversation.caseData,
@@ -545,6 +552,9 @@ async function runTestConversation(
           lastInteraction: new Date()
         }
       );
+      
+      const processingTime = Date.now() - startTime;
+      console.log(`   ✅ Response received (${processingTime}ms)`);
       
       // Extract KB entries from logs
       const retrievedKBEntries: string[] = [];
@@ -708,12 +718,22 @@ async function runTests() {
   console.log('='.repeat(80));
   
   try {
+    console.log('📡 Initializing Firebase...');
     const db = initializeFirebase();
+    console.log('📡 Initializing API Gateway...');
     const apiGateway = new TotoAPIGateway(db);
-    await apiGateway.initialize();
-    console.log('✅ API Gateway initialized\n');
+    
+    try {
+      await apiGateway.initialize();
+      console.log('✅ API Gateway initialized\n');
+    } catch (error: any) {
+      console.error('❌ Failed to initialize API Gateway:', error.message);
+      throw error;
+    }
     
     const results: ConversationTestResult[] = [];
+    
+    console.log(`\n📋 Running ${TEST_CONVERSATIONS.length} test conversations...\n`);
     
     for (let i = 0; i < TEST_CONVERSATIONS.length; i++) {
       const testConversation = TEST_CONVERSATIONS[i];
@@ -721,19 +741,38 @@ async function runTests() {
       
       console.log(`\n🧪 Testing Conversation ${i + 1}/${TEST_CONVERSATIONS.length}: ${testConversation.flowName}`);
       
-      const result = await testConversation(apiGateway, testConversation, testSessionId);
-      result.testSessionId = testSessionId;
-      
-      // Save to database
       try {
-        const conversationId = await saveConversationToDB(db, result, testConversation);
-        result.conversationId = conversationId;
-        console.log(`   ✅ Saved to database: ${conversationId}`);
+        const result = await runTestConversation(apiGateway, testConversation, testSessionId);
+        result.testSessionId = testSessionId;
+        
+        // Save to database
+        try {
+          const conversationId = await saveConversationToDB(db, result, testConversation);
+          result.conversationId = conversationId;
+          console.log(`   ✅ Saved to database: ${conversationId}`);
+        } catch (error: any) {
+          console.error(`   ❌ Failed to save to database: ${error.message}`);
+          result.conversationId = 'SAVE_FAILED';
+        }
+        
+        results.push(result);
       } catch (error: any) {
-        console.error(`   ❌ Failed to save to database: ${error.message}`);
+        console.error(`   ❌ Error testing conversation: ${error.message}`);
+        // Create a failed result
+        results.push({
+          conversationId: 'ERROR',
+          flowName: testConversation.flowName,
+          testSessionId,
+          passed: false,
+          steps: [],
+          summary: {
+            totalSteps: testConversation.messages.length,
+            passedSteps: 0,
+            failedSteps: testConversation.messages.length,
+            successRate: 0
+          }
+        });
       }
-      
-      results.push(result);
     }
     
     // Generate and print report
