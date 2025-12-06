@@ -9,6 +9,9 @@ import fs from 'fs';
 import path from 'path';
 import { GoldenConversation, validateGoldenConversation } from './schema';
 
+// Re-export types for external use
+export type { GoldenConversation } from './schema';
+
 /**
  * Load all golden conversations from JSON files
  */

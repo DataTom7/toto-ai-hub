@@ -29,6 +29,7 @@ import { RateLimitError } from '../errors/AppErrors';
 import { Cache, createCache } from '../utils/cache';
 import { CACHE_CONSTANTS } from '../config/constants';
 import { getMetricsService, MetricCategory } from '../services/MetricsService';
+import { getFewShotLearningService } from '../services/FewShotLearningService';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -232,9 +233,9 @@ export class CaseAgent extends BaseAgent {
     }
   }
 
-  protected getSystemPrompt(knowledgeContext?: string): string {
-    // Use new modular prompt builder
-    return buildCaseAgentSystemPrompt(knowledgeContext);
+  protected getSystemPrompt(knowledgeContext?: string, fewShotExamples?: string): string {
+    // Use new modular prompt builder with few-shot learning support
+    return buildCaseAgentSystemPrompt(knowledgeContext, fewShotExamples);
   }
 
   /**
@@ -332,14 +333,29 @@ export class CaseAgent extends BaseAgent {
         userContext: validatedContext,
         conversationHistory: memory.conversationHistory
       }), validatedContext);
-      
+
       // Extract KB entry titles for post-processing detection
-      const kbTitles = knowledgeContextResult ? 
-        knowledgeContextResult.split('\n').filter(line => line.startsWith('**')).map(line => line.replace(/\*\*/g, '').trim()).join(' ') 
+      const kbTitles = knowledgeContextResult ?
+        knowledgeContextResult.split('\n').filter(line => line.startsWith('**')).map(line => line.replace(/\*\*/g, '').trim()).join(' ')
         : '';
       const knowledgeContext = knowledgeContextResult;
 
-      // Build comprehensive context
+      // Select few-shot examples based on intent and language
+      const fewShotService = getFewShotLearningService();
+      await fewShotService.initialize(); // Initialize if not already done
+
+      const fewShotExamples = fewShotService.selectExamples({
+        intent: intentAnalysis.intent as any,
+        language: validatedContext.language,
+        hasAmount: hasAmount(validatedMessage) || hasAmountInHistory(memory),
+        maxExamples: 3, // Keep token usage reasonable - 3 high-quality examples
+      });
+
+      const fewShotPrompt = fewShotService.formatExamplesForPrompt(fewShotExamples);
+
+      console.log(`[CaseAgent] 📚 Few-shot learning: Selected ${fewShotExamples.length} examples for intent=${intentAnalysis.intent}, language=${validatedContext.language}`);
+
+      // Build comprehensive context with few-shot examples
       const enhancedMessage = this.buildEnhancedContext(
         validatedMessage,
         enhancedCaseData,
@@ -348,7 +364,9 @@ export class CaseAgent extends BaseAgent {
         userProfile,
         intentAnalysis,
         emotionalState,
-        conversationContext
+        conversationContext,
+        knowledgeContext,
+        fewShotPrompt
       );
 
       // Process with enhanced context and knowledge
@@ -1073,15 +1091,17 @@ export class CaseAgent extends BaseAgent {
     userProfile: UserProfile,
     intentAnalysis: any,
     emotionalState: string,
-    conversationContext?: ConversationContext
+    conversationContext?: ConversationContext,
+    knowledgeContext?: string,
+    fewShotExamples?: string
   ): string {
     const conversationHistory = this.buildConversationHistory(memory);
     const userContext = this.buildUserContext(userProfile, context);
     const caseContext = this.buildCaseContext(enhancedCaseData);
     const intentContext = this.buildIntentContext(intentAnalysis, emotionalState);
-    
+
     // Detect if case information has already been provided
-    const hasProvidedCaseInfo = memory.conversationHistory.some(msg => 
+    const hasProvidedCaseInfo = memory.conversationHistory.some(msg =>
       msg.role === 'assistant' && (
         msg.message.toLowerCase().includes(enhancedCaseData.name?.toLowerCase() || '') ||
         msg.message.toLowerCase().includes('perrita') ||
@@ -1090,17 +1110,17 @@ export class CaseAgent extends BaseAgent {
         msg.message.toLowerCase().includes('caso')
       )
     );
-    
+
     // Check if user is giving affirmative response after case info was provided
-    const isAffirmativeAfterIntro = intentAnalysis.intent === 'help' && 
+    const isAffirmativeAfterIntro = intentAnalysis.intent === 'help' &&
       memory.conversationHistory.length >= 2 &&
       hasProvidedCaseInfo &&
-      ['si', 'sí', 'yes', 'ok', 'okay', 'vale', 'claro'].some(affirm => 
+      ['si', 'sí', 'yes', 'ok', 'okay', 'vale', 'claro'].some(affirm =>
         message.toLowerCase().trim().startsWith(affirm)
       );
 
-    const progressionContext = isAffirmativeAfterIntro 
-      ? `\n⚠️ IMPORTANT: User has already been introduced to the case and is now saying "Si/Yes" to proceed. 
+    const progressionContext = isAffirmativeAfterIntro
+      ? `\n⚠️ IMPORTANT: User has already been introduced to the case and is now saying "Si/Yes" to proceed.
 DO NOT repeat the case introduction. Instead:
 - Explain HOW they can help (donation process, sharing steps, adoption info)
 - Ask what specific aspect they want to know more about
@@ -1108,7 +1128,7 @@ DO NOT repeat the case introduction. Instead:
 - Progress the conversation forward`
       : '';
 
-    return `${this.getSystemPrompt()}
+    return `${this.getSystemPrompt(knowledgeContext, fewShotExamples)}
 
 ${caseContext}
 

@@ -91,13 +91,17 @@ The Knowledge Base information above provides specific instructions for:
 - KB guidelines are NOT suggestions - they are REQUIREMENTS`;
 
 /**
- * Build complete system prompt with optional Knowledge Base context
+ * Build complete system prompt with optional Knowledge Base context and few-shot examples
  */
-export function buildCaseAgentSystemPrompt(knowledgeContext?: string): string {
+export function buildCaseAgentSystemPrompt(
+  knowledgeContext?: string,
+  fewShotExamples?: string
+): string {
   const sections = [
     CORE_IDENTITY,
     LANGUAGE_INSTRUCTION,
     knowledgeContext ? `📚 KNOWLEDGE BASE GUIDELINES:\n\n${knowledgeContext}\n\n${KB_INTEGRATION_INSTRUCTION}` : '',
+    fewShotExamples ? `\n${fewShotExamples}\n` : '',
     CRITICAL_SAFETY
   ].filter(Boolean);
 
