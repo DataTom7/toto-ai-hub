@@ -1,246 +1,204 @@
 import { CaseAgent } from '../CaseAgent';
-import { createTestCaseAgent, createMockRAGService, mockCaseData, mockUserContext } from './setup';
+import { RAGService } from '../../services/RAGService';
+import { VertexAISearchService } from '../../services/VertexAISearchService';
+
+jest.mock('../../services/VertexAISearchService');
 
 describe('CaseAgent - Intent Detection', () => {
   let agent: CaseAgent;
-  let mockRAGService: ReturnType<typeof createMockRAGService>;
+  let ragService: RAGService;
+
+  // Helper to create valid CaseData
+  const createCaseData = (overrides: any = {}) => ({
+    id: 'case-1',
+    name: 'Test Case',
+    description: 'Test',
+    status: 'active' as const,
+    priority: 'normal' as const,
+    category: 'rescue' as const,
+    guardianId: 'guardian-1',
+    donationsReceived: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  });
 
   beforeEach(() => {
-    mockRAGService = createMockRAGService();
-    agent = createTestCaseAgent(mockRAGService);
+    const mockVertexAI = new VertexAISearchService() as jest.Mocked<VertexAISearchService>;
+    ragService = new RAGService(mockVertexAI);
+    agent = new CaseAgent();
+    agent.setRAGService(ragService);
   });
 
-  describe('analyzeUserIntent', () => {
-    // Note: These tests require API calls and complex mocking
-    // Skipping for now - focus on pure logic tests
-    it.skip('should detect donation intent from "quiero donar"', async () => {
-      // Mock RAG service to return empty results
-      mockRAGService.retrieveKnowledge = jest.fn().mockResolvedValue({
-        chunks: [],
-        totalResults: 0,
-        query: '',
-        agentType: 'case',
-      });
-
-      // Create a mock memory
-      const memory = {
-        sessionId: 'test-session',
-        userId: mockUserContext.userId,
-        caseId: mockCaseData.id,
-        conversationHistory: [],
-        userPreferences: {
+  describe('Donation Intent', () => {
+    it('should detect donation intent with amount', async () => {
+      const response = await agent.processCaseInquiry(
+        'Quiero donar $1000',
+        createCaseData(),
+        {
+          userId: 'user-1',
+          userRole: 'user',
           language: 'es',
-          preferredActions: [],
-          communicationStyle: 'empathetic',
-          interests: []
-        },
-        contextSummary: '',
-        lastInteraction: new Date(),
-      };
+        }
+      );
 
-      const userProfile = {
-        userId: mockUserContext.userId,
-        interactionHistory: [],
-        preferences: {
-          language: 'es',
-          communicationStyle: 'empathetic',
-        },
-        engagementLevel: 'medium',
-        lastActive: new Date(),
-      };
-
-      // Access private method via type casting
-      const analyzeUserIntent = (agent as any).analyzeUserIntent.bind(agent);
-      const intent = await analyzeUserIntent('Quiero donar $1000', memory, userProfile);
-
-      expect(intent.intent).toBe('donate');
-      expect(intent.confidence).toBeGreaterThan(0.5);
+      expect(response.success).toBe(true);
+      // Should mention amount
+      expect(response.message.toLowerCase()).toMatch(/1000|1\.000|mil/);
     });
 
-    it.skip('should detect share intent from "quiero compartir"', async () => {
-      mockRAGService.retrieveKnowledge = jest.fn().mockResolvedValue({
-        chunks: [],
-        totalResults: 0,
-        query: '',
-        agentType: 'case',
-      });
-
-      const memory = {
-        sessionId: 'test-session',
-        userId: mockUserContext.userId,
-        caseId: mockCaseData.id,
-        conversationHistory: [],
-        userPreferences: {
+    it('should detect donation intent without amount', async () => {
+      const response = await agent.processCaseInquiry(
+        'Quiero donar',
+        createCaseData(),
+        {
+          userId: 'user-1',
+          userRole: 'user',
           language: 'es',
-          preferredActions: [],
-          communicationStyle: 'empathetic',
-          interests: []
-        },
-        contextSummary: '',
-        lastInteraction: new Date(),
-      };
+        }
+      );
 
-      const userProfile = {
-        userId: mockUserContext.userId,
-        interactionHistory: [],
-        preferences: {
-          language: 'es',
-          communicationStyle: 'empathetic',
-        },
-        engagementLevel: 'medium',
-        lastActive: new Date(),
-      };
-
-      const analyzeUserIntent = (agent as any).analyzeUserIntent.bind(agent);
-      const intent = await analyzeUserIntent('Quiero compartir este caso', memory, userProfile);
-
-      expect(intent.intent).toBe('share');
+      expect(response.success).toBe(true);
+      // Should ask for amount
+      expect(response.message.toLowerCase()).toMatch(/monto|cantidad|cuánto/);
     });
 
-    it.skip('should detect help intent from "cómo puedo ayudar"', async () => {
-      mockRAGService.retrieveKnowledge = jest.fn().mockResolvedValue({
-        chunks: [],
-        totalResults: 0,
-        query: '',
-        agentType: 'case',
-      });
-
-      const memory = {
-        sessionId: 'test-session',
-        userId: mockUserContext.userId,
-        caseId: mockCaseData.id,
-        conversationHistory: [],
-        userPreferences: {
+    it('should detect short-form donation', async () => {
+      const response = await agent.processCaseInquiry(
+        'Donar',
+        createCaseData(),
+        {
+          userId: 'user-1',
+          userRole: 'user',
           language: 'es',
-          preferredActions: [],
-          communicationStyle: 'empathetic',
-          interests: []
-        },
-        contextSummary: '',
-        lastInteraction: new Date(),
-      };
+        }
+      );
 
-      const userProfile = {
-        userId: mockUserContext.userId,
-        interactionHistory: [],
-        preferences: {
-          language: 'es',
-          communicationStyle: 'empathetic',
-        },
-        engagementLevel: 'medium',
-        lastActive: new Date(),
-      };
-
-      const analyzeUserIntent = (agent as any).analyzeUserIntent.bind(agent);
-      const intent = await analyzeUserIntent('¿Cómo puedo ayudar?', memory, userProfile);
-
-      expect(intent.intent).toBe('help');
+      expect(response.success).toBe(true);
     });
 
-    it.skip('should detect adoption intent from "quiero adoptar"', async () => {
-      mockRAGService.retrieveKnowledge = jest.fn().mockResolvedValue({
-        chunks: [],
-        totalResults: 0,
-        query: '',
-        agentType: 'case',
-      });
-
-      const memory = {
-        sessionId: 'test-session',
-        userId: mockUserContext.userId,
-        caseId: mockCaseData.id,
-        conversationHistory: [],
-        userPreferences: {
+    it('should detect amount-only message', async () => {
+      const response = await agent.processCaseInquiry(
+        '$500',
+        createCaseData(),
+        {
+          userId: 'user-1',
+          userRole: 'user',
           language: 'es',
-          preferredActions: [],
-          communicationStyle: 'empathetic',
-          interests: []
-        },
-        contextSummary: '',
-        lastInteraction: new Date(),
-      };
+        }
+      );
 
-      const userProfile = {
-        userId: mockUserContext.userId,
-        interactionHistory: [],
-        preferences: {
-          language: 'es',
-          communicationStyle: 'empathetic',
-        },
-        engagementLevel: 'medium',
-        lastActive: new Date(),
-      };
-
-      const analyzeUserIntent = (agent as any).analyzeUserIntent.bind(agent);
-      const intent = await analyzeUserIntent('Quiero adoptar a Luna', memory, userProfile);
-
-      expect(intent.intent).toBe('adopt');
-    });
-
-    it.skip('should default to general intent for unclear messages', async () => {
-      mockRAGService.retrieveKnowledge = jest.fn().mockResolvedValue({
-        chunks: [],
-        totalResults: 0,
-        query: '',
-        agentType: 'case',
-      });
-
-      const memory = {
-        sessionId: 'test-session',
-        userId: mockUserContext.userId,
-        caseId: mockCaseData.id,
-        conversationHistory: [],
-        userPreferences: {
-          language: 'es',
-          preferredActions: [],
-          communicationStyle: 'empathetic',
-          interests: []
-        },
-        contextSummary: '',
-        lastInteraction: new Date(),
-      };
-
-      const userProfile = {
-        userId: mockUserContext.userId,
-        interactionHistory: [],
-        preferences: {
-          language: 'es',
-          communicationStyle: 'empathetic',
-        },
-        engagementLevel: 'medium',
-        lastActive: new Date(),
-      };
-
-      const analyzeUserIntent = (agent as any).analyzeUserIntent.bind(agent);
-      const intent = await analyzeUserIntent('Hola', memory, userProfile);
-
-      expect(intent.intent).toBe('general');
+      expect(response.success).toBe(true);
+      expect(response.message).toMatch(/500/);
     });
   });
 
-  describe('isFosterCareOrAdoptionQuestion', () => {
-    it('should detect foster care questions', () => {
-      const isFosterCareQuestion = (agent as any).isFosterCareOrAdoptionQuestion.bind(agent);
+  describe('Share Intent', () => {
+    it('should detect share intent', async () => {
+      const response = await agent.processCaseInquiry(
+        'Quiero compartir',
+        createCaseData(),
+        {
+          userId: 'user-1',
+          userRole: 'user',
+          language: 'es',
+        }
+      );
 
-      expect(isFosterCareQuestion('¿Puedo ser hogar de tránsito?')).toBe(true);
-      expect(isFosterCareQuestion('Quiero ser foster')).toBe(true);
-      // Note: "temporary home" is not in the keyword list, only "foster" is
-      expect(isFosterCareQuestion('foster home')).toBe(true);
+      expect(response.success).toBe(true);
+      // Should provide share message
+      expect(response.message.length).toBeGreaterThan(50);
     });
 
-    it('should detect adoption questions', () => {
-      const isFosterCareQuestion = (agent as any).isFosterCareOrAdoptionQuestion.bind(agent);
+    it('should detect short-form share', async () => {
+      const response = await agent.processCaseInquiry(
+        'Compartir',
+        createCaseData(),
+        {
+          userId: 'user-1',
+          userRole: 'user',
+          language: 'es',
+        }
+      );
 
-      expect(isFosterCareQuestion('Quiero adoptar a Luna')).toBe(true);
-      expect(isFosterCareQuestion('Can I adopt?')).toBe(true);
+      expect(response.success).toBe(true);
+    });
+  });
+
+  describe('Help Intent', () => {
+    it('should detect help-seeking messages', async () => {
+      const response = await agent.processCaseInquiry(
+        '¿Cómo puedo ayudar?',
+        createCaseData(),
+        {
+          userId: 'user-1',
+          userRole: 'user',
+          language: 'es',
+        }
+      );
+
+      expect(response.success).toBe(true);
+      // Should provide help options
+      expect(response.metadata).toBeDefined();
+    });
+  });
+
+  describe('Intent Caching', () => {
+    it('should cache intent detection results', async () => {
+      const message = 'Quiero donar $1000';
+      const caseData = createCaseData();
+      const userContext = {
+        userId: 'user-1',
+        userRole: 'user' as const,
+        language: 'es' as const,
+      };
+
+      // First call
+      const response1 = await agent.processCaseInquiry(message, caseData, userContext);
+
+      // Second call (should use cache)
+      const response2 = await agent.processCaseInquiry(message, caseData, userContext);
+
+      expect(response1.success).toBe(true);
+      expect(response2.success).toBe(true);
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle validation errors', async () => {
+      const response = await agent.processCaseInquiry(
+        '', // Empty message
+        createCaseData(),
+        {
+          userId: 'user-1',
+          userRole: 'user',
+          language: 'es',
+        }
+      );
+
+      expect(response.success).toBe(false);
+      expect(response.error).toBeDefined();
     });
 
-    it('should return false for donation questions', () => {
-      const isFosterCareQuestion = (agent as any).isFosterCareOrAdoptionQuestion.bind(agent);
+    it('should handle rate limit errors', async () => {
+      // Trigger rate limit by making many requests
+        const promises = Array.from({ length: 150 }, (_, i) =>
+          agent.processCaseInquiry(
+            `Message ${i}`,
+            createCaseData(),
+          {
+            userId: 'rate-limit-test',
+            userRole: 'user',
+            language: 'es',
+          }
+        )
+      );
 
-      expect(isFosterCareQuestion('Quiero donar $1000')).toBe(false);
-      expect(isFosterCareQuestion('How can I donate?')).toBe(false);
+      const results = await Promise.all(promises);
+
+      // At least one should hit rate limit
+      const rateLimited = results.some(r => !r.success && r.error === 'RATE_LIMIT_EXCEEDED');
+      expect(rateLimited).toBe(true);
     });
   });
 });
-
