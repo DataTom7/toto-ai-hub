@@ -24,6 +24,8 @@ import { hasAmount, hasAmountInHistory, extractAmount } from '../utils/amountDet
 import { safeValidateProcessCaseInquiryInput } from '../validators/caseAgent.validators';
 import { getFirestore } from '../config/firestore.config';
 import { handleError } from '../utils/errorHandler';
+import { getRateLimitService } from '../services/RateLimitService';
+import { RateLimitError } from '../errors/AppErrors';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -259,6 +261,30 @@ export class CaseAgent extends BaseAgent {
     // Use original caseData since it has the correct complete type
     const validatedCaseData = caseData;
     const validatedContext = validated.userContext;
+
+    // Add rate limiting
+    try {
+      const rateLimitService = getRateLimitService();
+      rateLimitService.checkLimit({
+        userId: validatedContext.userId,
+        userRole: validatedContext.userRole,
+      });
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        console.warn('[CaseAgent] ⚠️  Rate limit exceeded:', {
+          userId: validatedContext.userId,
+          limit: error.limit,
+          retryAfterMs: error.retryAfterMs,
+        });
+
+        return {
+          success: false,
+          message: error.getUserMessage(validatedContext.language),
+          error: 'RATE_LIMIT_EXCEEDED',
+        } as CaseResponse;
+      }
+      throw error;
+    }
 
     // Use conversationContext.conversationId if available, otherwise create stable sessionId
     // This ensures conversation memory persists across multiple messages in the same conversation

@@ -148,6 +148,41 @@ export const FIRESTORE_CONSTANTS = {
 } as const;
 
 /**
+ * Rate Limiting Configuration
+ */
+export const RATE_LIMIT_CONSTANTS = {
+  /**
+   * Per-user rate limits
+   */
+  USER_REQUESTS_PER_HOUR: 100,
+  USER_WINDOW_MS: 60 * 60 * 1000, // 1 hour
+
+  /**
+   * Per-IP rate limits (more lenient for multiple users behind same IP)
+   */
+  IP_REQUESTS_PER_HOUR: 300,
+  IP_WINDOW_MS: 60 * 60 * 1000, // 1 hour
+
+  /**
+   * Global rate limits (prevent total system overload)
+   */
+  GLOBAL_REQUESTS_PER_HOUR: 10000,
+  GLOBAL_WINDOW_MS: 60 * 60 * 1000, // 1 hour
+
+  /**
+   * Expensive operations (embedding generation, vector search)
+   */
+  EXPENSIVE_REQUESTS_PER_HOUR: 50,
+  EXPENSIVE_WINDOW_MS: 60 * 60 * 1000, // 1 hour
+
+  /**
+   * Admin/trusted users (higher limits)
+   */
+  ADMIN_REQUESTS_PER_HOUR: 1000,
+  ADMIN_WINDOW_MS: 60 * 60 * 1000, // 1 hour
+} as const;
+
+/**
  * Message Keywords
  *
  * Keywords used for message classification and intent detection.

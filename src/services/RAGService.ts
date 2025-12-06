@@ -5,7 +5,8 @@ import { PredictionServiceClient } from '@google-cloud/aiplatform';
 import { RAG_SERVICE_CONSTANTS, CASE_AGENT_CONSTANTS } from '../config/constants';
 import { assertValidEmbedding } from '../utils/embeddingValidator';
 import { handleError } from '../utils/errorHandler';
-import { ExternalAPIError } from '../errors/AppErrors';
+import { ExternalAPIError, RateLimitError } from '../errors/AppErrors';
+import { getRateLimitService } from './RateLimitService';
 
 export interface KnowledgeChunk {
   id: string;
@@ -231,7 +232,26 @@ export class RAGService {
    * Priority: Vertex AI text-embedding-004 > Gemini-based > Hash-based fallback
    * Public method for use by other services (e.g., intent detection)
    */
-  async generateEmbedding(text: string): Promise<number[]> {
+  async generateEmbedding(text: string, context?: { userId?: string; userRole?: string }): Promise<number[]> {
+    // Rate limit expensive embedding generation
+    if (context?.userId) {
+      try {
+        const rateLimitService = getRateLimitService();
+        rateLimitService.checkExpensiveLimit({
+          userId: context.userId,
+          userRole: context.userRole as any,
+        });
+      } catch (error) {
+        if (error instanceof RateLimitError) {
+          console.warn('[RAGService] ⚠️  Rate limit exceeded for embedding generation:', {
+            userId: context.userId,
+            limit: error.limit,
+          });
+        }
+        throw error;
+      }
+    }
+
     try {
       // Try Vertex AI text-embedding-004 first (best multilingual support)
       // Currently disabled - will be enabled when GCP setup is complete
