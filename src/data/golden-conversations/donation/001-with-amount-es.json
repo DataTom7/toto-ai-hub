@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false,
+    "reviewed": true,
     "reviewNotes": ""
   },
   "conversation": [
@@ -69,4 +69,3 @@
   },
   "notes": "Simple donation flow: user clicks '$1.000' button which sends 'Quiero donar $1.000' (matches implementation). Agent provides guardian alias and asks about verification/totitos."
 }
-

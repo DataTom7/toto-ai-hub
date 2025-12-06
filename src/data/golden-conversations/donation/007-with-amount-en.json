@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": false,
     "multiTurn": false,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -60,4 +60,3 @@
   },
   "notes": "English version of donation with amount."
 }
-

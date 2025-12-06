@@ -7,7 +7,7 @@
     "complexity": "medium",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -67,4 +67,3 @@
   },
   "notes": "Follow-up question about progress, then donation. Agent provides information from case details (cost and raised amount from caseData). Note: We use donation milestones, not goals. Information should only be mentioned if available in case description or updates."
 }
-

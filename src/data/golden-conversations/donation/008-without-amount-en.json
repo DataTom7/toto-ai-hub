@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": false,
     "multiTurn": false,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -43,10 +43,22 @@
         "quickActions": {
           "showAmountOptions": true,
           "amountOptions": [
-            { "label": "$500", "amount": 500 },
-            { "label": "$1,000", "amount": 1000 },
-            { "label": "$2,000", "amount": 2000 },
-            { "label": "Other amount", "amount": null }
+            {
+              "label": "$500",
+              "amount": 500
+            },
+            {
+              "label": "$1,000",
+              "amount": 1000
+            },
+            {
+              "label": "$2,000",
+              "amount": 2000
+            },
+            {
+              "label": "Other amount",
+              "amount": null
+            }
           ]
         }
       }
@@ -54,4 +66,3 @@
   },
   "notes": "English version - donation without amount."
 }
-

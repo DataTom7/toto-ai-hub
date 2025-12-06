@@ -7,7 +7,7 @@
     "complexity": "medium",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -30,18 +30,18 @@
       "role": "agent",
       "message": "¿Querés saber cómo verificar tu donación y recibir tus totitos?"
     },
-      {
-        "role": "user",
-        "message": "ok"
-      },
-      {
-        "role": "agent",
-        "message": "[KB content about donation verification and totitos]"
-      },
-      {
-        "role": "agent",
-        "message": "¡Gracias por ayudar a Luna! ❤️"
-      }
+    {
+      "role": "user",
+      "message": "ok"
+    },
+    {
+      "role": "agent",
+      "message": "[KB content about donation verification and totitos]"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias por ayudar a Luna! ❤️"
+    }
   ],
   "caseData": {
     "id": "case-luna-001",
@@ -67,10 +67,22 @@
         "quickActions": {
           "showAmountOptions": true,
           "amountOptions": [
-            { "label": "$500", "amount": 500 },
-            { "label": "$1.000", "amount": 1000 },
-            { "label": "$2.000", "amount": 2000 },
-            { "label": "Otro monto", "amount": null }
+            {
+              "label": "$500",
+              "amount": 500
+            },
+            {
+              "label": "$1.000",
+              "amount": 1000
+            },
+            {
+              "label": "$2.000",
+              "amount": 2000
+            },
+            {
+              "label": "Otro monto",
+              "amount": null
+            }
           ]
         }
       },
@@ -98,4 +110,3 @@
   },
   "notes": "Empty follow-up 'ok' after verification question. Agent provides KB content about verification/totitos, then acknowledges. Multi-turn flow: 'Quiero donar' → agent asks → user says amount → agent provides alias → user says 'ok' → agent provides KB → agent acknowledges."
 }
-

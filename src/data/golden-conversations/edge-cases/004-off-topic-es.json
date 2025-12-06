@@ -7,7 +7,7 @@
     "complexity": "medium",
     "hasContext": false,
     "multiTurn": false,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -46,11 +46,19 @@
       }
     ],
     "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" }
+      {
+        "type": "donation_amount",
+        "label": "Donar",
+        "data": {
+          "showAmountOptions": true
+        }
+      },
+      {
+        "type": "share",
+        "label": "Compartir caso"
+      }
     ],
     "shouldIncludeKB": true
   },
   "notes": "Off-topic question about vet location. Agent interprets as potentially asking about Luna's location and provides case location from caseData, then redirects to case-related actions."
 }
-

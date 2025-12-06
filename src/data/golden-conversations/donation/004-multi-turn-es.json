@@ -7,7 +7,7 @@
     "complexity": "medium",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -75,4 +75,3 @@
   },
   "notes": "Multi-turn conversation: user clicks 'Donar' button (sends 'Quiero donar'), then clicks '$2.000' button (sends 'Quiero donar $2.000'). Shows context awareness."
 }
-

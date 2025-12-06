@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -67,4 +67,3 @@
   },
   "notes": "Foster category donation. User clicks 'Otro monto' and types $ 600 (space after dollar sign - realistic user input). Agent interprets as $600."
 }
-

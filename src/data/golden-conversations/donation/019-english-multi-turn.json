@@ -7,7 +7,7 @@
     "complexity": "medium",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -75,4 +75,3 @@
   },
   "notes": "English multi-turn conversation showing context awareness."
 }
-

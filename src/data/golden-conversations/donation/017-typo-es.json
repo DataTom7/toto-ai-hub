@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": false,
     "multiTurn": false,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -59,4 +59,3 @@
   },
   "notes": "Typo in 'donra' instead of 'donar'. Agent should still understand intent."
 }
-

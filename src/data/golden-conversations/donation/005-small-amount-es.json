@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -67,4 +67,3 @@
   },
   "notes": "Small amount donation ($100). User clicks 'Donar' button, then clicks 'Otro monto' and types $100 (no separator for small amounts). Agent interprets as donation intent."
 }
-

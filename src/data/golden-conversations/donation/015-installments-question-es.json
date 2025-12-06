@@ -7,7 +7,7 @@
     "complexity": "medium",
     "hasContext": false,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -67,4 +67,3 @@
   },
   "notes": "User asks about installments. Agent explains flexibility and proceeds with donation. When user confirms donation after asking about installments, system should create 2 donation intents: one for current donation and one inferred for next donation (same amount, 30 days from now)."
 }
-

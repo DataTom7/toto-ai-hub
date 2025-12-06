@@ -7,7 +7,7 @@
     "complexity": "medium",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -67,4 +67,3 @@
   },
   "notes": "Very large donation amount. Agent provides extra explicit thank you message acknowledging the large amount, but follows same flow as all donations. User clicks 'Donar' button (sends 'Quiero donar'), then clicks 'Otro monto' and types '$50000' (no thousands separator), which sends 'Quiero donar $50.000' (matches implementation)."
 }
-

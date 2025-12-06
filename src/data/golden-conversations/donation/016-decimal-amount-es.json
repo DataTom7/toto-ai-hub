@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -67,4 +67,3 @@
   },
   "notes": "User clicks 'Otro monto' and types 1500 (no dollar sign, no separator - realistic user input). Agent should interpret as $1.500 and proceed with donation."
 }
-

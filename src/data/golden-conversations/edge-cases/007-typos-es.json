@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": false,
     "multiTurn": false,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -46,12 +46,29 @@
       }
     ],
     "suggestedActions": [
-      { "type": "share", "label": "Compartir en Instagram", "data": { "platform": "instagram" } },
-      { "type": "share", "label": "Compartir en Twitter", "data": { "platform": "twitter" } },
-      { "type": "share", "label": "Compartir en Facebook", "data": { "platform": "facebook" } }
+      {
+        "type": "share",
+        "label": "Compartir en Instagram",
+        "data": {
+          "platform": "instagram"
+        }
+      },
+      {
+        "type": "share",
+        "label": "Compartir en Twitter",
+        "data": {
+          "platform": "twitter"
+        }
+      },
+      {
+        "type": "share",
+        "label": "Compartir en Facebook",
+        "data": {
+          "platform": "facebook"
+        }
+      }
     ],
     "shouldIncludeKB": true
   },
   "notes": "Typo 'comaprtir' instead of 'compartir'. Agent should still understand intent."
 }
-

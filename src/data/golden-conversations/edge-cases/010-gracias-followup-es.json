@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -80,4 +80,3 @@
   },
   "notes": "User says 'gracias' as follow-up. Agent should acknowledge and remind about verification/totitos (KB). Multi-turn flow: 'Quiero donar' → agent asks → user says amount → agent provides alias → user says 'gracias' → agent acknowledges."
 }
-

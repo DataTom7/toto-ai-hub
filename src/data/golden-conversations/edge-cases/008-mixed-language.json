@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": false,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -55,10 +55,22 @@
         "quickActions": {
           "showAmountOptions": true,
           "amountOptions": [
-            { "label": "$500", "amount": 500 },
-            { "label": "$1.000", "amount": 1000 },
-            { "label": "$2.000", "amount": 2000 },
-            { "label": "Otro monto", "amount": null }
+            {
+              "label": "$500",
+              "amount": 500
+            },
+            {
+              "label": "$1.000",
+              "amount": 1000
+            },
+            {
+              "label": "$2.000",
+              "amount": 2000
+            },
+            {
+              "label": "Otro monto",
+              "amount": null
+            }
           ]
         }
       },
@@ -79,4 +91,3 @@
   },
   "notes": "Mixed language - Spanish + English word 'donate' in amount message. Agent should understand intent despite mixed language. Multi-turn flow: 'Quiero donar' → agent asks → user says 'Quiero donate $1.000' (mixed language) → agent provides alias."
 }
-

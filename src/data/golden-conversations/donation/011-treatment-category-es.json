@@ -7,7 +7,7 @@
     "complexity": "simple",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -67,4 +67,3 @@
   },
   "notes": "Donation for treatment category. User clicks 'Otro monto' and types $1500 (no separator - user typed format). Agent should interpret and format correctly in response."
 }
-

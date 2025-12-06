@@ -7,7 +7,7 @@
     "complexity": "medium",
     "hasContext": false,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -46,11 +46,19 @@
       }
     ],
     "suggestedActions": [
-      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
-      { "type": "share", "label": "Compartir caso" }
+      {
+        "type": "donation_amount",
+        "label": "Donar",
+        "data": {
+          "showAmountOptions": true
+        }
+      },
+      {
+        "type": "share",
+        "label": "Compartir caso"
+      }
     ],
     "shouldIncludeKB": true
   },
   "notes": "Ambiguous message 'ayudar' - could be donate or share. Agent should ask for clarification."
 }
-

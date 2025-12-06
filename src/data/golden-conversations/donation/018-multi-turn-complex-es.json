@@ -7,7 +7,7 @@
     "complexity": "complex",
     "hasContext": true,
     "multiTurn": true,
-    "reviewed": false
+    "reviewed": true
   },
   "conversation": [
     {
@@ -83,4 +83,3 @@
   },
   "notes": "Complex multi-turn conversation. User clicks 'Otro monto' and types $3,000 (comma separator - English style, realistic user input). Agent interprets as $3.000 (Spanish format)."
 }
-
