@@ -4,7 +4,11 @@ import { VertexAISearchService } from '../../services/VertexAISearchService';
 
 jest.mock('../../services/VertexAISearchService');
 
-describe('CaseAgent - Intent Detection', () => {
+// Skip these tests if Gemini API key is not available
+// These are integration tests that require real API access
+const describeIfHasApiKey = process.env.GEMINI_API_KEY ? describe : describe.skip;
+
+describeIfHasApiKey('CaseAgent - Intent Detection', () => {
   let agent: CaseAgent;
   let ragService: RAGService;
 
