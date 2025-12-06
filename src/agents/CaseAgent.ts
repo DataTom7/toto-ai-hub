@@ -26,6 +26,8 @@ import { getFirestore } from '../config/firestore.config';
 import { handleError } from '../utils/errorHandler';
 import { getRateLimitService } from '../services/RateLimitService';
 import { RateLimitError } from '../errors/AppErrors';
+import { Cache, createCache } from '../utils/cache';
+import { CACHE_CONSTANTS } from '../config/constants';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -41,6 +43,8 @@ export class CaseAgent extends BaseAgent {
   private translationCache: Map<string, string> = new Map(); // Cache for language-agnostic intent detection
   // Intent embeddings cache - pre-computed embeddings for multilingual intent detection
   private intentEmbeddingsCache: Map<string, number[][]> = new Map();
+  // Intent detection cache
+  private intentCache: Cache<IntentAnalysis>;
   // Default audience for KB retrieval - primarily serves donors
   private readonly DEFAULT_AUDIENCE = CASE_AGENT_CONSTANTS.DEFAULT_AUDIENCE;
   private analytics: AgentAnalytics = {
@@ -82,6 +86,15 @@ export class CaseAgent extends BaseAgent {
     };
 
     super(config);
+
+    // Initialize intent cache
+    this.intentCache = createCache<IntentAnalysis>(
+      CACHE_CONSTANTS.INTENT_TTL_MS,
+      CACHE_CONSTANTS.INTENT_MAX_SIZE,
+      'intent'
+    );
+
+    console.log('[CaseAgent] ✅ Intent cache initialized');
   }
 
   /**
@@ -870,6 +883,18 @@ export class CaseAgent extends BaseAgent {
   // ===== INTENT ANALYSIS =====
 
   private async analyzeUserIntent(message: string, memory: ConversationMemory, userProfile: UserProfile): Promise<IntentAnalysis> {
+    // Normalize message for cache key (trim, lowercase)
+    const cacheKey = message.trim().toLowerCase();
+
+    // Check cache first
+    if (CACHE_CONSTANTS.ENABLE_CACHING) {
+      const cached = this.intentCache.get(cacheKey);
+      if (cached) {
+        console.log('[CaseAgent] 🎯 Cache hit for intent detection:', cached.intent);
+        return cached;
+      }
+    }
+
     const lowerMessage = message.toLowerCase().trim();
 
     // Language-agnostic affirmative detection - normalize to English first
@@ -985,13 +1010,20 @@ export class CaseAgent extends BaseAgent {
     const confidence = this.calculateIntentConfidence(message, detectedIntent);
     const suggestedActions = this.getSuggestedActionsForIntent(detectedIntent);
 
-    return {
+    const result: IntentAnalysis = {
       intent: detectedIntent,
       confidence,
       suggestedActions,
       emotionalTone: this.detectEmotionalTone(message),
       urgency: this.detectUrgency(message)
     };
+
+    // Cache result
+    if (CACHE_CONSTANTS.ENABLE_CACHING) {
+      this.intentCache.set(cacheKey, result);
+    }
+
+    return result;
   }
 
   private async detectEmotionalState(message: string): Promise<string> {

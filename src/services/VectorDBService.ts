@@ -16,9 +16,10 @@
  */
 
 import { GoogleAuth } from 'google-auth-library';
-import { VECTOR_DB_CONSTANTS } from '../config/constants';
+import { VECTOR_DB_CONSTANTS, CACHE_CONSTANTS } from '../config/constants';
 import { assertValidEmbedding, validateEmbeddingBatch } from '../utils/embeddingValidator';
 import { handleError } from '../utils/errorHandler';
+import { Cache, createCache, generateCacheKey } from '../utils/cache';
 
 // Conditional import for HNSW - requires native compilation
 // Note: On Windows, requires Visual Studio build tools for installation
@@ -114,6 +115,9 @@ export class VectorDBService {
   private documentIdMap: Map<number, string> = new Map(); // HNSW index ID -> document ID
   private nextHnswId: number = 0;
 
+  // Search result cache
+  private searchCache: Cache<VectorSearchResult[]>;
+
   constructor(config: VectorDBConfig) {
     // Generate unique instance ID for debugging
     this.instanceId = `VectorDB-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -142,6 +146,15 @@ export class VectorDBService {
       console.log('[VectorDBService] Using in-memory vector storage with HNSW indexing');
       this.initializeHNSW();
     }
+
+    // Initialize search cache
+    this.searchCache = createCache<VectorSearchResult[]>(
+      CACHE_CONSTANTS.VECTOR_SEARCH_TTL_MS,
+      CACHE_CONSTANTS.VECTOR_SEARCH_MAX_SIZE,
+      'vector_search'
+    );
+
+    console.log(`[VectorDBService] ✅ Search cache initialized (TTL: ${CACHE_CONSTANTS.VECTOR_SEARCH_TTL_MS}ms)`);
   }
 
   /**
@@ -204,6 +217,9 @@ export class VectorDBService {
 
       console.log(`[VectorDBService] upsert: Added document ${document.id} (store size: ${this.inMemoryStore.size})`);
     }
+
+    // Clear cache when documents change
+    this.clearSearchCache();
   }
 
   /**
@@ -310,12 +326,55 @@ export class VectorDBService {
       throw error;
     }
 
-    console.log(`[VectorDBService] search() called with backend: ${this.config.backend} (instance: ${this.instanceId})`);
-    if (this.config.backend === 'vertex-ai') {
-      return await this.searchVertexAI(query);
-    } else {
-      return this.searchInMemory(query);
+    // Check cache first
+    if (CACHE_CONSTANTS.ENABLE_CACHING) {
+      const cacheKey = generateCacheKey({
+        embedding: query.embedding.slice(0, 10), // Use first 10 dims for key
+        topK: query.topK,
+        filters: query.filters,
+        minScore: query.minScore,
+      });
+
+      const cached = this.searchCache.get(cacheKey);
+      if (cached) {
+        console.log('[VectorDBService] 🎯 Cache hit for vector search');
+        if (CACHE_CONSTANTS.LOG_CACHE_STATS) {
+          console.log('[VectorDBService] Cache stats:', this.searchCache.getStats());
+        }
+        return cached;
+      }
     }
+
+    console.log(`[VectorDBService] search() called with backend: ${this.config.backend} (instance: ${this.instanceId})`);
+
+    // Perform search
+    let results: VectorSearchResult[];
+    if (this.config.backend === 'vertex-ai') {
+      results = await this.searchVertexAI(query);
+    } else {
+      results = this.searchInMemory(query);
+    }
+
+    // Cache results
+    if (CACHE_CONSTANTS.ENABLE_CACHING && results.length > 0) {
+      const cacheKey = generateCacheKey({
+        embedding: query.embedding.slice(0, 10),
+        topK: query.topK,
+        filters: query.filters,
+        minScore: query.minScore,
+      });
+      this.searchCache.set(cacheKey, results);
+    }
+
+    return results;
+  }
+
+  /**
+   * Clear search cache (call when documents are added/updated)
+   */
+  clearSearchCache(): void {
+    this.searchCache.clear();
+    console.log('[VectorDBService] Search cache cleared');
   }
 
   /**

@@ -183,6 +183,41 @@ export const RATE_LIMIT_CONSTANTS = {
 } as const;
 
 /**
+ * Cache Configuration
+ */
+export const CACHE_CONSTANTS = {
+  /**
+   * Embedding cache (already exists in RAGService, centralizing config)
+   */
+  EMBEDDING_TTL_MS: 24 * 60 * 60 * 1000, // 24 hours
+  EMBEDDING_MAX_SIZE: 1000,
+
+  /**
+   * Vector search result cache
+   */
+  VECTOR_SEARCH_TTL_MS: 60 * 60 * 1000, // 1 hour
+  VECTOR_SEARCH_MAX_SIZE: 500,
+
+  /**
+   * Intent detection cache
+   */
+  INTENT_TTL_MS: 30 * 60 * 1000, // 30 minutes
+  INTENT_MAX_SIZE: 1000,
+
+  /**
+   * KB query result cache
+   */
+  KB_QUERY_TTL_MS: 60 * 60 * 1000, // 1 hour
+  KB_QUERY_MAX_SIZE: 200,
+
+  /**
+   * General cache settings
+   */
+  ENABLE_CACHING: process.env.ENABLE_CACHING !== 'false', // Enabled by default
+  LOG_CACHE_STATS: process.env.LOG_CACHE_STATS === 'true', // Disabled by default
+} as const;
+
+/**
  * Message Keywords
  *
  * Keywords used for message classification and intent detection.

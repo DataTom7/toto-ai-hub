@@ -2,11 +2,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { VertexAISearchService, VertexAISearchResult } from './VertexAISearchService';
 import { VectorDBService, VectorDocument, VectorSearchQuery, VectorSearchResult } from './VectorDBService';
 import { PredictionServiceClient } from '@google-cloud/aiplatform';
-import { RAG_SERVICE_CONSTANTS, CASE_AGENT_CONSTANTS } from '../config/constants';
+import { RAG_SERVICE_CONSTANTS, CASE_AGENT_CONSTANTS, CACHE_CONSTANTS } from '../config/constants';
 import { assertValidEmbedding } from '../utils/embeddingValidator';
 import { handleError } from '../utils/errorHandler';
 import { ExternalAPIError, RateLimitError } from '../errors/AppErrors';
 import { getRateLimitService } from './RateLimitService';
+import { Cache, createCache, generateCacheKey } from '../utils/cache';
 
 export interface KnowledgeChunk {
   id: string;
@@ -53,6 +54,9 @@ export class RAGService {
   private embeddingDimensions: number = 768; // text-embedding-004 dimensions
   private useVertexAIEmbeddings: boolean = false;
 
+  // KB query cache
+  private kbQueryCache: Cache<KnowledgeChunk[]>;
+
   constructor(vertexAISearchService?: VertexAISearchService, vectorDBConfig?: { backend?: 'vertex-ai' | 'in-memory' }) {
     this.genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
     this.vertexAISearchService = vertexAISearchService;
@@ -67,7 +71,16 @@ export class RAGService {
     
     this.initializeEmbeddingModel();
     this.initializeVertexAIEmbeddings();
+
+    // Initialize KB query cache
+    this.kbQueryCache = createCache<KnowledgeChunk[]>(
+      CACHE_CONSTANTS.KB_QUERY_TTL_MS,
+      CACHE_CONSTANTS.KB_QUERY_MAX_SIZE,
+      'kb_query'
+    );
+
     console.log(`[RAGService] Initialized with VectorDBService (backend: ${backend}) - unlimited storage, no 1,000 chunk limit`);
+    console.log('[RAGService] ✅ KB query cache initialized');
     if (this.useVertexAIEmbeddings) {
       console.log(`[RAGService] Using Vertex AI text-embedding-004 for multilingual embeddings`);
     } else {
@@ -662,6 +675,26 @@ English translation:`;
   async retrieveKnowledge(query: RAGQuery): Promise<RAGResult> {
     try {
       const { query: userQuery, agentType, context, audience, maxResults = 3 } = query;
+
+      // Check cache first
+      if (CACHE_CONSTANTS.ENABLE_CACHING) {
+        const cacheKey = generateCacheKey({ query: userQuery, category: query.agentType, topK: maxResults, audience });
+        const cached = this.kbQueryCache.get(cacheKey);
+
+        if (cached) {
+          console.log('[RAGService] 🎯 Cache hit for KB query');
+          if (CACHE_CONSTANTS.LOG_CACHE_STATS) {
+            console.log('[RAGService] Cache stats:', this.kbQueryCache.getStats());
+          }
+          // Return cached results in RAGResult format
+          return {
+            chunks: cached,
+            totalResults: cached.length,
+            query: userQuery,
+            agentType,
+          };
+        }
+      }
       
       // Generate embedding for the query (use RETRIEVAL_QUERY task type)
       const queryEmbedding = await this.generateQueryEmbedding(userQuery);
@@ -785,8 +818,8 @@ English translation:`;
           console.warn(`[RAGService] Failed to update usage count for ${chunk.id}:`, err);
         });
       });
-      
-      return {
+
+      const result = {
         chunks: topChunks,
         totalResults: scoredChunks.length,
         query: userQuery,
@@ -795,6 +828,14 @@ English translation:`;
         fallbackUsed,
         vertexAISearchResults,
       };
+
+      // Cache results
+      if (CACHE_CONSTANTS.ENABLE_CACHING && topChunks.length > 0) {
+        const cacheKey = generateCacheKey({ query: userQuery, category: agentType, topK: maxResults, audience });
+        this.kbQueryCache.set(cacheKey, topChunks);
+      }
+      
+      return result;
     } catch (error) {
       console.error('Error retrieving knowledge:', error);
       return {
