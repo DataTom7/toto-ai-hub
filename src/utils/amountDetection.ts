@@ -9,16 +9,21 @@ import type { ConversationMemory } from '../types';
 
 /**
  * Regular expressions for amount detection
+ *
+ * Supports all format variations from golden conversations:
+ * - Currency: $1000, $1.000, $1,000, $ 1000
+ * - Pesos/ARS: 500 pesos, 1.000 ARS
+ * - Plain numbers: 1000, 100
  */
 const AMOUNT_PATTERNS = {
-  /** Matches: $500, $1000, $5.000 */
-  currency: /\$\d+/,
+  /** Matches: $500, $1000, $5.000, $1,000, $ 1000 (with/without thousands separators and optional space) */
+  currency: /\$\s*\d+/,
 
-  /** Matches: 500 pesos, 1000 ARS */
-  pesosArs: /\d+\s*(pesos|ars)/i,
+  /** Matches: 500 pesos, 1000 ARS, 1.000 pesos */
+  pesosArs: /\d+(?:[.,]\d{3})*\s*(pesos|ars)/i,
 
-  /** Matches: any number with 3 or more digits (500, 1000, etc.) */
-  threeOrMoreDigits: /\d{3,}/,
+  /** Matches: any number with 2 or more digits (for "Otro monto" inputs like "50", "100") */
+  twoOrMoreDigits: /\b\d{2,}\b/,
 } as const;
 
 /**
@@ -62,12 +67,21 @@ export function hasAmountInHistory(memory: ConversationMemory): boolean {
 /**
  * Extract the numerical amount from text
  *
+ * Supports all format variations found in golden conversations:
+ * - $1000, $1.000 (Argentine), $1,000 (US), $ 1000 (with space)
+ * - 500 pesos, 1000 ARS
+ * - Just numbers: 1000, 100
+ *
  * @param text - The text to extract from
  * @returns The extracted amount or null if none found
  *
  * @example
  * extractAmount('Quiero donar $1000') // 1000
+ * extractAmount('Quiero donar $1.000') // 1000 (Argentine format)
+ * extractAmount('Quiero donar $1,000') // 1000 (US format)
+ * extractAmount('Quiero donar $ 1000') // 1000 (space after $)
  * extractAmount('Quiero donar 500 pesos') // 500
+ * extractAmount('100') // 100 (from "Otro monto" input)
  * extractAmount('Quiero donar') // null
  */
 export function extractAmount(text: string): number | null {
@@ -75,24 +89,59 @@ export function extractAmount(text: string): number | null {
     return null;
   }
 
-  // Try to match currency format first ($1000)
-  const currencyMatch = text.match(/\$(\d+(?:[.,]\d+)?)/);
+  // Pattern 1: Currency format with optional thousands separators and optional space after $
+  // Matches: $1000, $1.000, $1,000, $ 1000, $ 1.000, etc.
+  const currencyMatch = text.match(/\$\s*(\d{1,}(?:[.,]\d{3})*(?:[.,]\d{2})?)/);
   if (currencyMatch) {
-    const amount = currencyMatch[1].replace(/[.,]/g, '');
-    return parseInt(amount, 10);
+    // Remove thousands separators (dots or commas) but preserve decimal point
+    let amount = currencyMatch[1];
+
+    // Check if there's a decimal part (last separator followed by exactly 2 digits)
+    const hasDecimal = /[.,]\d{2}$/.test(amount);
+
+    if (hasDecimal) {
+      // Has decimal: remove all separators except the last one, then convert to dot
+      amount = amount.replace(/[.,](?=.*[.,])/g, '').replace(',', '.');
+    } else {
+      // No decimal: remove all separators (they're thousands separators)
+      amount = amount.replace(/[.,]/g, '');
+    }
+
+    return Math.floor(parseFloat(amount));
   }
 
-  // Try to match pesos/ARS format (500 pesos)
-  const pesosMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(pesos|ars)/i);
+  // Pattern 2: Pesos/ARS format with optional thousands separators
+  // Matches: 500 pesos, 1.000 pesos, 1,000 ARS
+  const pesosMatch = text.match(/(\d{1,}(?:[.,]\d{3})*(?:[.,]\d{2})?)\s*(pesos|ars)/i);
   if (pesosMatch) {
-    const amount = pesosMatch[1].replace(/[.,]/g, '');
-    return parseInt(amount, 10);
+    let amount = pesosMatch[1];
+
+    // Check if there's a decimal part
+    const hasDecimal = /[.,]\d{2}$/.test(amount);
+
+    if (hasDecimal) {
+      amount = amount.replace(/[.,](?=.*[.,])/g, '').replace(',', '.');
+    } else {
+      amount = amount.replace(/[.,]/g, '');
+    }
+
+    return Math.floor(parseFloat(amount));
   }
 
-  // Try to match any 3+ digit number
-  const digitMatch = text.match(/\d{3,}/);
+  // Pattern 3: Just a number (3+ digits) - from "Otro monto" input or amount-only messages
+  // Matches: 1000, 100, 5000
+  const digitMatch = text.match(/\b(\d{3,})\b/);
   if (digitMatch) {
-    return parseInt(digitMatch[0], 10);
+    return parseInt(digitMatch[1], 10);
+  }
+
+  // Pattern 4: Small amounts (2 digits) if preceded by donation keywords
+  // Matches: "donar 50", "donate 75" (edge case for very small donations)
+  if (/\b(donar|donate|donation|donación)\b/i.test(text)) {
+    const smallAmountMatch = text.match(/\b(\d{2,})\b/);
+    if (smallAmountMatch) {
+      return parseInt(smallAmountMatch[1], 10);
+    }
   }
 
   return null;
