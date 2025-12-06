@@ -1,0 +1,49 @@
+{
+  "id": "golden-info-007",
+  "metadata": {
+    "intent": "information",
+    "language": "en",
+    "category": "surgery",
+    "complexity": "medium",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "What happened to Max?"
+    },
+    {
+      "role": "agent",
+      "message": "Max suffered a hip fracture and needs urgent surgery. He was hit by a car a week ago and has been under veterinary care since then.\n\nThe surgery is necessary for him to be able to walk again. We've already raised $15,000 of the $30,000 we need.\n\nWould you like to help Max?"
+    }
+  ],
+  "caseData": {
+    "id": "case-max-002",
+    "name": "Max - Urgent Surgery",
+    "description": "Max needs surgery for a hip fracture after being hit by a car.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "surgery",
+    "guardianId": "guardian-002",
+    "donationsReceived": 15000
+  },
+  "userContext": {
+    "userId": "user-044",
+    "userRole": "user",
+    "language": "en"
+  },
+  "expectedResponse": {
+    "intent": "information",
+    "confidence": 0.85,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Donate", "data": { "showAmountOptions": true } },
+      { "type": "share", "label": "Share case" },
+      { "type": "more_info", "label": "More details" }
+    ],
+    "shouldIncludeKB": true
+  },
+  "notes": "English version - information about case details."
+}
+

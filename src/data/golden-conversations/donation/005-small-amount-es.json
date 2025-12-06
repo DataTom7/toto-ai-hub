@@ -1,0 +1,47 @@
+{
+  "id": "golden-donation-005",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "treatment",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "donar 100"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias por tu generosidad! Cada aporte cuenta, incluso $100. Para donar a Bella:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $100\n3. Enviá el comprobante\n\nTu ayuda es valiosa. ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-bella-003",
+    "name": "Bella - Tratamiento",
+    "description": "Bella necesita tratamiento para una infección.",
+    "status": "active",
+    "priority": "normal",
+    "category": "treatment",
+    "guardianId": "guardian-003",
+    "donationsReceived": 2000
+  },
+  "userContext": {
+    "userId": "user-005",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.9,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirmar $100", "data": { "amount": 100 } },
+      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "Small amount donation with lowercase. Shows agent accepts informal language."
+}
+

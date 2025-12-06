@@ -1,0 +1,49 @@
+{
+  "id": "golden-edge-004",
+  "metadata": {
+    "intent": "unknown",
+    "language": "es",
+    "category": "rescue",
+    "complexity": "medium",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "¿Dónde queda la veterinaria?"
+    },
+    {
+      "role": "agent",
+      "message": "No tengo información sobre ubicaciones de veterinarias. Pero podés ayudar a Luna de otras formas:\n\n• Donar para su tratamiento\n• Compartir su caso\n• Contactar al guardián para más información\n\n¿Te gustaría ayudar a Luna?"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Rescate Urgente",
+    "description": "Luna fue encontrada en la calle con heridas graves.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-050",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "unknown",
+    "confidence": 0.3,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
+      { "type": "share", "label": "Compartir caso" },
+      { "type": "contact", "label": "Contactar guardián" },
+      { "type": "more_info", "label": "Más información" }
+    ]
+  },
+  "notes": "Off-topic question. Agent should politely redirect to case-related actions."
+}
+

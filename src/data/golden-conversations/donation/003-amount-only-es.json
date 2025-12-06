@@ -1,0 +1,47 @@
+{
+  "id": "golden-donation-003",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "surgery",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "$500"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias por tu aporte de $500 para la cirugía de Max! Para completar la donación:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $500\n3. Enviá el comprobante\n\nCada aporte nos acerca más a salvar a Max."
+    }
+  ],
+  "caseData": {
+    "id": "case-max-002",
+    "name": "Max - Cirugía Urgente",
+    "description": "Max necesita cirugía por fractura de cadera.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "surgery",
+    "guardianId": "guardian-002",
+    "donationsReceived": 15000
+  },
+  "userContext": {
+    "userId": "user-003",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.85,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirmar $500", "data": { "amount": 500 } },
+      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "User sends just an amount. Agent should interpret as donation intent."
+}
+

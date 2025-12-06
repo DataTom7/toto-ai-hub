@@ -1,0 +1,47 @@
+{
+  "id": "golden-donation-013",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "foster",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Quiero donar $600 para el cuidado"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias por tu apoyo! Tu donación de $600 ayudará con el cuidado temporal de Coco. Para completarla:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $600\n3. Enviá el comprobante\n\nTu ayuda es fundamental para el bienestar de Coco. ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-coco-005",
+    "name": "Coco - Cuidado Temporal",
+    "description": "Coco está en cuidado temporal mientras busca un hogar permanente.",
+    "status": "active",
+    "priority": "normal",
+    "category": "foster",
+    "guardianId": "guardian-005",
+    "donationsReceived": 1000
+  },
+  "userContext": {
+    "userId": "user-013",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.9,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirmar $600", "data": { "amount": 600 } },
+      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "Foster category donation. User mentions 'cuidado' (care)."
+}
+

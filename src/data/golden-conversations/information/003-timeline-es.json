@@ -1,0 +1,49 @@
+{
+  "id": "golden-info-003",
+  "metadata": {
+    "intent": "information",
+    "language": "es",
+    "category": "surgery",
+    "complexity": "medium",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "¿Cuándo es la cirugía?"
+    },
+    {
+      "role": "agent",
+      "message": "La cirugía de Max está programada para cuando alcancemos la meta de $30.000. Actualmente llevamos $15.000 recaudados, faltan $15.000.\n\nCuanto antes alcancemos la meta, antes podrá ser operado.\n\n¿Te gustaría ayudar a acelerar el proceso?"
+    }
+  ],
+  "caseData": {
+    "id": "case-max-002",
+    "name": "Max - Cirugía Urgente",
+    "description": "Max necesita cirugía por fractura de cadera. Se necesitan $30.000.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "surgery",
+    "guardianId": "guardian-002",
+    "donationsReceived": 15000
+  },
+  "userContext": {
+    "userId": "user-040",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "information",
+    "confidence": 0.85,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
+      { "type": "share", "label": "Compartir caso" },
+      { "type": "more_info", "label": "Más detalles" }
+    ],
+    "shouldIncludeKB": true
+  },
+  "notes": "Timeline question. Agent explains dependency on funding goal."
+}
+

@@ -1,0 +1,47 @@
+{
+  "id": "golden-donation-009",
+  "metadata": {
+    "intent": "donation",
+    "language": "en",
+    "category": "surgery",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "$500"
+    },
+    {
+      "role": "agent",
+      "message": "Thank you for your $500 contribution for Max's surgery! To complete the donation:\n\n1. Transfer to: toto.fondo.rescate\n2. Amount: $500\n3. Send the receipt\n\nEvery contribution brings us closer to saving Max."
+    }
+  ],
+  "caseData": {
+    "id": "case-max-002",
+    "name": "Max - Urgent Surgery",
+    "description": "Max needs surgery for a hip fracture.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "surgery",
+    "guardianId": "guardian-002",
+    "donationsReceived": 15000
+  },
+  "userContext": {
+    "userId": "user-009",
+    "userRole": "user",
+    "language": "en"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.85,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirm $500", "data": { "amount": 500 } },
+      { "type": "donation_proof", "label": "Send receipt", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "English - amount only message."
+}
+

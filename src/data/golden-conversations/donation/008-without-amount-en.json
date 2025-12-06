@@ -1,0 +1,49 @@
+{
+  "id": "golden-donation-008",
+  "metadata": {
+    "intent": "donation",
+    "language": "en",
+    "category": "rescue",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "I want to donate"
+    },
+    {
+      "role": "agent",
+      "message": "That's wonderful that you want to help Luna! What amount would you like to donate?"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Urgent Rescue",
+    "description": "Luna was found on the street with serious injuries.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-008",
+    "userRole": "user",
+    "language": "en"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.9,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "$500", "data": { "amount": 500 } },
+      { "type": "donation_amount", "label": "$1,000", "data": { "amount": 1000 } },
+      { "type": "donation_amount", "label": "$2,000", "data": { "amount": 2000 } },
+      { "type": "donation_amount", "label": "Other amount", "data": { "amount": null } }
+    ]
+  },
+  "notes": "English version - donation without amount."
+}
+

@@ -1,0 +1,54 @@
+{
+  "id": "golden-edge-010",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "rescue",
+    "complexity": "simple",
+    "hasContext": true,
+    "multiTurn": true,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Quiero donar $1000"
+    },
+    {
+      "role": "agent",
+      "message": "¡Muchas gracias por tu generosidad! Para donar $1.000 a Luna:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $1.000\n3. Enviá el comprobante por este chat\n\nTu ayuda hace una diferencia real. ❤️"
+    },
+    {
+      "role": "user",
+      "message": "gracias"
+    },
+    {
+      "role": "agent",
+      "message": "¡De nada! Nosotros te agradecemos por querer ayudar a Luna. Cuando hagas la transferencia, no olvides enviar el comprobante.\n\n¡Que tengas un lindo día! ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Rescate Urgente",
+    "description": "Luna fue encontrada en la calle con heridas graves.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-056",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.6,
+    "suggestedActions": [
+      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "User says 'gracias' as follow-up. Agent should acknowledge and remind about receipt."
+}
+

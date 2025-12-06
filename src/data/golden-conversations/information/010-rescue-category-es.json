@@ -1,0 +1,49 @@
+{
+  "id": "golden-info-010",
+  "metadata": {
+    "intent": "information",
+    "language": "es",
+    "category": "rescue",
+    "complexity": "medium",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "¿Qué le pasó a Luna?"
+    },
+    {
+      "role": "agent",
+      "message": "Luna fue encontrada en la calle con heridas graves. Fue rescatada y está recibiendo atención veterinaria urgente.\n\nLas heridas requieren tratamiento inmediato para asegurar su recuperación. Cada aporte ayuda a cubrir los costos del tratamiento.\n\n¿Te gustaría ayudar a Luna?"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Rescate Urgente",
+    "description": "Luna fue encontrada en la calle con heridas graves que requieren atención veterinaria inmediata.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-047",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "information",
+    "confidence": 0.85,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
+      { "type": "share", "label": "Compartir caso" },
+      { "type": "more_info", "label": "Más detalles" }
+    ],
+    "shouldIncludeKB": true
+  },
+  "notes": "Information request for rescue category. User asks what happened."
+}
+

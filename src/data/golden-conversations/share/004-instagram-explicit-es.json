@@ -1,0 +1,48 @@
+{
+  "id": "golden-share-004",
+  "metadata": {
+    "intent": "share",
+    "language": "es",
+    "category": "surgery",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Compartir en Instagram"
+    },
+    {
+      "role": "agent",
+      "message": "¡Excelente! Compartir en Instagram ayuda a llegar a más personas. Acá está el mensaje para Max:\n\n---\n🆘 URGENTE: Max necesita cirugía\n\nMax sufrió una fractura de cadera y necesita cirugía urgente.\n\nPodés ayudar donando a: toto.fondo.rescate\n\nCada aporte nos acerca más a salvar a Max! 🙏❤️\n---"
+    }
+  ],
+  "caseData": {
+    "id": "case-max-002",
+    "name": "Max - Cirugía Urgente",
+    "description": "Max necesita cirugía por fractura de cadera.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "surgery",
+    "guardianId": "guardian-002",
+    "donationsReceived": 15000
+  },
+  "userContext": {
+    "userId": "user-023",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "share",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "share", "label": "Compartir en Instagram", "data": { "platform": "instagram" } },
+      { "type": "share", "label": "Compartir en WhatsApp", "data": { "platform": "whatsapp" } },
+      { "type": "share", "label": "Copiar mensaje", "data": { "platform": "clipboard" } }
+    ]
+  },
+  "notes": "User explicitly mentions Instagram platform."
+}
+

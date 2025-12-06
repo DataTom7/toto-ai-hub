@@ -1,0 +1,48 @@
+{
+  "id": "golden-share-010",
+  "metadata": {
+    "intent": "share",
+    "language": "es",
+    "category": "transit",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Compartir"
+    },
+    {
+      "role": "agent",
+      "message": "¡Perfecto! Compartir el caso de Rocky ayuda a que más personas puedan ayudar. Acá está el mensaje:\n\n---\n🆘 Rocky necesita ayuda\n\nRocky necesita ser trasladado a un refugio especializado.\n\nPodés ayudar donando a: toto.fondo.rescate\n\nCada aporte facilita el transporte seguro! 🙏❤️\n---"
+    }
+  ],
+  "caseData": {
+    "id": "case-rocky-004",
+    "name": "Rocky - Traslado",
+    "description": "Rocky necesita ser trasladado a un refugio especializado.",
+    "status": "active",
+    "priority": "normal",
+    "category": "transit",
+    "guardianId": "guardian-004",
+    "donationsReceived": 3000
+  },
+  "userContext": {
+    "userId": "user-029",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "share",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "share", "label": "Compartir en WhatsApp", "data": { "platform": "whatsapp" } },
+      { "type": "share", "label": "Compartir en Instagram", "data": { "platform": "instagram" } },
+      { "type": "share", "label": "Copiar mensaje", "data": { "platform": "clipboard" } }
+    ]
+  },
+  "notes": "Transit category share."
+}
+

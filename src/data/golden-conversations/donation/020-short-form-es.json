@@ -1,0 +1,49 @@
+{
+  "id": "golden-donation-020",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "rescue",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Donar"
+    },
+    {
+      "role": "agent",
+      "message": "¡Qué bueno que quieras donar para ayudar a Luna! ¿Qué monto te gustaría donar?"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Rescate Urgente",
+    "description": "Luna fue encontrada en la calle con heridas graves.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-020",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.9,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "$500", "data": { "amount": 500 } },
+      { "type": "donation_amount", "label": "$1.000", "data": { "amount": 1000 } },
+      { "type": "donation_amount", "label": "$2.000", "data": { "amount": 2000 } },
+      { "type": "donation_amount", "label": "Otro monto", "data": { "amount": null } }
+    ]
+  },
+  "notes": "Shortest form - just 'Donar'. Agent should ask for amount."
+}
+

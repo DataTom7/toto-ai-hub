@@ -1,0 +1,49 @@
+{
+  "id": "golden-help-006",
+  "metadata": {
+    "intent": "help",
+    "language": "en",
+    "category": "rescue",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Help"
+    },
+    {
+      "role": "agent",
+      "message": "Of course! You can help Luna in several ways:\n\n💰 **Donate**: Every contribution helps with her treatment\n📱 **Share**: Spread her case on social media\n📞 **Contact**: Talk to the guardian\n📋 **More info**: Learn more about her situation\n\nWhat would you like to do?"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Urgent Rescue",
+    "description": "Luna was found on the street with serious injuries.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-034",
+    "userRole": "user",
+    "language": "en"
+  },
+  "expectedResponse": {
+    "intent": "help",
+    "confidence": 0.9,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Donate", "data": { "showAmountOptions": true } },
+      { "type": "share", "label": "Share case" },
+      { "type": "contact", "label": "Contact guardian" },
+      { "type": "more_info", "label": "More information" }
+    ]
+  },
+  "notes": "English short form 'Help'."
+}
+

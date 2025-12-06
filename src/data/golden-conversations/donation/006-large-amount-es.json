@@ -1,0 +1,47 @@
+{
+  "id": "golden-donation-006",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "surgery",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Quiero donar $5000"
+    },
+    {
+      "role": "agent",
+      "message": "¡Increíble! Tu donación de $5.000 para la cirugía de Max es muy generosa. Para completarla:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $5.000\n3. Enviá el comprobante\n\nCon tu ayuda, Max podrá recibir la cirugía que necesita. ¡Gracias! ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-max-002",
+    "name": "Max - Cirugía Urgente",
+    "description": "Max necesita cirugía por fractura de cadera.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "surgery",
+    "guardianId": "guardian-002",
+    "donationsReceived": 15000
+  },
+  "userContext": {
+    "userId": "user-006",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirmar $5.000", "data": { "amount": 5000 } },
+      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "Large donation amount. Agent should acknowledge generosity appropriately."
+}
+

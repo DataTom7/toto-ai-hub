@@ -1,0 +1,71 @@
+{
+  "id": "golden-donation-018",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "rescue",
+    "complexity": "complex",
+    "hasContext": true,
+    "multiTurn": true,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Hola, vi el caso de Luna"
+    },
+    {
+      "role": "agent",
+      "message": "¡Hola! Sí, Luna necesita ayuda urgente. Fue encontrada con heridas graves y requiere atención veterinaria inmediata.\n\n¿Te gustaría ayudar?"
+    },
+    {
+      "role": "user",
+      "message": "Sí, cómo puedo ayudar?"
+    },
+    {
+      "role": "agent",
+      "message": "Podés ayudar de varias formas:\n\n• Donar para su tratamiento\n• Compartir su caso en redes sociales\n• Contactar al guardián\n\n¿Qué te gustaría hacer?"
+    },
+    {
+      "role": "user",
+      "message": "Donar"
+    },
+    {
+      "role": "agent",
+      "message": "¡Perfecto! ¿Qué monto te gustaría donar para Luna?"
+    },
+    {
+      "role": "user",
+      "message": "$3000"
+    },
+    {
+      "role": "agent",
+      "message": "¡Increíble! Tu donación de $3.000 va a ayudar muchísimo a Luna. Para completarla:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $3.000\n3. Enviá el comprobante\n\nGracias por tu generosidad! ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Rescate Urgente",
+    "description": "Luna fue encontrada en la calle con heridas graves.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-018",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirmar $3.000", "data": { "amount": 3000 } },
+      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "Complex multi-turn conversation with greeting, information request, then donation."
+}
+

@@ -1,0 +1,48 @@
+{
+  "id": "golden-share-002",
+  "metadata": {
+    "intent": "share",
+    "language": "es",
+    "category": "rescue",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Compartir"
+    },
+    {
+      "role": "agent",
+      "message": "¡Perfecto! Compartir el caso de Luna ayuda a que más personas puedan ayudar. Acá está el mensaje:\n\n---\n🆘 URGENTE: Luna necesita ayuda\n\nLuna fue rescatada con heridas graves y necesita atención veterinaria inmediata.\n\nPodés ayudar donando a: toto.fondo.rescate\n\nCada aporte suma! 🙏❤️\n---"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Rescate Urgente",
+    "description": "Luna fue encontrada en la calle con heridas graves.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-021",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "share",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "share", "label": "Compartir en WhatsApp", "data": { "platform": "whatsapp" } },
+      { "type": "share", "label": "Compartir en Instagram", "data": { "platform": "instagram" } },
+      { "type": "share", "label": "Copiar mensaje", "data": { "platform": "clipboard" } }
+    ]
+  },
+  "notes": "Short form 'Compartir' only."
+}
+

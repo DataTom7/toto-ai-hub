@@ -1,0 +1,50 @@
+{
+  "id": "golden-help-001",
+  "metadata": {
+    "intent": "help",
+    "language": "es",
+    "category": "rescue",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "¿Cómo puedo ayudar?"
+    },
+    {
+      "role": "agent",
+      "message": "Hay varias formas de ayudar a Luna:\n\n💰 **Donar**: Cada aporte ayuda con su tratamiento\n📱 **Compartir**: Difundí su caso en redes sociales\n📞 **Contactar**: Hablá con el guardián\n📋 **Más info**: Conocé más sobre su situación\n\n¿Qué te gustaría hacer?"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Rescate Urgente",
+    "description": "Luna fue encontrada en la calle con heridas graves.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-006",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "help",
+    "confidence": 0.9,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
+      { "type": "share", "label": "Compartir caso" },
+      { "type": "contact", "label": "Contactar guardián" },
+      { "type": "more_info", "label": "Más información" }
+    ],
+    "shouldIncludeKB": false
+  },
+  "notes": "General help intent. Show all available actions as quick buttons."
+}
+

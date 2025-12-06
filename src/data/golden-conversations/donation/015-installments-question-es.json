@@ -1,0 +1,55 @@
+{
+  "id": "golden-donation-015",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "surgery",
+    "complexity": "medium",
+    "hasContext": false,
+    "multiTurn": true,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "¿Puedo donar en cuotas?"
+    },
+    {
+      "role": "agent",
+      "message": "¡Por supuesto! Podés hacer varias donaciones cuando te sea cómodo. Por ejemplo, podés donar $1.000 ahora y luego hacer otra donación cuando puedas.\n\n¿Qué monto te gustaría donar ahora?"
+    },
+    {
+      "role": "user",
+      "message": "$1000"
+    },
+    {
+      "role": "agent",
+      "message": "Perfecto! Para donar $1.000 ahora:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $1.000\n3. Enviá el comprobante\n\nPodés hacer más donaciones cuando quieras. ¡Gracias por tu apoyo! ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-max-002",
+    "name": "Max - Cirugía Urgente",
+    "description": "Max necesita cirugía por fractura de cadera.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "surgery",
+    "guardianId": "guardian-002",
+    "donationsReceived": 15000
+  },
+  "userContext": {
+    "userId": "user-015",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirmar $1.000", "data": { "amount": 1000 } },
+      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "User asks about installments. Agent explains flexibility and proceeds with donation."
+}
+

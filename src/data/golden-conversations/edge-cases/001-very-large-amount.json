@@ -1,0 +1,47 @@
+{
+  "id": "golden-edge-001",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "rescue",
+    "complexity": "medium",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Quiero donar $50000"
+    },
+    {
+      "role": "agent",
+      "message": "¡Wow! Tu donación de $50.000 para Luna es increíble y va a hacer una diferencia enorme.\n\nPara una donación de este monto, te recomendamos:\n1. Coordinar directamente con el guardián\n2. Considerar una transferencia bancaria formal\n\n¿Te gustaría que te conectemos con el guardián para coordinar?"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Rescate Urgente",
+    "description": "Luna fue encontrada en la calle con heridas graves.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-008",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.9,
+    "suggestedActions": [
+      { "type": "contact", "label": "Contactar guardián", "data": { "reason": "large_donation" } },
+      { "type": "donation_amount", "label": "Continuar con $50.000", "data": { "amount": 50000 } }
+    ]
+  },
+  "notes": "Very large donation. Should suggest contacting guardian for coordination."
+}
+

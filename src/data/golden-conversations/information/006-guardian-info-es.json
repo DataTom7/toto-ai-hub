@@ -1,0 +1,50 @@
+{
+  "id": "golden-info-006",
+  "metadata": {
+    "intent": "information",
+    "language": "es",
+    "category": "rescue",
+    "complexity": "medium",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "¿Quién lo cuida?"
+    },
+    {
+      "role": "agent",
+      "message": "Luna está bajo el cuidado de un guardián experimentado que la rescató y está coordinando su tratamiento veterinario.\n\nSi querés contactar al guardián o conocer más sobre el caso, podés hacerlo a través de las opciones disponibles.\n\n¿Te gustaría ayudar de alguna forma?"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Rescate Urgente",
+    "description": "Luna fue encontrada en la calle con heridas graves.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-043",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "information",
+    "confidence": 0.85,
+    "suggestedActions": [
+      { "type": "contact", "label": "Contactar guardián" },
+      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
+      { "type": "share", "label": "Compartir caso" },
+      { "type": "more_info", "label": "Más información" }
+    ],
+    "shouldIncludeKB": false
+  },
+  "notes": "Guardian information question. Agent provides general info and suggests contact option."
+}
+

@@ -1,0 +1,48 @@
+{
+  "id": "golden-share-008",
+  "metadata": {
+    "intent": "share",
+    "language": "en",
+    "category": "rescue",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Share"
+    },
+    {
+      "role": "agent",
+      "message": "Perfect! Sharing Luna's case helps a lot. Here's the message:\n\n---\n🆘 URGENT: Luna needs help\n\nLuna was rescued with serious injuries and needs immediate veterinary care.\n\nYou can help by donating to: toto.fondo.rescate\n\nEvery contribution counts! 🙏❤️\n---"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Urgent Rescue",
+    "description": "Luna was found on the street with serious injuries.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-027",
+    "userRole": "user",
+    "language": "en"
+  },
+  "expectedResponse": {
+    "intent": "share",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "share", "label": "Share on WhatsApp", "data": { "platform": "whatsapp" } },
+      { "type": "share", "label": "Share on Instagram", "data": { "platform": "instagram" } },
+      { "type": "share", "label": "Copy message", "data": { "platform": "clipboard" } }
+    ]
+  },
+  "notes": "English short form 'Share'."
+}
+

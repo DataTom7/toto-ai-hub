@@ -1,0 +1,47 @@
+{
+  "id": "golden-donation-012",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "transit",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Donar $800"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias! Tu donación de $800 ayudará con el traslado de Rocky. Para completarla:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $800\n3. Enviá el comprobante\n\nCada aporte facilita el transporte seguro de Rocky. ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-rocky-004",
+    "name": "Rocky - Traslado",
+    "description": "Rocky necesita ser trasladado a un refugio especializado.",
+    "status": "active",
+    "priority": "normal",
+    "category": "transit",
+    "guardianId": "guardian-004",
+    "donationsReceived": 3000
+  },
+  "userContext": {
+    "userId": "user-012",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.9,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirmar $800", "data": { "amount": 800 } },
+      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "Transit category donation. Short form 'Donar $800'."
+}
+

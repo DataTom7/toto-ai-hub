@@ -1,0 +1,48 @@
+{
+  "id": "golden-share-006",
+  "metadata": {
+    "intent": "share",
+    "language": "es",
+    "category": "treatment",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Quiero compartir el caso"
+    },
+    {
+      "role": "agent",
+      "message": "¡Perfecto! Compartir el caso de Bella ayuda a que más personas puedan ayudar. Acá está el mensaje:\n\n---\n🆘 Bella necesita ayuda\n\nBella necesita tratamiento para una infección.\n\nPodés ayudar donando a: toto.fondo.rescate\n\nCada aporte ayuda! 🙏❤️\n---"
+    }
+  ],
+  "caseData": {
+    "id": "case-bella-003",
+    "name": "Bella - Tratamiento",
+    "description": "Bella necesita tratamiento para una infección.",
+    "status": "active",
+    "priority": "normal",
+    "category": "treatment",
+    "guardianId": "guardian-003",
+    "donationsReceived": 2000
+  },
+  "userContext": {
+    "userId": "user-025",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "share",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "share", "label": "Compartir en WhatsApp", "data": { "platform": "whatsapp" } },
+      { "type": "share", "label": "Compartir en Instagram", "data": { "platform": "instagram" } },
+      { "type": "share", "label": "Copiar mensaje", "data": { "platform": "clipboard" } }
+    ]
+  },
+  "notes": "Treatment category share. User says 'el caso' explicitly."
+}
+

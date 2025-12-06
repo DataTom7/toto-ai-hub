@@ -1,0 +1,63 @@
+{
+  "id": "golden-donation-019",
+  "metadata": {
+    "intent": "donation",
+    "language": "en",
+    "category": "rescue",
+    "complexity": "medium",
+    "hasContext": true,
+    "multiTurn": true,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "I want to help"
+    },
+    {
+      "role": "agent",
+      "message": "That's wonderful! You can help Luna in several ways:\n\n• Donate for her treatment\n• Share her case on social media\n• Contact the guardian\n\nWhat would you like to do?"
+    },
+    {
+      "role": "user",
+      "message": "Donate"
+    },
+    {
+      "role": "agent",
+      "message": "Perfect! What amount would you like to donate for Luna?"
+    },
+    {
+      "role": "user",
+      "message": "$2000"
+    },
+    {
+      "role": "agent",
+      "message": "Amazing! Your $2,000 donation will help Luna so much. To complete it:\n\n1. Transfer to: toto.fondo.rescate\n2. Amount: $2,000\n3. Send the receipt\n\nThank you for your generosity! ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Urgent Rescue",
+    "description": "Luna was found on the street with serious injuries.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000
+  },
+  "userContext": {
+    "userId": "user-019",
+    "userRole": "user",
+    "language": "en"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirm $2,000", "data": { "amount": 2000 } },
+      { "type": "donation_proof", "label": "Send receipt", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "English multi-turn conversation showing context awareness."
+}
+

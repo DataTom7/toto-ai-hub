@@ -1,0 +1,48 @@
+{
+  "id": "golden-donation-007",
+  "metadata": {
+    "intent": "donation",
+    "language": "en",
+    "category": "rescue",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "I want to donate $1000"
+    },
+    {
+      "role": "agent",
+      "message": "Thank you so much for your generosity! To donate $1,000 to Luna:\n\n1. Transfer to: toto.fondo.rescate\n2. Amount: $1,000\n3. Send the receipt through this chat\n\nYour help makes a real difference in Luna's life. ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-luna-001",
+    "name": "Luna - Urgent Rescue",
+    "description": "Luna was found on the street with serious injuries requiring immediate veterinary care.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "rescue",
+    "guardianId": "guardian-001",
+    "donationsReceived": 5000,
+    "location": "Buenos Aires"
+  },
+  "userContext": {
+    "userId": "user-007",
+    "userRole": "user",
+    "language": "en"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirm $1,000", "data": { "amount": 1000 } },
+      { "type": "donation_proof", "label": "Send receipt", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "English version of donation with amount."
+}
+

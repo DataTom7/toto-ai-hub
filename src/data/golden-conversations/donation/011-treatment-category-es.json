@@ -1,0 +1,47 @@
+{
+  "id": "golden-donation-011",
+  "metadata": {
+    "intent": "donation",
+    "language": "es",
+    "category": "treatment",
+    "complexity": "simple",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "Quiero donar $1500 para el tratamiento"
+    },
+    {
+      "role": "agent",
+      "message": "¡Gracias por ayudar con el tratamiento de Bella! Para donar $1.500:\n\n1. Transferí a: toto.fondo.rescate\n2. Monto: $1.500\n3. Enviá el comprobante\n\nTu aporte ayudará a que Bella se recupere pronto. ❤️"
+    }
+  ],
+  "caseData": {
+    "id": "case-bella-003",
+    "name": "Bella - Tratamiento",
+    "description": "Bella necesita tratamiento para una infección.",
+    "status": "active",
+    "priority": "normal",
+    "category": "treatment",
+    "guardianId": "guardian-003",
+    "donationsReceived": 2000
+  },
+  "userContext": {
+    "userId": "user-011",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "donation",
+    "confidence": 0.95,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Confirmar $1.500", "data": { "amount": 1500 } },
+      { "type": "donation_proof", "label": "Enviar comprobante", "data": { "showUpload": true } }
+    ]
+  },
+  "notes": "Donation for treatment category. User mentions treatment explicitly."
+}
+

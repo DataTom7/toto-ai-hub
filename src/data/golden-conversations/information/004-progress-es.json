@@ -1,0 +1,49 @@
+{
+  "id": "golden-info-004",
+  "metadata": {
+    "intent": "information",
+    "language": "es",
+    "category": "surgery",
+    "complexity": "medium",
+    "hasContext": false,
+    "multiTurn": false,
+    "reviewed": false
+  },
+  "conversation": [
+    {
+      "role": "user",
+      "message": "¿Cómo va la recuperación?"
+    },
+    {
+      "role": "agent",
+      "message": "Max está bajo cuidado veterinario mientras esperamos la cirugía. Una vez que alcancemos la meta de $30.000, podrá ser operado y comenzar su recuperación.\n\nActualmente llevamos $15.000 recaudados, faltan $15.000.\n\n¿Te gustaría ayudar a que Max pueda operarse pronto?"
+    }
+  ],
+  "caseData": {
+    "id": "case-max-002",
+    "name": "Max - Cirugía Urgente",
+    "description": "Max necesita cirugía por fractura de cadera. Se necesitan $30.000.",
+    "status": "active",
+    "priority": "urgent",
+    "category": "surgery",
+    "guardianId": "guardian-002",
+    "donationsReceived": 15000
+  },
+  "userContext": {
+    "userId": "user-041",
+    "userRole": "user",
+    "language": "es"
+  },
+  "expectedResponse": {
+    "intent": "information",
+    "confidence": 0.85,
+    "suggestedActions": [
+      { "type": "donation_amount", "label": "Donar", "data": { "showAmountOptions": true } },
+      { "type": "share", "label": "Compartir caso" },
+      { "type": "more_info", "label": "Más detalles" }
+    ],
+    "shouldIncludeKB": true
+  },
+  "notes": "Progress question. Agent explains current status and funding progress."
+}
+
