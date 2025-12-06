@@ -4,6 +4,8 @@ import { VectorDBService, VectorDocument, VectorSearchQuery, VectorSearchResult 
 import { PredictionServiceClient } from '@google-cloud/aiplatform';
 import { RAG_SERVICE_CONSTANTS, CASE_AGENT_CONSTANTS } from '../config/constants';
 import { assertValidEmbedding } from '../utils/embeddingValidator';
+import { handleError } from '../utils/errorHandler';
+import { ExternalAPIError } from '../errors/AppErrors';
 
 export interface KnowledgeChunk {
   id: string;
@@ -344,13 +346,19 @@ export class RAGService {
       } catch (error) {
         const isLastAttempt = attempt === maxRetries;
 
+        if (isLastAttempt) {
+          // Transform and throw as ExternalAPIError
+          const appError = handleError(error, {
+            operation: 'generateVertexAIEmbedding',
+            text: text.substring(0, 100), // First 100 chars for context
+            attempt,
+            maxRetries,
+          });
+          throw appError;
+        }
+
         console.warn(`[RAGService] ⚠️  Vertex AI embedding attempt ${attempt}/${maxRetries} failed:`, error
           instanceof Error ? error.message : String(error));
-
-        if (isLastAttempt) {
-          console.error(`[RAGService] ❌ All ${maxRetries} Vertex AI attempts failed`);
-          throw error;
-        }
 
         // Exponential backoff with jitter
         const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;

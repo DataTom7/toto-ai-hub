@@ -23,6 +23,7 @@ import { CASE_AGENT_CONSTANTS } from '../config/constants';
 import { hasAmount, hasAmountInHistory, extractAmount } from '../utils/amountDetection';
 import { safeValidateProcessCaseInquiryInput } from '../validators/caseAgent.validators';
 import { getFirestore } from '../config/firestore.config';
+import { handleError } from '../utils/errorHandler';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -617,25 +618,30 @@ export class CaseAgent extends BaseAgent {
       return normalizeCaseResponse(response);
 
     } catch (error) {
-      console.error('Error in enhanced CaseAgent:', error);
-      
+      // Handle and transform error
+      const appError = handleError(error, {
+        operation: 'CaseAgent.processCaseInquiry',
+        caseId: validatedCaseData.id,
+        userId: validatedContext.userId,
+        messageLength: validatedMessage.length,
+      });
+
+      console.error('[CaseAgent] ❌ Processing failed:', appError.toJSON());
+
       const processingTime = Date.now() - startTime;
       this.analytics.successfulInteractions--; // Decrement on error
       
-      // Use standardized error response
-      const standardizedError = createErrorResponse('PROCESSING_ERROR', {
-        originalError: error instanceof Error ? error.message : 'Unknown error',
-        agentType: this.config.name
-      });
-      
-      const userLanguage = context.language || 'es';
-      const userMessage = getUserErrorMessage(standardizedError, userLanguage);
+      // Return user-friendly error message
+      const userLanguage = validatedContext.language || 'es';
+      const userMessage = appError.getUserMessage(userLanguage);
       
       return normalizeCaseResponse({
         success: false,
         message: userMessage,
-        caseData,
-        error: standardizedError,
+        caseData: validatedCaseData,
+        error: appError.message,
+        category: appError.category,
+        isRetryable: appError.isRetryable,
         metadata: {
           agentType: this.config.name,
           confidence: 0,

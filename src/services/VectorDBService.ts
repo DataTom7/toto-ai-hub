@@ -18,6 +18,7 @@
 import { GoogleAuth } from 'google-auth-library';
 import { VECTOR_DB_CONSTANTS } from '../config/constants';
 import { assertValidEmbedding, validateEmbeddingBatch } from '../utils/embeddingValidator';
+import { handleError } from '../utils/errorHandler';
 
 // Conditional import for HNSW - requires native compilation
 // Note: On Windows, requires Visual Studio build tools for installation
@@ -776,7 +777,7 @@ export class VectorDBService {
   }
 
   /**
-   * Retry wrapper with exponential backoff
+   * Retry wrapper with exponential backoff and error handling
    */
   private async withRetry<T>(fn: () => Promise<T>): Promise<T> {
     let lastError: Error | null = null;
@@ -796,6 +797,12 @@ export class VectorDBService {
       }
     }
 
-    throw lastError || new Error('Operation failed after retries');
+    // All retries exhausted - transform and throw
+    const appError = handleError(lastError || new Error('Operation failed after retries'), {
+      operation: 'VectorDBService.withRetry',
+      backend: this.config.backend,
+      maxRetries: this.config.maxRetries,
+    });
+    throw appError;
   }
 }
