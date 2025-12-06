@@ -5,6 +5,7 @@ import { TwitterAgent } from '../agents/TwitterAgent';
 import { RAGService, KnowledgeChunk } from '../services/RAGService';
 import { KnowledgeBaseService, KnowledgeItem as KBKnowledgeItem } from '../services/KnowledgeBaseService';
 import { VertexAISearchService, SearchableDocument } from '../services/VertexAISearchService';
+import { getMetricsService, MetricCategory } from '../services/MetricsService';
 
 // Types for API Gateway
 export interface AnalyticsData {
@@ -610,5 +611,30 @@ export class TotoAPIGateway {
       console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       throw error; // Re-throw to surface the error
     }
+  }
+
+  /**
+   * Get system metrics
+   *
+   * @returns Current metrics summary
+   */
+  getMetrics(): Record<string, any> {
+    const metricsService = getMetricsService();
+
+    return {
+      summary: metricsService.getSummary(),
+      performance: {
+        responseTime: metricsService.getStats('process_case_inquiry', MetricCategory.PERFORMANCE),
+        vectorSearch: metricsService.getStats('vector_search', MetricCategory.PERFORMANCE),
+        embedding: metricsService.getStats('vertex_ai_embedding', MetricCategory.COST),
+      },
+      cache: {
+        intentCache: metricsService.getStats('cache_hit', MetricCategory.CACHE),
+        vectorSearchCache: metricsService.getStats('cache_hit', MetricCategory.CACHE),
+      },
+      costs: metricsService.getSummary()['cost'] || {},
+      quality: metricsService.getSummary()['quality'] || {},
+      errors: metricsService.getSummary()['error'] || {},
+    };
   }
 }

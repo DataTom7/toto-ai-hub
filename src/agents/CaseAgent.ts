@@ -28,6 +28,7 @@ import { getRateLimitService } from '../services/RateLimitService';
 import { RateLimitError } from '../errors/AppErrors';
 import { Cache, createCache } from '../utils/cache';
 import { CACHE_CONSTANTS } from '../config/constants';
+import { getMetricsService, MetricCategory } from '../services/MetricsService';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -304,6 +305,9 @@ export class CaseAgent extends BaseAgent {
     const sessionId = conversationContext?.conversationId 
       ? conversationContext.conversationId 
       : `${validatedContext.userId}_${validatedCaseData.id}`;
+
+    const metrics = getMetricsService();
+    const stopTimer = metrics.startTimer('process_case_inquiry', MetricCategory.PERFORMANCE);
 
     try {
       // Update analytics
@@ -654,6 +658,8 @@ export class CaseAgent extends BaseAgent {
       };
 
       // Normalize response to ensure consistent structure
+      metrics.recordCounter('inquiry_success', MetricCategory.QUALITY);
+      stopTimer();
       return normalizeCaseResponse(response);
 
     } catch (error) {
@@ -666,6 +672,13 @@ export class CaseAgent extends BaseAgent {
       });
 
       console.error('[CaseAgent] ❌ Processing failed:', appError.toJSON());
+
+      metrics.recordCounter('inquiry_error', MetricCategory.ERROR);
+      metrics.recordError(appError.category, appError.message, {
+        caseId: validatedCaseData.id,
+        userId: validatedContext.userId,
+      });
+      stopTimer();
 
       const processingTime = Date.now() - startTime;
       this.analytics.successfulInteractions--; // Decrement on error
@@ -886,12 +899,17 @@ export class CaseAgent extends BaseAgent {
     // Normalize message for cache key (trim, lowercase)
     const cacheKey = message.trim().toLowerCase();
 
+    const metrics = getMetricsService();
+
     // Check cache first
     if (CACHE_CONSTANTS.ENABLE_CACHING) {
       const cached = this.intentCache.get(cacheKey);
       if (cached) {
+        metrics.recordCounter('cache_hit', MetricCategory.CACHE, 1, { cache: 'intent' });
         console.log('[CaseAgent] 🎯 Cache hit for intent detection:', cached.intent);
         return cached;
+      } else {
+        metrics.recordCounter('cache_miss', MetricCategory.CACHE, 1, { cache: 'intent' });
       }
     }
 

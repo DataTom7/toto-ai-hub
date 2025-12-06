@@ -8,6 +8,7 @@ import { handleError } from '../utils/errorHandler';
 import { ExternalAPIError, RateLimitError } from '../errors/AppErrors';
 import { getRateLimitService } from './RateLimitService';
 import { Cache, createCache, generateCacheKey } from '../utils/cache';
+import { getMetricsService, MetricCategory } from './MetricsService';
 
 export interface KnowledgeChunk {
   id: string;
@@ -296,7 +297,13 @@ export class RAGService {
     text: string,
     taskType: 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY' = 'RETRIEVAL_DOCUMENT'
   ): Promise<number[]> {
+    const metrics = getMetricsService();
+    const stopTimer = metrics.startTimer('vertex_ai_embedding', MetricCategory.COST, {
+      taskType
+    });
+
     if (!this.predictionClient) {
+      stopTimer();
       throw new Error('Vertex AI client not initialized');
     }
 
@@ -373,13 +380,29 @@ export class RAGService {
           console.log(`[RAGService] ✅ Vertex AI succeeded on attempt ${attempt}/${maxRetries}`);
         }
 
+        // Record successful API call
+        metrics.recordCounter('vertex_ai_calls', MetricCategory.COST, 1, {
+          operation: 'embedding',
+          success: 'true',
+          taskType
+        });
+
         console.log(`[RAGService] ✅ Generated valid ${embedding.length}D embedding`);
+        stopTimer();
         return embedding;
 
       } catch (error) {
         const isLastAttempt = attempt === maxRetries;
 
         if (isLastAttempt) {
+          // Record failed API call
+          metrics.recordCounter('vertex_ai_calls', MetricCategory.COST, 1, {
+            operation: 'embedding',
+            success: 'false',
+            taskType
+          });
+          stopTimer();
+
           // Transform and throw as ExternalAPIError
           const appError = handleError(error, {
             operation: 'generateVertexAIEmbedding',

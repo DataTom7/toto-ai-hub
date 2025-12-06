@@ -20,6 +20,7 @@ import { VECTOR_DB_CONSTANTS, CACHE_CONSTANTS } from '../config/constants';
 import { assertValidEmbedding, validateEmbeddingBatch } from '../utils/embeddingValidator';
 import { handleError } from '../utils/errorHandler';
 import { Cache, createCache, generateCacheKey } from '../utils/cache';
+import { getMetricsService, MetricCategory } from './MetricsService';
 
 // Conditional import for HNSW - requires native compilation
 // Note: On Windows, requires Visual Studio build tools for installation
@@ -326,6 +327,8 @@ export class VectorDBService {
       throw error;
     }
 
+    const metrics = getMetricsService();
+
     // Check cache first
     if (CACHE_CONSTANTS.ENABLE_CACHING) {
       const cacheKey = generateCacheKey({
@@ -337,13 +340,21 @@ export class VectorDBService {
 
       const cached = this.searchCache.get(cacheKey);
       if (cached) {
+        metrics.recordCounter('cache_hit', MetricCategory.CACHE, 1, { cache: 'vector_search' });
         console.log('[VectorDBService] 🎯 Cache hit for vector search');
         if (CACHE_CONSTANTS.LOG_CACHE_STATS) {
           console.log('[VectorDBService] Cache stats:', this.searchCache.getStats());
         }
         return cached;
+      } else {
+        metrics.recordCounter('cache_miss', MetricCategory.CACHE, 1, { cache: 'vector_search' });
       }
     }
+
+    // Track search performance
+    const stopTimer = metrics.startTimer('vector_search', MetricCategory.PERFORMANCE, {
+      backend: this.config.backend
+    });
 
     console.log(`[VectorDBService] search() called with backend: ${this.config.backend} (instance: ${this.instanceId})`);
 
@@ -354,6 +365,8 @@ export class VectorDBService {
     } else {
       results = this.searchInMemory(query);
     }
+
+    stopTimer();
 
     // Cache results
     if (CACHE_CONSTANTS.ENABLE_CACHING && results.length > 0) {
