@@ -128,6 +128,26 @@ export const GUARDIAN_SERVICE_CONSTANTS = {
 } as const;
 
 /**
+ * Firestore Connection Pool Configuration
+ */
+export const FIRESTORE_CONSTANTS = {
+  /**
+   * Maximum number of idle connections to maintain
+   */
+  MAX_IDLE_CONNECTIONS: 10,
+
+  /**
+   * Connection timeout (ms)
+   */
+  CONNECTION_TIMEOUT_MS: 5000,
+
+  /**
+   * Enable connection pooling
+   */
+  ENABLE_POOLING: true,
+} as const;
+
+/**
  * Message Keywords
  *
  * Keywords used for message classification and intent detection.

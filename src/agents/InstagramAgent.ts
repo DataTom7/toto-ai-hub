@@ -10,6 +10,7 @@ import { InstagramService } from "../services/InstagramService";
 import { SocialMediaPostService } from "../services/SocialMediaPostService";
 import { ImageService } from "../services/ImageService";
 import { AgentFeedbackService } from "../services/AgentFeedbackService";
+import { getFirestore } from '../config/firestore.config';
 
 // Instagram-specific types
 export interface InstagramCredentials {
@@ -314,8 +315,7 @@ Be thorough but concise in your analysis, paying special attention to visual con
    */
   private async loadGuardiansFromDatabase(guardianId?: string): Promise<void> {
     try {
-      const admin = require('firebase-admin');
-      const db = admin.firestore();
+      const db = getFirestore();
       
       // If guardianId is provided, load only that guardian
       if (guardianId) {
@@ -698,8 +698,7 @@ Be thorough but concise in your analysis, paying special attention to visual con
   private async findCasesForGuardian(guardianId: string): Promise<any[]> {
     try {
       // Query toto-app-stg Firestore for cases belonging to this guardian
-      const admin = (await import('firebase-admin')).default;
-      const db = admin.firestore(); // Uses default app (toto-app-stg)
+      const db = getFirestore(); // Uses singleton connection pool
       
       const casesSnapshot = await db.collection('cases')
         .where('guardianId', '==', guardianId)

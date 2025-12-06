@@ -22,6 +22,7 @@ import { getTRFAlias, isValidBankingAlias } from '../config/banking.config';
 import { CASE_AGENT_CONSTANTS } from '../config/constants';
 import { hasAmount, hasAmountInHistory, extractAmount } from '../utils/amountDetection';
 import { safeValidateProcessCaseInquiryInput } from '../validators/caseAgent.validators';
+import { getFirestore } from '../config/firestore.config';
 
 // Enhanced Case Agent with memory, analytics, and intelligent context understanding
 
@@ -743,8 +744,7 @@ export class CaseAgent extends BaseAgent {
     }
 
     try {
-      const admin = (await import('firebase-admin')).default;
-      const db = admin.firestore(); // Uses default app (toto-app-stg)
+      const db = getFirestore(); // Uses singleton connection pool
       
       const guardianDoc = await db.collection('users').doc(guardianId).get();
       
@@ -777,8 +777,7 @@ export class CaseAgent extends BaseAgent {
     }
 
     try {
-      const admin = (await import('firebase-admin')).default;
-      const db = admin.firestore(); // Uses default app (toto-app-stg)
+      const db = getFirestore(); // Uses singleton connection pool
       
       const guardianDoc = await db.collection('users').doc(guardianId).get();
       

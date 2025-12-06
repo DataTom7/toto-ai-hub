@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { getFirestore } from '../config/firestore.config';
 
 export interface KnowledgeItem {
   id: string;
@@ -38,7 +39,7 @@ export class KnowledgeBaseService {
    *                            Should be set to toto-bo Firestore for cross-environment access
    */
   constructor(sharedKbFirestore?: admin.firestore.Firestore) {
-    this.db = sharedKbFirestore || admin.firestore();
+    this.db = sharedKbFirestore || getFirestore();
     if (sharedKbFirestore) {
       console.log('📚 KnowledgeBaseService using shared Firestore instance for cross-environment KB access');
     }

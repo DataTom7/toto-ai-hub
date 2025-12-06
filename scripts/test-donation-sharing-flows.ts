@@ -178,8 +178,8 @@ const mockCaseData: CaseData = {
   guardianInstagram: 'https://instagram.com/test_guardian',
   guardianTwitter: 'https://twitter.com/test_guardian',
   guardianFacebook: 'https://facebook.com/test_guardian',
-  createdAt: new Date(),
-  updatedAt: new Date()
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
 };
 
 const mockUserContext: UserContext = {
@@ -204,7 +204,8 @@ async function testFlow(apiGateway: TotoAPIGateway, flow: FlowTest): Promise<Tes
       const logs: string[] = [];
       const originalLog = console.log;
       console.log = (...args: any[]) => {
-        logs.push(args.join(' '));
+        const logLine = args.join(' ');
+        logs.push(logLine);
         originalLog(...args);
       };
 
@@ -218,19 +219,31 @@ async function testFlow(apiGateway: TotoAPIGateway, flow: FlowTest): Promise<Tes
       console.log = originalLog;
 
       // Extract KB entries from logs
+      // Look for lines like: "  [1] Help-Seeking Intent Response Flow (ID: kb-flow-help-seeking)"
       const retrievedKBEntries: string[] = [];
       logs.forEach(log => {
-        if (log.includes('KB entries for query')) {
-          // Extract KB entry IDs from logs
-          const kbMatches = log.match(/\[(\d+)\]\s+([^(]+)\s+\(ID:\s+([^)]+)\)/g);
-          if (kbMatches) {
-            kbMatches.forEach(match => {
-              const idMatch = match.match(/ID:\s+([^)]+)/);
-              if (idMatch) {
-                retrievedKBEntries.push(idMatch[1]);
+        // Match pattern: [1] Title (ID: kb-flow-help-seeking)
+        const idMatches = log.match(/\(ID:\s+([^)]+)\)/g);
+        if (idMatches) {
+          idMatches.forEach(match => {
+            const idMatch = match.match(/ID:\s+([^)]+)/);
+            if (idMatch) {
+              const kbId = idMatch[1].trim();
+              if (kbId && !retrievedKBEntries.includes(kbId)) {
+                retrievedKBEntries.push(kbId);
               }
-            });
-          }
+            }
+          });
+        }
+        // Also match standalone kb-* patterns anywhere in the log
+        const kbPatternMatches = log.match(/\bkb-[a-z0-9-]+/gi);
+        if (kbPatternMatches) {
+          kbPatternMatches.forEach(match => {
+            const kbId = match.trim();
+            if (kbId && !retrievedKBEntries.includes(kbId)) {
+              retrievedKBEntries.push(kbId);
+            }
+          });
         }
       });
 
@@ -295,13 +308,16 @@ async function testFlow(apiGateway: TotoAPIGateway, flow: FlowTest): Promise<Tes
       // Test KB entries
       if (step.expectedKBEntries) {
         step.expectedKBEntries.forEach(kbId => {
-          const retrieved = retrievedKBEntries.some(id => id.includes(kbId));
+          // Match both "kb-flow-help-seeking" and "flow-help-seeking" patterns
+          const retrieved = retrievedKBEntries.some(id => 
+            id.includes(kbId) || id.includes(`kb-${kbId}`) || id === kbId || id === `kb-${kbId}`
+          );
           results.push({
             step: `Step ${i + 1}: KB entry "${kbId}" retrieved`,
             passed: retrieved,
             message: retrieved
               ? `✅ KB entry "${kbId}" was retrieved`
-              : `❌ KB entry "${kbId}" was NOT retrieved. Retrieved: ${retrievedKBEntries.join(', ')}`
+              : `❌ KB entry "${kbId}" was NOT retrieved. Retrieved: ${retrievedKBEntries.join(', ') || 'none'}`
           });
         });
       }

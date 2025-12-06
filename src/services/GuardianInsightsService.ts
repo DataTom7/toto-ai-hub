@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import { getFirestore } from '../config/firestore.config';
 
 export interface GuardianInsight {
   guardianId: string;
@@ -55,8 +56,8 @@ export class GuardianInsightsService {
   private db: admin.firestore.Firestore;
   private readonly COLLECTION = 'guardianInsights';
 
-  constructor() {
-    this.db = admin.firestore();
+  constructor(db?: admin.firestore.Firestore) {
+    this.db = db || getFirestore();
   }
 
   /**
