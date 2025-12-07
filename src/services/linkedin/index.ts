@@ -20,5 +20,8 @@ export { ContactScoringService, contactScoringService } from './ContactScoringSe
 // Unified Outreach (Human-like workflow)
 export { LinkedInOutreachService, linkedInOutreachService } from './LinkedInOutreachService';
 
+// Batch Workflow (Recommended - safe incremental approach)
+export { LinkedInBatchService, linkedInBatchService } from './LinkedInBatchService';
+
 // Legacy Phase 0 Orchestrator (for separate analyze-then-message workflow)
 export { LinkedInPhase0, linkedInPhase0 } from './LinkedInPhase0';
