@@ -391,6 +391,26 @@ export class VectorDBService {
   }
 
   /**
+   * Get a vector document by ID
+   * 
+   * @param id - Document ID to retrieve
+   * @returns Document if found, null otherwise
+   */
+  async getById(id: string): Promise<VectorDocument | null> {
+    if (this.config.backend === 'vertex-ai') {
+      // Vertex AI doesn't have a native "get by ID" API
+      // We could implement a local cache or use metadata filters, but for now return null
+      // This is a limitation when using Vertex AI backend
+      console.warn(`[VectorDBService] getById not fully supported for Vertex AI backend (id: ${id})`);
+      return null;
+    } else {
+      // In-memory: direct Map lookup (O(1))
+      const doc = this.inMemoryStore.get(id);
+      return doc || null;
+    }
+  }
+
+  /**
    * Delete a vector document by ID
    */
   async delete(id: string): Promise<void> {

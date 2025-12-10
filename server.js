@@ -300,6 +300,18 @@ const apiGateway = new TotoAPIGateway(sharedKbFirestore);
     const caseAgent = totoAI.getCaseAgent();
     caseAgent.setRAGService(initializedRAGService);
     console.log('✅ Updated CaseAgent to use initialized RAGService (documents loaded)');
+    
+    // Pre-initialize FewShotLearningService to load golden conversations at startup
+    // This ensures conversations are ready before first API call
+    try {
+      const { getFewShotLearningService } = require('./dist/services/FewShotLearningService');
+      const fewShotService = getFewShotLearningService();
+      await fewShotService.initialize();
+      console.log('✅ FewShotLearningService initialized at startup');
+    } catch (error) {
+      console.warn('⚠️ Failed to initialize FewShotLearningService at startup:', error.message);
+      // Non-critical - will initialize on first use
+    }
   } catch (error) {
     console.error('❌ Error initializing API Gateway:', error);
     console.error('Error details:', {

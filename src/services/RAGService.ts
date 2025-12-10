@@ -877,27 +877,22 @@ English translation:`;
    */
   private async updateUsageCount(chunkId: string, newUsageCount: number): Promise<void> {
     try {
-      // Get the document, update usage count, and upsert back
-      // This is a simplified approach - in production, you might want to use a more efficient method
-      const searchResults = await this.vectorDB.search({
-        embedding: new Array(this.embeddingDimensions).fill(0), // Dummy embedding
-        topK: 1,
-        filters: {},
-      });
-      
-      // Find the document and update (this is not ideal, but works for now)
-      // TODO: Add a direct update method to VectorDBService
-      const doc = searchResults.find(r => r.document.id === chunkId);
-      if (doc) {
-        const updatedDoc: VectorDocument = {
-          ...doc.document,
-          metadata: {
-            ...doc.document.metadata,
-            usageCount: newUsageCount,
-          },
-        };
-        await this.vectorDB.upsert(updatedDoc);
+      // Get document directly by ID (O(1) for in-memory backend)
+      const doc = await this.vectorDB.getById(chunkId);
+      if (!doc) {
+        // Document not found, skip update (non-critical)
+        return;
       }
+      
+      // Update usage count and upsert back
+      const updatedDoc: VectorDocument = {
+        ...doc,
+        metadata: {
+          ...doc.metadata,
+          usageCount: newUsageCount,
+        },
+      };
+      await this.vectorDB.upsert(updatedDoc);
     } catch (error) {
       // Non-critical, just log
       console.warn(`[RAGService] Could not update usage count:`, error);
@@ -930,9 +925,15 @@ English translation:`;
    */
   async getAllKnowledgeChunks(): Promise<KnowledgeChunk[]> {
     try {
-      // Search with no filters to get all documents
+      // For in-memory backend, we can iterate directly
+      // For Vertex AI, we'd need to use search (but that requires a valid embedding)
+      // Since we're using in-memory, we'll use a workaround: search with a valid dummy embedding
+      // (a unit vector that won't trigger validation errors)
+      const dummyEmbedding = new Array(this.embeddingDimensions).fill(0);
+      dummyEmbedding[0] = 1; // Make it non-zero to pass validation
+      
       const results = await this.vectorDB.search({
-        embedding: new Array(this.embeddingDimensions).fill(0), // Dummy embedding
+        embedding: dummyEmbedding,
         topK: 10000, // Large number to get all
         filters: {},
       });
@@ -986,20 +987,14 @@ English translation:`;
    */
   async updateKnowledgeChunk(chunkId: string, updates: Partial<KnowledgeChunk>): Promise<boolean> {
     try {
-      // Get existing document
-      const results = await this.vectorDB.search({
-        embedding: new Array(this.embeddingDimensions).fill(0),
-        topK: 10000,
-        filters: {},
-      });
-      
-      const existingDoc = results.find(r => r.document.id === chunkId);
+      // Get existing document directly by ID (O(1) for in-memory backend)
+      const existingDoc = await this.vectorDB.getById(chunkId);
       if (!existingDoc) {
         return false;
       }
       
       // Regenerate embedding if content changed
-      let embedding = existingDoc.document.embedding;
+      let embedding = existingDoc.embedding;
       if (updates.content) {
         embedding = await this.generateEmbedding(updates.content);
       }
@@ -1008,17 +1003,17 @@ English translation:`;
       const updatedDoc: VectorDocument = {
         id: chunkId,
         embedding,
-        content: updates.content ? `${updates.title || existingDoc.document.metadata.title}\n\n${updates.content}` : existingDoc.document.content,
+        content: updates.content ? `${updates.title || existingDoc.metadata.title}\n\n${updates.content}` : existingDoc.content,
         metadata: {
-          ...existingDoc.document.metadata,
-          category: updates.category || existingDoc.document.metadata.category,
-          audience: updates.audience || existingDoc.document.metadata.audience,
+          ...existingDoc.metadata,
+          category: updates.category || existingDoc.metadata.category,
+          audience: updates.audience || existingDoc.metadata.audience,
           timestamp: new Date(),
           version: '1.0',
-          tags: updates.agentTypes || (existingDoc.document.metadata as any).agentTypes,
-          title: updates.title || (existingDoc.document.metadata as any).title,
-          agentTypes: updates.agentTypes || (existingDoc.document.metadata as any).agentTypes,
-          usageCount: updates.usageCount !== undefined ? updates.usageCount : (existingDoc.document.metadata as any).usageCount,
+          tags: updates.agentTypes || (existingDoc.metadata as any).agentTypes,
+          title: updates.title || (existingDoc.metadata as any).title,
+          agentTypes: updates.agentTypes || (existingDoc.metadata as any).agentTypes,
+          usageCount: updates.usageCount !== undefined ? updates.usageCount : (existingDoc.metadata as any).usageCount,
         },
       };
       

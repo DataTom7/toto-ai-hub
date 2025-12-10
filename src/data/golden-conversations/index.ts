@@ -17,6 +17,10 @@ export type { GoldenConversation } from './schema';
  */
 export function loadGoldenConversations(): GoldenConversation[] {
   const conversations: GoldenConversation[] = [];
+  
+  // Resolve path: works in both dev (src/) and compiled (dist/) environments
+  // After build, files are copied to dist/data/golden-conversations/ during build
+  // So __dirname always points to the correct location (src/ in dev, dist/ in production)
   const baseDir = __dirname;
 
   // Categories to load
@@ -26,7 +30,7 @@ export function loadGoldenConversations(): GoldenConversation[] {
     const categoryDir = path.join(baseDir, category);
 
     if (!fs.existsSync(categoryDir)) {
-      console.warn(`Category directory not found: ${category}`);
+      console.warn(`Category directory not found: ${category} (checked: ${categoryDir})`);
       continue;
     }
 

@@ -4,9 +4,11 @@
   "description": "AI agent system for Toto platform using Google Gemini",
   "main": "server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-data",
+    "copy-data": "node -e \"require('fs').cpSync('src/data/golden-conversations', 'dist/data/golden-conversations', {recursive: true, force: true})\"",
     "start": "node server.js",
-    "dev": "concurrently \"tsc --watch\" \"nodemon server.js\"",
+    "dev": "npm run copy-data && concurrently \"tsc --watch\" \"nodemon server.js\"",
+    "dev:setup": "tsc && npm run copy-data",
     "dev:tsc": "tsc --watch",
     "dev:server": "nodemon server.js",
     "test": "jest",
