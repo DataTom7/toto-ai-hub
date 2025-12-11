@@ -95,6 +95,7 @@ export interface CaseResponse extends AgentResponse {
   caseData?: CaseData;
   suggestions?: string[];
   relatedCases?: CaseData[];
+  renderableMessages?: any[]; // Render-ready messages from ChatMessageProcessor (imported from ui/types)
 }
 
 export interface ConversationContext {

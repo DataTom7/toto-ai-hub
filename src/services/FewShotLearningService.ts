@@ -159,26 +159,55 @@ export class FewShotLearningService {
 
   /**
    * Convert a golden conversation to a few-shot example format
+   * 
+   * FIXED: Now includes ALL agent messages from expectedResponse.messages[]
+   * to show the LLM the correct multi-message pattern for donation-with-amount
    */
   private convertToFewShotExample(conversation: GoldenConversation): FewShotExample {
-    // Get the last user message and last agent message
+    // Get the last user message
     const userMessages = conversation.conversation.filter(m => m.role === 'user');
-    const agentMessages = conversation.conversation.filter(m => m.role === 'agent');
-
     const userMessage = userMessages[userMessages.length - 1]?.message || '';
-    const agentResponse = agentMessages[agentMessages.length - 1]?.message || '';
 
-    // Extract quick actions from expectedResponse
+    // For multi-message responses, include ALL agent messages from expectedResponse
+    // This ensures the LLM learns the correct message sequence
+    let agentResponse = '';
     const quickActions: any = {};
 
     if (conversation.expectedResponse.messages && conversation.expectedResponse.messages.length > 0) {
-      const firstMessage = conversation.expectedResponse.messages[0];
-      if (firstMessage.quickActions) {
-        quickActions.showBankingAlias = firstMessage.quickActions.showBankingAlias;
-        quickActions.showAmountOptions = firstMessage.quickActions.showAmountOptions;
-        quickActions.showShareActions = firstMessage.quickActions.showShareActions;
-        quickActions.showHelpActions = firstMessage.quickActions.showHelpActions;
+      // Build response from expectedResponse.messages[] (the correct structure)
+      const messages = conversation.expectedResponse.messages;
+
+      if (messages.length === 1) {
+        // Single message response
+        agentResponse = messages[0].message;
+        if (messages[0].quickActions) {
+          quickActions.showBankingAlias = messages[0].quickActions.showBankingAlias;
+          quickActions.showAmountOptions = messages[0].quickActions.showAmountOptions;
+          quickActions.showShareActions = messages[0].quickActions.showShareActions;
+          quickActions.showHelpActions = messages[0].quickActions.showHelpActions;
+        }
+      } else {
+        // Multi-message response - format all messages (quick actions are indicated separately in metadata)
+        // Don't include inline markers - LLM might copy them into the actual response
+        const formattedMessages = messages.map((msg, idx) => {
+          return msg.message; // Just the message text, no inline markers
+        });
+
+        agentResponse = formattedMessages.join('\n\n');
+
+        // For the top-level quickActions, use the first message's actions
+        // (this is what CaseAgent should set in metadata)
+        if (messages[0].quickActions) {
+          quickActions.showBankingAlias = messages[0].quickActions.showBankingAlias;
+          quickActions.showAmountOptions = messages[0].quickActions.showAmountOptions;
+          quickActions.showShareActions = messages[0].quickActions.showShareActions;
+          quickActions.showHelpActions = messages[0].quickActions.showHelpActions;
+        }
       }
+    } else {
+      // Fallback: use conversation history (old format)
+      const agentMessages = conversation.conversation.filter(m => m.role === 'agent');
+      agentResponse = agentMessages[agentMessages.length - 1]?.message || '';
     }
 
     return {
@@ -211,7 +240,7 @@ export class FewShotLearningService {
       if (example.quickActions) {
         const actions: string[] = [];
         if (example.quickActions.showBankingAlias) actions.push('Show banking alias');
-        if (example.quickActions.showAmountOptions) actions.push('Show amount options ($500, $1.000, $2.000, Otro)');
+        if (example.quickActions.showAmountOptions) actions.push('Show amount options ($1.000, $5.000, $10.000, Otro)');
         if (example.quickActions.showShareActions) actions.push('Show share buttons (Instagram, Twitter, Facebook)');
         if (example.quickActions.showHelpActions) actions.push('Show help buttons (Donar, Compartir)');
 

@@ -18,6 +18,20 @@ export { GuardianInsightsService } from './services/GuardianInsightsService';
 // export { OrchestratorService } from './services/OrchestratorService';
 // export { FirebaseService } from './services/FirebaseService';
 
+// UI Utilities (for frontend integration)
+export { ChatMessageProcessor } from './ui/ChatMessageProcessor';
+export type {
+  RenderableMessage,
+  RenderableQuickActions,
+  QuickActionConfig,
+  BankingAliasConfig,
+  SocialMediaConfig,
+  DonationAmountsConfig,
+  HelpActionsConfig,
+  GuardianContactConfig,
+  CaseResponseForUI,
+} from './ui/types';
+
 // Import for internal use
 import { CaseAgent } from './agents/CaseAgent';
 import { TwitterAgent } from './agents/TwitterAgent';

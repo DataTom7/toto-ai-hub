@@ -581,7 +581,7 @@ export class CaseAgent extends BaseAgent {
         }
       }
       if (shouldShowAmountButtons) {
-        const suggestedAmounts = [500, 1000, 2500, 5000];
+        const suggestedAmounts = [1000, 5000, 10000];
         const amounts = suggestedAmounts.map((a: number) => `$${a.toLocaleString('es-AR')}`).join(', ');
         shownActions.push(`donation_amounts: ${amounts}`);
       }
@@ -609,7 +609,7 @@ export class CaseAgent extends BaseAgent {
           showGuardianContact: shouldShowGuardianContact && Object.keys(guardianContactUrls).length > 0,
           // Show donation amounts when user expresses donation intent WITHOUT amount
           showDonationIntent: shouldShowAmountButtons,
-          suggestedDonationAmounts: shouldShowAmountButtons ? [500, 1000, 2500, 5000] : undefined, // Suggested amounts in ARS
+          suggestedDonationAmounts: shouldShowAmountButtons ? [1000, 5000, 10000, null] : undefined, // 3 amounts ($1.000, $5.000, $10.000) + "Otro monto" (null) = 4 buttons total
           // For help-seeking, show generic action buttons (donate/share text buttons)
           showHelpActions: shouldShowHelpActions,
           actionTriggers: intentAnalysis.intent ? [intentAnalysis.intent] : []
@@ -664,16 +664,70 @@ export class CaseAgent extends BaseAgent {
         },
       };
 
+      // NEW: Generate messages[] array for donation-with-amount (matching golden conversation structure)
+      let messages: Array<{ message: string; quickActions?: any; guardianBankingAlias?: string }> | undefined;
+      if (intentAnalysis.intent === 'donate' && hasSelectedAmountCheck && (shouldShowBankingAlias || shouldShowTRFAlias)) {
+        // Extract amount from message or history
+        const extractedAmount = extractAmount(validatedMessage) || (memory.conversationHistory?.find(m => hasAmount(m.message)) ? extractAmount(memory.conversationHistory.find(m => hasAmount(m.message))!.message) : null);
+        const amountText = extractedAmount ? `$${extractedAmount.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : '';
+        
+        // Get case name
+        const caseName = enhancedCaseData.name || 'el caso';
+        
+        // Determine which alias to show
+        const aliasToShow = shouldShowBankingAlias ? enhancedCaseData.guardianBankingAlias : (shouldShowTRFAlias ? 'toto.rescue.fund' : null);
+        
+        // Build messages array matching golden conversation structure
+        const isSpanish = validatedContext.language === 'es';
+        
+        if (isSpanish) {
+          messages = [
+            {
+              message: amountText 
+                ? `¡Muchas gracias por tu generosidad! Para donar ${amountText} a ${caseName}, transferí al alias del guardián.`
+                : `¡Muchas gracias por tu generosidad! Para donar a ${caseName}, transferí al alias del guardián.`,
+              quickActions: {
+                showBankingAlias: true,
+              },
+              guardianBankingAlias: aliasToShow || undefined,
+            },
+            {
+              message: '¿Querés saber cómo verificar tu donación y recibir tus totitos?',
+            },
+          ];
+        } else {
+          messages = [
+            {
+              message: amountText
+                ? `Thank you so much for your generosity! To donate ${amountText} to ${caseName}, transfer to the guardian's alias.`
+                : `Thank you so much for your generosity! To donate to ${caseName}, transfer to the guardian's alias.`,
+              quickActions: {
+                showBankingAlias: true,
+              },
+              guardianBankingAlias: aliasToShow || undefined,
+            },
+            {
+              message: 'Would you like to know how to verify your donation and receive your totitos?',
+            },
+          ];
+        }
+      }
+
       // Build response and normalize structure
-      const response = {
+      const response: any = {
         success: result.success,
-        message: result.message,
+        message: result.message, // Keep for backward compatibility
         caseData: enhancedCaseData,
         actions,
         suggestions,
         metadata,
         error: result.error,
       };
+
+      // Include messages[] array if generated (for donation-with-amount flow)
+      if (messages && messages.length > 0) {
+        response.messages = messages;
+      }
 
       // Normalize response to ensure consistent structure
       metrics.recordCounter('inquiry_success', MetricCategory.QUALITY);
@@ -932,6 +986,38 @@ export class CaseAgent extends BaseAgent {
     }
 
     const lowerMessage = message.toLowerCase().trim();
+
+    // CRITICAL: Detect numeric-only messages in donation context
+    // If user types just a number (like "10000") after being asked about donation amount,
+    // treat it as donation intent
+    if (hasAmount(message) && memory.conversationHistory.length > 0) {
+      const lastAssistantMessage = memory.conversationHistory
+        .filter(msg => msg.role === 'assistant')
+        .slice(-1)[0]?.message?.toLowerCase() || '';
+      
+      // Check if last assistant message is asking about donation amount
+      const isDonationAmountQuestion = 
+        lastAssistantMessage.includes('cuánto') ||
+        lastAssistantMessage.includes('how much') ||
+        lastAssistantMessage.includes('qué monto') ||
+        lastAssistantMessage.includes('what amount') ||
+        (lastAssistantMessage.includes('monto') && 
+         (lastAssistantMessage.includes('gustaría') || lastAssistantMessage.includes('would you'))) ||
+        lastAssistantMessage.includes('donar') ||
+        lastAssistantMessage.includes('donate') ||
+        lastAssistantMessage.includes('donation');
+      
+      if (isDonationAmountQuestion) {
+        // This is a donation amount response - treat as donation intent
+        return {
+          intent: 'donate',
+          confidence: 0.95,
+          suggestedActions: ['donate'],
+          emotionalTone: 'neutral',
+          urgency: 'medium'
+        };
+      }
+    }
 
     // Language-agnostic affirmative detection - normalize to English first
     const normalizedMessage = await this.normalizeMessageForIntentDetection(lowerMessage);
@@ -1811,6 +1897,9 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
   private postProcessResponse(response: string, intent: string, knowledgeContext?: string, kbTitles?: string, hasSelectedAmount?: boolean, willShowBankingAlias?: boolean): string {
     let cleaned = response;
 
+    // Remove "[Show: ...]" markers that LLM might copy from few-shot examples
+    cleaned = cleaned.replace(/\s*\[Show:\s*[^\]]+\]\s*/gi, '');
+
     // Remove ALL markdown formatting
     // Remove bold/italic markers (**text**, *text*, __text__, _text_)
     cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, '$1'); // **bold** -> bold
@@ -1836,7 +1925,10 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
     
     if (isHelpSeeking) {
       // Split into sentences (handle Spanish and English punctuation)
-      const sentences = cleaned.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      // Split sentences while preserving punctuation
+      // Match sentence content + punctuation
+      const sentenceMatches = cleaned.match(/[^.!?]+[.!?]+/g) || [];
+      const sentences = sentenceMatches.map(m => m.trim()).filter(s => s.length > 0);
       
       // Remove sentences that:
       // 1. Repeat case information (name, location, medical condition, description)
@@ -1881,16 +1973,41 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
       });
 
       // Keep only first 2-3 sentences (gratitude + options)
+      // IMPORTANT: Preserve question marks when rejoining sentences
+      const joinSentences = (sentences: string[]): string => {
+        if (sentences.length === 0) return '';
+        if (sentences.length === 1) return sentences[0].trim();
+        
+        // Join with appropriate punctuation based on each sentence
+        const joined = sentences.map((s, idx) => {
+          const trimmed = s.trim();
+          // If sentence already ends with punctuation, don't add more
+          if (trimmed.endsWith('?') || trimmed.endsWith('!') || trimmed.endsWith('.') || trimmed.endsWith('¿')) {
+            return trimmed;
+          }
+          // Otherwise add period (except for last sentence if it's a question)
+          if (idx === sentences.length - 1) {
+            // Check if last sentence is a question
+            const isQuestion = trimmed.toLowerCase().includes('qué') || 
+                             trimmed.toLowerCase().includes('what') ||
+                             trimmed.toLowerCase().includes('cuánto') ||
+                             trimmed.toLowerCase().includes('how much') ||
+                             trimmed.toLowerCase().includes('cómo') ||
+                             trimmed.toLowerCase().includes('how') ||
+                             trimmed.toLowerCase().includes('gustaría') ||
+                             trimmed.toLowerCase().includes('would you');
+            return isQuestion ? trimmed + '?' : trimmed + '.';
+          }
+          return trimmed + '.';
+        }).join(' ');
+        
+        return joined.trim();
+      };
+      
       if (filteredSentences.length > 3) {
-        cleaned = filteredSentences.slice(0, 3).join('. ').trim();
-        if (!cleaned.endsWith('.') && !cleaned.endsWith('!') && !cleaned.endsWith('?')) {
-          cleaned += '.';
-        }
+        cleaned = joinSentences(filteredSentences.slice(0, 3));
       } else if (filteredSentences.length > 0) {
-        cleaned = filteredSentences.join('. ').trim();
-        if (!cleaned.endsWith('.') && !cleaned.endsWith('!') && !cleaned.endsWith('?')) {
-          cleaned += '.';
-        }
+        cleaned = joinSentences(filteredSentences);
       } else {
         // If all sentences were filtered, use a default help-seeking response
         cleaned = '¡Qué bueno que quieras ayudar! Podés donar para los gastos médicos o compartir su historia en redes sociales.';
@@ -2014,8 +2131,20 @@ ${enhancedCaseData.guardianTwitter || enhancedCaseData.guardianInstagram || enha
           cleaned += '.';
         }
         // Ensure it ends with a question if we added the amount question
-        if (amountQuestionSentences.length === 0 && !cleaned.endsWith('?')) {
+        // Check if the message contains a question about amount
+        const hasAmountQuestion = cleaned.toLowerCase().includes('cuánto') || 
+                                 cleaned.toLowerCase().includes('how much') ||
+                                 cleaned.toLowerCase().includes('qué monto') ||
+                                 cleaned.toLowerCase().includes('what amount') ||
+                                 (cleaned.toLowerCase().includes('monto') && 
+                                  (cleaned.toLowerCase().includes('gustaría') || cleaned.toLowerCase().includes('would you')));
+        
+        if (hasAmountQuestion && !cleaned.endsWith('?')) {
+          // Replace period with question mark if it's an amount question
           cleaned = cleaned.replace(/[.!]$/, '') + '?';
+        } else if (amountQuestionSentences.length === 0 && !cleaned.endsWith('?') && !cleaned.endsWith('.') && !cleaned.endsWith('!')) {
+          // Only add period if no punctuation exists
+          cleaned += '.';
         }
       } else {
         // Fallback: provide a simple response asking for amount

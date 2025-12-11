@@ -3,6 +3,8 @@
  * Ensures consistent response structure across all agents
  */
 
+import { ChatMessageProcessor } from '../ui/ChatMessageProcessor';
+
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
@@ -81,7 +83,9 @@ export function normalizeCaseResponse(response: any): any {
     success: response.success !== false,
     message: response.message || response.response || '',
     metadata: response.metadata || {},
-    error: response.error
+    error: response.error,
+    // IMPORTANT: Preserve messages[] array if present (for donation-with-amount flow)
+    messages: response.messages && Array.isArray(response.messages) ? response.messages : undefined,
   };
 
   // Ensure metadata has required structure
@@ -107,6 +111,37 @@ export function normalizeCaseResponse(response: any): any {
       isFirstMessage: false,
       conversationStage: 'general'
     };
+  }
+
+  // NEW: Process for UI rendering - generate render-ready messages
+  if (normalized.success) {
+    // Check if backend provided messages[] array (for donation-with-amount flow)
+    if (normalized.messages && Array.isArray(normalized.messages) && normalized.messages.length > 0) {
+      // Use messages[] array (matching golden conversation structure)
+      try {
+        const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        normalized.renderableMessages = ChatMessageProcessor.processMessagesArray(
+          normalized.messages,
+          messageId
+        );
+      } catch (error: any) {
+        console.error('[ResponseValidation] Failed to process messages array:', error);
+      }
+    } else if (normalized.message) {
+      // Fallback to single message processing
+      try {
+        // Generate render-ready messages using ChatMessageProcessor
+        const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        normalized.renderableMessages = ChatMessageProcessor.processBackendResponse(
+          normalized,
+          messageId
+        );
+      } catch (error: any) {
+        console.error('[ResponseValidation] Failed to process UI messages:', error);
+        // Fallback: keep original format, frontend can handle it
+        // Don't fail the response if UI processing fails
+      }
+    }
   }
 
   return normalized;
