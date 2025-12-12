@@ -31,6 +31,21 @@ env:
       - BUILD
       - RUNTIME
 
+  # Vertex AI Configuration (for multilingual embeddings)
+  # Required for semantic intent detection using text-embedding-004
+  # Without this, production falls back to Gemini embeddings which produce different similarity scores
+  - variable: VERTEX_AI_PROJECT_ID
+    value: toto-ai-hub
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: VERTEX_AI_LOCATION
+    value: us-central1
+    availability:
+      - BUILD
+      - RUNTIME
+
   # Environment
   - variable: NODE_ENV
     value: "production"
